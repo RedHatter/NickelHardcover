@@ -1,0 +1,109 @@
+query GetUserId {
+	me {
+		id
+	}
+}
+
+query GetUserBookRead($isbn: [String!]!, $user_id: Int!) {
+	user_book_reads(
+		where: {
+			user_book: { user_id: { _eq: $user_id } }
+			finished_at: { _is_null: true }
+			edition: {
+				_or: [
+					{ asin: { _in: $isbn } }
+					{ isbn_10: { _in: $isbn } }
+					{ isbn_13: { _in: $isbn } }
+				]
+			}
+		}
+		order_by: { started_at: desc }
+		limit: 1
+	) {
+		id
+		paused_at
+		started_at
+		edition {
+			id
+			pages
+		}
+	}
+}
+
+query GetEdition($isbn: [String!]!, $user_id: Int!) {
+	editions(
+		where: {
+			_or: [
+				{ asin: { _in: $isbn } }
+				{ isbn_10: { _in: $isbn } }
+				{ isbn_13: { _in: $isbn } }
+			]
+		}
+	) {
+		id
+		pages
+		book {
+			id
+			user_books(where: { user_id: { _eq: $user_id } }) {
+				id
+				status_id
+			}
+		}
+	}
+}
+
+mutation InsertUserBook($book_id: Int!, $edition_id: Int!, $status_id: Int!) {
+	insert_user_book(
+		object: {
+			edition_id: $edition_id
+			book_id: $book_id
+			status_id: $status_id
+		}
+	) {
+		user_book {
+			id
+		}
+	}
+}
+
+mutation UpdateUserBookStatus($id: Int!) {
+	update_user_book(id: $id, object: { status_id: 2 }) {
+		id
+	}
+}
+
+mutation InsertRead(
+	$user_book_id: Int!
+	$edition_id: Int!
+	$started_at: date!
+	$progress_pages: Int!
+) {
+	insert_user_book_read(
+		user_book_id: $user_book_id
+		user_book_read: {
+			edition_id: $edition_id
+			started_at: $started_at
+			progress_pages: $progress_pages
+		}
+	) {
+		id
+	}
+}
+
+mutation UpdateRead(
+	$id: Int!
+	$progress_pages: Int!
+	$edition_id: Int!
+	$started_at: date!
+) {
+	update_user_book_read(
+		id: $id
+		object: {
+			edition_id: $edition_id
+			started_at: $started_at
+			progress_pages: $progress_pages
+		}
+	) {
+		id
+	}
+}

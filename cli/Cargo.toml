@@ -1,0 +1,20 @@
+[package]
+name = "nickel-hardcover-cli"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+chrono = "0.4.41"
+graphql_client = "0.14.0"
+quick-xml = "0.38.0"
+rusqlite = { version = "0.34.0", features = ["bundled"] }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+serini = "0.2.0"
+tokio = { version = "1.45.0", features = ["full"] }
+zip = "4.3.0"
+
+[dependencies.reqwest]
+version = "0.12.15"
+default-features = false
+features = ["rustls-tls", "json", "gzip"]
