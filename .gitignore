@@ -1,0 +1,7 @@
+*.so*
+*.o
+*.moc
+.env
+*.log
+cli/target
+KoboRoot.tgz
