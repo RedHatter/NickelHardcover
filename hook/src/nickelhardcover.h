@@ -1,10 +1,13 @@
 #include <QDialog>
 #include <QFrame>
+#include <QLineEdit>
 #include <QWidget>
 
 typedef void MainWindowController;
 extern MainWindowController *(*MainWindowController__sharedInstance)();
 extern QWidget *(*MainWindowController__currentView)(MainWindowController *mwc);
+
+typedef QDialog N3Dialog;
 
 typedef QDialog ConfirmationDialog;
 extern void (*ConfirmationDialogFactory__showErrorDialog)(QString const &title, QString const &body);
@@ -28,4 +31,28 @@ typedef QFrame ComboButton;
 extern void (*ComboButton__addItem)(ComboButton *_this, QString const &label, QVariant const &data, bool);
 extern void (*ComboButton__renameItem)(ComboButton *_this, int index, QString const &label);
 
-extern const QString PATH;
+typedef QWidget KeyboardReceiver;
+extern KeyboardReceiver *(*KeyboardReceiver__constructor)(KeyboardReceiver *__this, QLineEdit *parent, bool idk);
+
+typedef QWidget KeyboardFrame;
+typedef QObject SearchKeyboardController;
+extern SearchKeyboardController *(*KeyboardFrame__createKeyboard)(KeyboardFrame *__this, int keyboardScript, QLocale locale);
+extern void (*SearchKeyboardController__setReceiver)(SearchKeyboardController *__this, KeyboardReceiver *receiver, bool idk);
+
+extern N3Dialog *(*N3DialogFactory__getDialog)(QWidget *content, bool idk);
+extern void (*N3Dialog__disableCloseButton)(N3Dialog *__this);
+extern void (*N3Dialog__enableBackButton)(N3Dialog *__this, bool enable);
+extern void (*N3Dialog__setTitle)(N3Dialog *__this, QString const &);
+extern KeyboardFrame *(*N3Dialog__keyboardFrame)(N3Dialog *__this);
+
+typedef QWidget PagingFooter;
+extern PagingFooter *(*PagingFooter__constructor)(PagingFooter *__this, QWidget *parent);
+extern void (*PagingFooter__setTotalPages)(PagingFooter *__this, int current);
+extern void (*PagingFooter__setCurrentPage)(PagingFooter *__this, int current);
+
+typedef QLineEdit TouchLineEdit;
+extern TouchLineEdit *(*TouchLineEdit__constructor)(TouchLineEdit *__this, QWidget *parent);
+
+typedef QWidget SettingContainer;
+extern SettingContainer *(*SettingContainer__constructor)(SettingContainer *__this, QWidget *parent);
+extern void (*SettingContainer__setShowBottomLine)(SettingContainer *__this, bool enabled);

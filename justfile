@@ -4,7 +4,7 @@ set dotenv-load := true
 default:
   @{{just_executable()}} --list --justfile {{justfile()}}
 
-# Cross compile CLI for Kobo
+# Cross compile SyncController for Kobo
 [group('build')]
 [working-directory: 'cli']
 build-cli:
@@ -26,10 +26,10 @@ package: build
   #!/usr/bin/env sh
   mkdir KoboRoot
   cd KoboRoot
-  mkdir -p usr/local/Kobo/imageformats/ mnt/onboard/.adds/NickelHardcover
+  mkdir -p usr/local/Kobo/imageformats/ mnt/onboard/.adds/NickelHardcover usr/share/NickelHardcover
   cp ../hook/libhardcover.so                                                 usr/local/Kobo/imageformats/
   cp ../cli/target/arm-unknown-linux-musleabihf/release/nickel-hardcover-cli mnt/onboard/.adds/NickelHardcover/cli
-  cp ../res/sync.png                                                         mnt/onboard/.adds/NickelHardcover/sync.png
+  cp ../res/*                                                                usr/share/NickelHardcover
   tar -vczf ../KoboRoot.tgz . | grep '[^/]$'
   cd ..
   rm -r KoboRoot
@@ -48,8 +48,8 @@ fetch-schema:
 [group('helpers')]
 format:
   cd cli && cargo fmt
-  clang-format -i hook/src/*.cc
-  clang-format -i hook/src/*.h
+  clang-format -i hook/src/**/*.cc hook/src/*.cc
+  clang-format -i hook/src/**/*.h hook/src/*.h
 
 clean:
   cd hook && make clean

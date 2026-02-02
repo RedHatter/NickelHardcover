@@ -1,0 +1,58 @@
+#include <QLabel>
+#include <QNetworkAccessManager>
+#include <QObject>
+#include <QSettings>
+
+#include "nickelhardcover.h"
+
+class SyncController : public QObject {
+  Q_OBJECT
+
+public:
+  static SyncController *getInstance();
+
+  void prepare(bool silent);
+
+public:
+  QString getContentId();
+  void setContentId(QString value);
+
+  bool isEnabled();
+  void setEnabled(bool value);
+
+  void setLinkedBook(QString value);
+  QString getLinkedBook();
+
+  void setLastProgress(int value);
+  int getLastProgress();
+
+  QString query;
+  QNetworkAccessManager *network;
+
+public Q_SLOTS:
+  void currentViewIndexChanged(int index);
+  void pageChanged();
+  void networkConnected();
+  void readyReadStandardOutput();
+  void finished(int exitCode);
+
+Q_SIGNALS:
+  void currentViewChanged(QString name);
+
+private:
+  SyncController(QObject *parent = nullptr);
+
+  static SyncController *instance;
+
+  QSettings *settings = nullptr;
+  QString contentId = nullptr;
+  QString key = nullptr;
+  qint64 timestamp = INT64_MAX;
+  int percent = 0;
+  int frequency;
+  QLabel *inProgress;
+  ConfirmationDialog *dialog = nullptr;
+
+  void run();
+  void logLines(QByteArray msg);
+};

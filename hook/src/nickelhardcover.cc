@@ -6,17 +6,16 @@
 
 #include <NickelHook.h>
 
-#include "cli.h"
 #include "menucontroller.h"
-#include "settings.h"
-
-const QString PATH = "/mnt/onboard/.adds/NickelHardcover/";
+#include "synccontroller.h"
 
 typedef void ReadingController;
 typedef void Volume;
 typedef void Bookmark;
 static void (*ReadingController__setVolume)(ReadingController *_this, Volume *volume, Bookmark *bookmark);
 static QString (*Content__getId)(Volume *_this);
+static QString (*Content__getTitle)(Volume *_this);
+static QString (*Content__getAttribution)(Volume *_this);
 
 MainWindowController *(*MainWindowController__sharedInstance)();
 QWidget *(*MainWindowController__currentView)(MainWindowController *mwc);
@@ -41,6 +40,24 @@ void (*ComboButton__renameItem)(ComboButton *_this, int index, QString const &la
 typedef QWidget ReadingMenuView;
 void (*ReadingMenuView__constructor)(ReadingMenuView *_this, QWidget *parent, bool unkown);
 
+N3Dialog *(*N3DialogFactory__getDialog)(QWidget *content, bool idk);
+void (*N3Dialog__disableCloseButton)(N3Dialog *__this);
+void (*N3Dialog__enableBackButton)(N3Dialog *__this, bool enable);
+void (*N3Dialog__setTitle)(N3Dialog *__this, QString const &);
+KeyboardFrame *(*N3Dialog__keyboardFrame)(N3Dialog *__this);
+
+PagingFooter *(*PagingFooter__constructor)(PagingFooter *__this, QWidget *parent);
+void (*PagingFooter__setTotalPages)(PagingFooter *__this, int current);
+void (*PagingFooter__setCurrentPage)(PagingFooter *__this, int current);
+
+KeyboardReceiver *(*KeyboardReceiver__constructor)(KeyboardReceiver *__this, QLineEdit *parent, bool idk);
+SearchKeyboardController *(*KeyboardFrame__createKeyboard)(KeyboardFrame *__this, int keyboardScript, QLocale locale);
+void (*SearchKeyboardController__setReceiver)(SearchKeyboardController *__this, KeyboardReceiver *receiver, bool idk);
+TouchLineEdit *(*TouchLineEdit__constructor)(TouchLineEdit *__this, QWidget *parent);
+
+SettingContainer *(*SettingContainer__constructor)(SettingContainer *__this, QWidget *parent);
+void (*SettingContainer__setShowBottomLine)(SettingContainer *__this, bool enabled);
+
 static struct nh_info NickelHardcover = (struct nh_info){
     .name = "NickelHardcover",
     .desc = "Updates reading progress on Hardcover.app",
@@ -55,7 +72,9 @@ static struct nh_hook NickelHardcoverHook[] = {
 };
 
 static struct nh_dlsym NickelHardcoverDlsym[] = {
-  { .name = "_ZNK7Content5getIdEv", .out = nh_symoutptr(Content__getId)},
+  { .name = "_ZNK7Content5getIdEv",                                            .out = nh_symoutptr(Content__getId) },
+  { .name = "_ZNK7Content8getTitleEv",                                         .out = nh_symoutptr(Content__getTitle) },
+  { .name = "_ZNK7Content14getAttributionEv",                                  .out = nh_symoutptr(Content__getAttribution) },
 
   { .name = "_ZN20MainWindowController14sharedInstanceEv",                     .out = nh_symoutptr(MainWindowController__sharedInstance) },
   { .name = "_ZNK20MainWindowController11currentViewEv",                       .out = nh_symoutptr(MainWindowController__currentView) },
@@ -76,6 +95,24 @@ static struct nh_dlsym NickelHardcoverDlsym[] = {
   { .name = "_ZN11ComboButton7addItemERK7QStringRK8QVariantb",                 .out = nh_symoutptr(ComboButton__addItem) },
   { .name = "_ZN11ComboButton10renameItemEiRK7QString",                        .out = nh_symoutptr(ComboButton__renameItem) },
 
+  { .name = "_ZN15N3DialogFactory9getDialogEP7QWidgetb",                       .out = nh_symoutptr(N3DialogFactory__getDialog) },
+  { .name = "_ZN8N3Dialog18disableCloseButtonEv",                              .out = nh_symoutptr(N3Dialog__disableCloseButton) },
+  { .name = "_ZN8N3Dialog16enableBackButtonEb",                                .out = nh_symoutptr(N3Dialog__enableBackButton) },
+  { .name = "_ZN8N3Dialog8setTitleERK7QString",                                .out = nh_symoutptr(N3Dialog__setTitle) },
+  { .name = "_ZN8N3Dialog13keyboardFrameEv",                                   .out = nh_symoutptr(N3Dialog__keyboardFrame) },
+
+  { .name = "_ZN12PagingFooterC1EP7QWidget",                                   .out = nh_symoutptr(PagingFooter__constructor) },
+  { .name = "_ZN12PagingFooter13setTotalPagesEi",                              .out = nh_symoutptr(PagingFooter__setTotalPages) },
+  { .name = "_ZN12PagingFooter14setCurrentPageEi",                             .out = nh_symoutptr(PagingFooter__setCurrentPage) },
+
+  { .name = "_ZN13TouchLineEditC1EP7QWidget",                                  .out = nh_symoutptr(TouchLineEdit__constructor) },
+  { .name = "_ZN16KeyboardReceiverC1EP9QLineEditb",                            .out = nh_symoutptr(KeyboardReceiver__constructor) },
+  { .name = "_ZN13KeyboardFrame14createKeyboardE14KeyboardScriptRK7QLocale",   .out = nh_symoutptr(KeyboardFrame__createKeyboard) },
+  { .name = "_ZN24SearchKeyboardController11setReceiverEP16KeyboardReceiverb", .out = nh_symoutptr(SearchKeyboardController__setReceiver) },
+
+  { .name = "_ZN16SettingContainerC1EP7QWidget",                               .out = nh_symoutptr(SettingContainer__constructor) },
+  { .name = "_ZN16SettingContainer17setShowBottomLineEb",                      .out = nh_symoutptr(SettingContainer__setShowBottomLine) },
+
   {0},
 };
 // clang-format on
@@ -89,7 +126,9 @@ void handleStackedWidgetDestroyed() { stackedWidget = nullptr; }
 extern "C" __attribute__((visibility("default"))) void _nh_set_volume(ReadingController *_this, Volume *volume, Bookmark *bookmark) {
   nh_log("ReadingController::setVolume(%p, %p, %p)", _this, volume, bookmark);
 
-  Settings::getInstance()->setContentId(Content__getId(volume));
+  SyncController *syncController = SyncController::getInstance();
+  syncController->setContentId(Content__getId(volume));
+  syncController->query = Content__getTitle(volume) + " " + Content__getAttribution(volume);
 
   MainWindowController *mwc = MainWindowController__sharedInstance();
   QWidget *cv = MainWindowController__currentView(mwc);
@@ -97,10 +136,11 @@ extern "C" __attribute__((visibility("default"))) void _nh_set_volume(ReadingCon
   if (!stackedWidget) {
     if (QString(cv->parentWidget()->metaObject()->className()) == "QStackedWidget") {
       stackedWidget = static_cast<QStackedWidget *>(cv->parentWidget());
-      QObject::connect(stackedWidget, &QStackedWidget::currentChanged, CLI::getInstance(), &CLI::currentViewChanged);
+      QObject::connect(stackedWidget, &QStackedWidget::currentChanged, SyncController::getInstance(),
+                       &SyncController::currentViewIndexChanged);
       QObject::connect(stackedWidget, &QObject::destroyed, handleStackedWidgetDestroyed);
     } else {
-      nh_log("expected QStackedWidget, got %s", cv->parentWidget()->metaObject()->className());
+      nh_log("Error: expected QStackedWidget, got %s", cv->parentWidget()->metaObject()->className());
     }
   }
 

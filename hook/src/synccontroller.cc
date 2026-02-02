@@ -5,36 +5,57 @@
 #include <QSettings>
 #include <QTimer>
 
-#include "cli.h"
-#include "settings.h"
+#include "synccontroller.h"
 
-CLI *CLI::instance;
+const QString PATH = "/mnt/onboard/.adds/NickelHardcover/";
 
-CLI *CLI::getInstance() {
+SyncController *SyncController::instance;
+
+SyncController *SyncController::getInstance() {
   if (!instance) {
-    instance = new CLI();
+    instance = new SyncController();
   };
 
   return instance;
 };
 
-CLI::CLI(QObject *parent) : QObject(parent) {
+SyncController::SyncController(QObject *parent) : QObject(parent) {
   QSettings config(PATH + "config.ini", QSettings::IniFormat);
   frequency = config.value("frequency", 15).toInt();
   if (frequency < 5) {
     frequency = 5;
   }
 
+  settings = new QSettings(PATH + "settings.ini", QSettings::IniFormat);
+  network = new QNetworkAccessManager();
+
   MainWindowController *mwc = MainWindowController__sharedInstance();
   QWidget *cv = MainWindowController__currentView(mwc);
   QWidget *window = cv->window();
   inProgress = new QLabel(window);
-  inProgress->setPixmap(QPixmap(PATH + "sync.png"));
+  inProgress->setPixmap(QPixmap("/usr/share/NickelHardcover/sync.png"));
   inProgress->resize(48, 48);
   inProgress->move(window->width() - 96, window->height() - 96);
 };
 
-void CLI::currentViewChanged(int index) {
+void SyncController::setContentId(QString value) {
+  contentId = value;
+  key = value.replace('/', '-').replace('\\', '-');
+}
+
+bool SyncController::isEnabled() { return settings->value(key + "/enabled", false).toBool(); }
+
+void SyncController::setEnabled(bool value) { settings->setValue(key + "/enabled", value); }
+
+void SyncController::setLinkedBook(QString value) { settings->setValue(key + "/linkedbook", value); }
+
+QString SyncController::getLinkedBook() { return settings->value(key + "/linkedbook").toString(); }
+
+void SyncController::setLastProgress(int value) { settings->setValue(key + "/progress", value); }
+
+int SyncController::getLastProgress() { return settings->value(key + "/progress", 0).toInt(); }
+
+void SyncController::currentViewIndexChanged(int index) {
   if (index < 0)
     return;
 
@@ -43,14 +64,15 @@ void CLI::currentViewChanged(int index) {
   QString name = cv->objectName();
   nh_log("Current view changed to %s", qPrintable(name));
 
+  currentViewChanged(name);
+
   if (name == "ReadingView") {
-    timestamp = QDateTime::currentMSecsSinceEpoch();
     QObject::connect(cv, SIGNAL(pageChanged(int)), this, SLOT(pageChanged()), Qt::UniqueConnection);
   }
 }
 
-void CLI::pageChanged() {
-  if (!Settings::getInstance()->isEnabled())
+void SyncController::pageChanged() {
+  if (!isEnabled())
     return;
 
   qint64 currentTimestamp = QDateTime::currentMSecsSinceEpoch();
@@ -68,7 +90,7 @@ void CLI::pageChanged() {
   }
 }
 
-void CLI::prepare(bool silent) {
+void SyncController::prepare(bool silent) {
   MainWindowController *mwc = MainWindowController__sharedInstance();
   QWidget *cv = MainWindowController__currentView(mwc);
   QString name = cv->objectName();
@@ -86,7 +108,12 @@ void CLI::prepare(bool silent) {
   }
 
   percent = ReadingView__getCalculatedReadProgressEv(cv);
-  contentId = Settings::getInstance()->getContentId();
+
+  if (silent && getLastProgress() == percent) {
+    nh_log("Reading progress hasn't changed skipping update");
+    return;
+  }
+
   timestamp = QDateTime::currentMSecsSinceEpoch();
 
   WirelessWorkflowManager *wfm = WirelessWorkflowManager__sharedInstance();
@@ -109,12 +136,12 @@ void CLI::prepare(bool silent) {
   }
 }
 
-void CLI::networkConnected() {
+void SyncController::networkConnected() {
   sender()->disconnect(this);
   run();
 }
 
-void CLI::run() {
+void SyncController::run() {
   if (percent == 0) {
     nh_log("Error: attempted to sync with 0 percent progress");
     ConfirmationDialogFactory__showErrorDialog("Hardcover.app", "Reading progress must be at least 1% in order to sync.");
@@ -133,13 +160,20 @@ void CLI::run() {
 
   inProgress->show();
 
+  setLastProgress(percent);
+
   QProcess *process = new QProcess();
-  process->start(PATH + "cli", {contentId, QString::number(percent)});
-  QObject::connect(process, &QProcess::readyReadStandardOutput, this, &CLI::readyReadStandardOutput);
-  QObject::connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &CLI::finished);
+  QString linkedBook = getLinkedBook();
+  if (linkedBook.isEmpty()) {
+    process->start(PATH + "cli", {"update", contentId, QString::number(percent)});
+  } else {
+    process->start(PATH + "cli", {"update", contentId, QString::number(percent), linkedBook});
+  }
+  QObject::connect(process, &QProcess::readyReadStandardOutput, this, &SyncController::readyReadStandardOutput);
+  QObject::connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &SyncController::finished);
 }
 
-void CLI::logLines(QByteArray msg) {
+void SyncController::logLines(QByteArray msg) {
   QList<QByteArray> lines = msg.split('\n');
   for (QByteArray &line : lines) {
     if (line.length() == 0)
@@ -149,16 +183,16 @@ void CLI::logLines(QByteArray msg) {
   }
 }
 
-void CLI::readyReadStandardOutput() {
+void SyncController::readyReadStandardOutput() {
   QProcess *process = qobject_cast<QProcess *>(sender());
   logLines(process->readAllStandardOutput());
 }
 
-void CLI::finished(int exitCode) {
+void SyncController::finished(int exitCode) {
   sender()->deleteLater();
   inProgress->hide();
 
-  nh_log("CLI finished with exit code %d", exitCode);
+  nh_log("cli finished with exit code %d", exitCode);
 
   if (exitCode != 0) {
     if (dialog) {
