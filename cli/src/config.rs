@@ -15,7 +15,7 @@ impl Default for Config {
     Self {
       sqlite_path: "/mnt/onboard/.kobo/KoboReader.sqlite".into(),
       authorization: "".into(),
-      frequency: 10,
+      frequency: 15,
     }
   }
 }

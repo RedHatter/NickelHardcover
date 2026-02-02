@@ -4,7 +4,7 @@ query GetUserId {
 	}
 }
 
-query GetUserBookRead($isbn: [String!]!, $user_id: Int!) {
+query GetUserBookReadByIsnb($isbn: [String!]!, $user_id: Int!) {
 	user_book_reads(
 		where: {
 			user_book: { user_id: { _eq: $user_id } }
@@ -26,6 +26,31 @@ query GetUserBookRead($isbn: [String!]!, $user_id: Int!) {
 		edition {
 			id
 			pages
+			book {
+				pages
+			}
+		}
+	}
+}
+
+query GetUserBookReadById($book_id: Int!, $user_id: Int!) {
+	user_book_reads(
+		where: {
+			user_book: { book_id: { _eq: $book_id }, user_id: { _eq: $user_id } }
+			finished_at: { _is_null: true }
+		}
+		order_by: { started_at: desc }
+		limit: 1
+	) {
+		id
+		paused_at
+		started_at
+		edition {
+			id
+			pages
+			book {
+				pages
+			}
 		}
 	}
 }
@@ -44,10 +69,34 @@ query GetEdition($isbn: [String!]!, $user_id: Int!) {
 		pages
 		book {
 			id
+			pages
 			user_books(where: { user_id: { _eq: $user_id } }) {
 				id
 				status_id
 			}
+		}
+	}
+}
+
+query GetBook($book_id: Int!, $user_id: Int!) {
+	books(where: { id: { _eq: $book_id } }) {
+		id
+		pages
+		user_books(where: { user_id: { _eq: $user_id } }) {
+			id
+			status_id
+			edition {
+				pages
+				id
+			}
+		}
+		default_ebook_edition {
+			id
+			pages
+		}
+		default_cover_edition {
+			id
+			pages
 		}
 	}
 }
@@ -62,6 +111,22 @@ mutation InsertUserBook($book_id: Int!, $edition_id: Int!, $status_id: Int!) {
 	) {
 		user_book {
 			id
+			user_book_reads(
+				where: { finished_at: { _is_null: true } }
+				order_by: { started_at: desc }
+				limit: 1
+			) {
+				id
+				paused_at
+				started_at
+				edition {
+					id
+					pages
+					book {
+						pages
+					}
+				}
+			}
 		}
 	}
 }
@@ -69,6 +134,24 @@ mutation InsertUserBook($book_id: Int!, $edition_id: Int!, $status_id: Int!) {
 mutation UpdateUserBookStatus($id: Int!) {
 	update_user_book(id: $id, object: { status_id: 2 }) {
 		id
+		user_book {
+			user_book_reads(
+				where: { finished_at: { _is_null: true } }
+				order_by: { started_at: desc }
+				limit: 1
+			) {
+				id
+				paused_at
+				started_at
+				edition {
+					id
+					pages
+					book {
+						pages
+					}
+				}
+			}
+		}
 	}
 }
 
@@ -105,5 +188,11 @@ mutation UpdateRead(
 		}
 	) {
 		id
+	}
+}
+
+query SearchBooks($query: String!, $limit: Int!, $page: Int!) {
+	search(query: $query, query_type: "Book", per_page: $limit, page: $page) {
+		results
 	}
 }
