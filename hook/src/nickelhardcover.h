@@ -1,6 +1,8 @@
 #include <QDialog>
 #include <QFrame>
+#include <QLabel>
 #include <QLineEdit>
+#include <QMenu>
 #include <QWidget>
 
 typedef void MainWindowController;
@@ -56,3 +58,17 @@ extern TouchLineEdit *(*TouchLineEdit__constructor)(TouchLineEdit *__this, QWidg
 typedef QWidget SettingContainer;
 extern SettingContainer *(*SettingContainer__constructor)(SettingContainer *__this, QWidget *parent);
 extern void (*SettingContainer__setShowBottomLine)(SettingContainer *__this, bool enabled);
+
+typedef QLabel TouchLabel;
+extern void (*TouchLabel__constructor)(TouchLabel *_this, QWidget *parent, QFlags<Qt::WindowType>);
+extern void (*TouchLabel__setSelectedPixmap)(TouchLabel *_this, QPixmap const &image);
+extern void (*TouchLabel__setDeselectedPixmap)(TouchLabel *_this, QPixmap const &image);
+
+typedef QMenu NickelTouchMenu;
+extern void (*NickelTouchMenu__constructor)(NickelTouchMenu *_this, QWidget *parent, int pos);
+extern void (*NickelTouchMenu__showDecoration)(NickelTouchMenu *_this, bool show);
+
+typedef QWidget MenuTextItem;
+extern void (*MenuTextItem__constructor)(MenuTextItem *_this, QWidget *parent, bool checkable, bool italic);
+extern void (*MenuTextItem__setText)(MenuTextItem *_this, QString const &text);
+extern void (*MenuTextItem__registerForTapGestures)(MenuTextItem *_this);

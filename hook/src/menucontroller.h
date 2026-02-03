@@ -1,5 +1,6 @@
 #include <QObject>
 #include <QSettings>
+#include <QWidgetAction>
 
 #include "nickelhardcover.h"
 
@@ -10,13 +11,19 @@ public:
   static MenuController *getInstance();
 
 public Q_SLOTS:
-  void itemSelected(int index);
+  void showMenu(bool checked);
+
+  void syncNow(bool checked);
+  void toggleEnabled(bool checked);
+  void linkBook(bool checked);
 
 public:
-  void setupItems(ComboButton *button);
+  QWidget *buildWidget(QWidget *parent = nullptr);
 
 private:
   MenuController(QObject *parent = nullptr);
+
+  QWidgetAction* addMenuItem(NickelTouchMenu *menu, QString label);
 
   static MenuController *instance;
 };

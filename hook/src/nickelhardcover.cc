@@ -1,8 +1,6 @@
-#include <QCoreApplication>
 #include <QStackedWidget>
 #include <QString>
-
-#include <syslog.h>
+#include "QHBoxLayout"
 
 #include <NickelHook.h>
 
@@ -34,8 +32,16 @@ void (*WirelessWorkflowManager__connectWirelessSilently)(WirelessWorkflowManager
 void (*WirelessWorkflowManager__connectWireless)(WirelessWorkflowManager *_this, bool, bool);
 bool (*WirelessWorkflowManager__isInternetAccessible)(WirelessWorkflowManager *_this);
 
-void (*ComboButton__addItem)(ComboButton *_this, QString const &label, QVariant const &data, bool);
-void (*ComboButton__renameItem)(ComboButton *_this, int index, QString const &label);
+void (*TouchLabel__constructor)(TouchLabel *_this, QWidget *parent, QFlags<Qt::WindowType>);
+void (*TouchLabel__setSelectedPixmap)(TouchLabel *_this, QPixmap const &image);
+void (*TouchLabel__setDeselectedPixmap)(TouchLabel *_this, QPixmap const &image);
+
+void (*NickelTouchMenu__constructor)(NickelTouchMenu *_this, QWidget *parent, int pos);
+void (*NickelTouchMenu__showDecoration)(NickelTouchMenu *_this, bool show);
+
+void (*MenuTextItem__constructor)(MenuTextItem *_this, QWidget *parent, bool checkable, bool italic);
+void (*MenuTextItem__setText)(MenuTextItem *_this, QString const &text);
+void (*MenuTextItem__registerForTapGestures)(MenuTextItem *_this);
 
 typedef QWidget ReadingMenuView;
 void (*ReadingMenuView__constructor)(ReadingMenuView *_this, QWidget *parent, bool unkown);
@@ -92,8 +98,15 @@ static struct nh_dlsym NickelHardcoverDlsym[] = {
   { .name = "_ZN23WirelessWorkflowManager23connectWirelessSilentlyEv",         .out = nh_symoutptr(WirelessWorkflowManager__connectWirelessSilently) },
   { .name = "_ZN15WirelessManager14sharedInstanceEv",                          .out = nh_symoutptr(WirelessManager__sharedInstance) },
 
-  { .name = "_ZN11ComboButton7addItemERK7QStringRK8QVariantb",                 .out = nh_symoutptr(ComboButton__addItem) },
-  { .name = "_ZN11ComboButton10renameItemEiRK7QString",                        .out = nh_symoutptr(ComboButton__renameItem) },
+  { .name = "_ZN10TouchLabelC1EP7QWidget6QFlagsIN2Qt10WindowTypeEE",           .out = nh_symoutptr(TouchLabel__constructor) },
+  { .name = "_ZN10TouchLabel17setSelectedPixmapERK7QPixmap",                   .out = nh_symoutptr(TouchLabel__setSelectedPixmap) },
+  { .name = "_ZN10TouchLabel19setDeselectedPixmapERK7QPixmap",                 .out = nh_symoutptr(TouchLabel__setDeselectedPixmap) },
+
+  { .name = "_ZN15NickelTouchMenuC1EP7QWidget18DecorationPosition",            .out = nh_symoutptr(NickelTouchMenu__constructor) },
+  { .name = "_ZN15NickelTouchMenu14showDecorationEb",                          .out = nh_symoutptr(NickelTouchMenu__showDecoration) },
+  { .name = "_ZN12MenuTextItemC1EP7QWidgetbb",                                 .out = nh_symoutptr(MenuTextItem__constructor) },
+  { .name = "_ZN12MenuTextItem7setTextERK7QString",                            .out = nh_symoutptr(MenuTextItem__setText) },
+  { .name = "_ZN12MenuTextItem22registerForTapGesturesEv",                     .out = nh_symoutptr(MenuTextItem__registerForTapGestures) },
 
   { .name = "_ZN15N3DialogFactory9getDialogEP7QWidgetb",                       .out = nh_symoutptr(N3DialogFactory__getDialog) },
   { .name = "_ZN8N3Dialog18disableCloseButtonEv",                              .out = nh_symoutptr(N3Dialog__disableCloseButton) },
@@ -147,34 +160,16 @@ extern "C" __attribute__((visibility("default"))) void _nh_set_volume(ReadingCon
   return ReadingController__setVolume(_this, volume, bookmark);
 }
 
-QObject *findChild(QObject *parent, const QString className) {
-  QObjectList children = parent->children();
-
-  for (int i = 0; i < children.size(); ++i) {
-    QString child = QString(children[i]->metaObject()->className());
-    if (child == className) {
-      return children[i];
-    }
-
-    QObject *res = findChild(children[i], className);
-    if (res) {
-      return res;
-    }
-  }
-
-  return nullptr;
-}
-
 extern "C" __attribute__((visibility("default"))) void _nh_reading_menu_view_constructor(ReadingMenuView *_this, QWidget *parent,
                                                                                          bool unknown) {
   nh_log("ReadingMenuView::ReadingMenuView(%p, %p, %s)", _this, parent, unknown ? "true" : "false");
   ReadingMenuView__constructor(_this, parent, unknown);
 
-  QObject *child = findChild(_this, "ComboButton");
+  QHBoxLayout *childLayout = _this->findChild<QHBoxLayout *>("bottomHorizontalLayout");
 
-  if (child) {
-    MenuController::getInstance()->setupItems(qobject_cast<ComboButton *>(child));
+  if (childLayout) {
+    childLayout->insertWidget(childLayout->count() - 1, MenuController::getInstance()->buildWidget(_this));
   } else {
-    nh_log("Error: unable to find ComboButton");
+    nh_log("Error: unable to find bottomHorizontalLayout");
   }
 }
