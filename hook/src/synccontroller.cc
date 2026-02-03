@@ -34,8 +34,8 @@ SyncController::SyncController(QObject *parent) : QObject(parent) {
   QWidget *window = cv->window();
   inProgress = new QLabel(window);
   inProgress->setPixmap(QPixmap("/usr/share/NickelHardcover/icon.png"));
-  inProgress->resize(48, 48);
-  inProgress->move(window->width() - 96, window->height() - 96);
+  inProgress->resize(90, 90);
+  inProgress->move(window->width() - 144, window->height() - 144);
 };
 
 void SyncController::setContentId(QString value) {
