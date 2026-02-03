@@ -103,7 +103,7 @@ void SyncController::prepare(bool silent) {
 
   if (name != "ReadingView") {
     nh_log("Error: attempted to sync while current view is %s", qPrintable(name));
-    ConfirmationDialogFactory__showErrorDialog("Hardcover.app", "Can only update book progress when a book is open");
+    ConfirmationDialogFactory__showErrorDialog("Hardcover.app", "Can only update book progress while a book is open");
     return;
   }
 
@@ -114,6 +114,9 @@ void SyncController::prepare(bool silent) {
   }
 
   percent = ReadingView__getCalculatedReadProgressEv(cv);
+  if (percent == 0) {
+    percent = 1;
+  }
 
   if (silent && getLastProgress() == percent) {
     nh_log("Reading progress hasn't changed skipping update");
@@ -148,13 +151,8 @@ void SyncController::networkConnected() {
 }
 
 void SyncController::run() {
-  if (percent == 0) {
-    nh_log("Error: attempted to sync with 0 percent progress");
-    ConfirmationDialogFactory__showErrorDialog("Hardcover.app", "Reading progress must be at least 1% in order to sync.");
-    return;
-  }
-
   if (contentId == nullptr) {
+    closeDialog();
     nh_log("Error: attempted to sync with null contentId");
     ConfirmationDialogFactory__showErrorDialog("Hardcover.app", "`contentId` is null. This should not be possible.");
     return;
@@ -201,11 +199,7 @@ void SyncController::finished(int exitCode) {
   nh_log("cli finished with exit code %d", exitCode);
 
   if (exitCode != 0) {
-    if (dialog) {
-      dialog->close();
-      dialog->deleteLater();
-      dialog = nullptr;
-    }
+    closeDialog();
 
     QProcess *process = qobject_cast<QProcess *>(sender());
     QByteArray stderr = process->readAllStandardError();
@@ -214,14 +208,14 @@ void SyncController::finished(int exitCode) {
     ConfirmationDialogFactory__showErrorDialog("Hardcover.app", QString(stderr));
   } else if (dialog) {
     ConfirmationDialog__setText(dialog, "Success!");
-
-    QTimer *timer = new QTimer(dialog);
-    timer->setSingleShot(true);
-    QObject::connect(timer, &QTimer::timeout, this, [this] {
-      dialog->close();
-      dialog->deleteLater();
-      dialog = nullptr;
-    });
-    timer->start(800);
+    QTimer::singleShot(800, this, &SyncController::closeDialog);
   }
+}
+
+void SyncController::closeDialog() {
+  if (dialog == nullptr) return;
+
+  dialog->close();
+  dialog->deleteLater();
+  dialog = nullptr;
 }

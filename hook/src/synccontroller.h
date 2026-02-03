@@ -35,6 +35,7 @@ public Q_SLOTS:
   void networkConnected();
   void readyReadStandardOutput();
   void finished(int exitCode);
+  void closeDialog();
 
 Q_SIGNALS:
   void currentViewChanged(QString name);
