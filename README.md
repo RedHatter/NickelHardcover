@@ -32,10 +32,10 @@ frequency = 15
 
 ![Book overflow menu](https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/menu.png?raw=true)
 
-You should find 3 new menu items in the overflow menu of open books.
-* **Sync now**  
+When a book is open you should a new menu on the top right with 3 menu items.
+* **Sync now**
   Triggers an update to the reading progress on Hardcover.app
-* **Enable auto-sync**  
+* **Enable auto-sync**
   Enables automatically updating the reading progress every 15 minutes (configurable)
-* **Manually link book**  
+* **Manually link book**
   NickelHardcover attempts to determine what book to update on Hardcover.app using the ISBN of the open book. If that fails this option allows you to manually select which book to update.
