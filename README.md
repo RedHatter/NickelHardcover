@@ -1,10 +1,12 @@
 # NickelHardcover
 Sync reading progress from Kobo eReaders to [Hardcover.app](https://hardcover.app/).
 
+![Updating reading progress](https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/updating.png?raw=true)
+
 ## Installation
 
 1. Download the latest release from the [releases page](https://github.com/RedHatter/NickelHardcover/releases)
-2. Copy the the KoboRoot.tgz to the `.kobo` directory on your Kobo
+2. Copy the KoboRoot.tgz file to the `.kobo` directory on your Kobo
 3. Eject/disconnect your Kobo, and it should automatically reboot
 
 ## Configuration
@@ -12,6 +14,8 @@ In order to function NickelHardcover needs to be configured with an authorizatio
 
 1. Visit [hardcover.app/account/api](https://hardcover.app/account/api) and signin
 2. Copy the contents of the text box starting with "Bearer"
+![Authorization token](https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/authorization_token.png?raw=true)
+
 3. Connect your Kobo and edit the file `.adds/NickelHardcover/config.ini`
 4. On the first line, labeled "authorization", remove the starting semicolon and paste the token copied in step 2 after the the equals sign
 5. Save the file and eject/disconnect your Kobo
@@ -24,6 +28,9 @@ frequency = 15
 ```
 
 ## Usage
+
+![Book overflow menu](https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/menu.png?raw=true)
+
 You should find 3 new menu items in the overflow menu of open books.
 * Sync now  
   Triggers an update to the reading progress on Hardcover.app
