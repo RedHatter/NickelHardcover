@@ -22,22 +22,30 @@ MenuController::MenuController(QObject *parent) : QObject(parent) {};
 void MenuController::itemSelected(int index) {
   nh_log("MenuController::itemSelected(%d)", index);
 
+  ComboButton *button = qobject_cast<ComboButton *>(sender());
+  SyncController *ctl = SyncController::getInstance();
+
   switch (index) {
   case 3:
     nh_log("Manually triggering sync");
-    SyncController::getInstance()->prepare(false);
+    ctl->prepare(false);
     break;
   case 5:
-    SearchDialogContent::showSearchDialog(SyncController::getInstance()->query);
+    if (ctl->getLinkedBook().isEmpty()) {
+      SearchDialogContent::showSearchDialog(ctl->query);
+      ComboButton__renameItem(button, 5, "Unlink book");
+    } else {
+      nh_log("Unlinking book");
+      ctl->setLinkedBook("");
+      ComboButton__renameItem(button, 5, "Manually link book");
+    }
     break;
   case 4:
-    bool enabled = !SyncController::getInstance()->isEnabled();
+    bool enabled = !ctl->isEnabled();
 
     nh_log("Setting auto-sync to %s", enabled ? "enabled" : "disabled");
 
-    SyncController::getInstance()->setEnabled(enabled);
-
-    ComboButton *button = qobject_cast<ComboButton *>(sender());
+    ctl->setEnabled(enabled);
     ComboButton__renameItem(button, 4, enabled ? "Disable auto-sync" : "Enable auto-sync");
     break;
   }
@@ -49,10 +57,11 @@ void MenuController::setupItems(ComboButton *button) {
   QObject::connect(timer, &QTimer::timeout, this, [this, button] {
     ComboButton__addItem(button, "Sync now", "sync-now", false);
 
-    QString label = SyncController::getInstance()->isEnabled() ? "Disable auto-sync" : "Enable auto-sync";
-    ComboButton__addItem(button, label, "toggle-auto-sync", false);
+    QString autoSynclabel = SyncController::getInstance()->isEnabled() ? "Disable auto-sync" : "Enable auto-sync";
+    ComboButton__addItem(button, autoSynclabel, "toggle-auto-sync", false);
 
-    ComboButton__addItem(button, "Manually link book", "link-book", false);
+    QString linkLabel = SyncController::getInstance()->getLinkedBook().isEmpty() ? "Manually link book" : "Unlink book";
+    ComboButton__addItem(button, linkLabel, "link-book", false);
 
     QObject::connect(button, SIGNAL(currentIndexChanged(int)), instance, SLOT(itemSelected(int)), Qt::UniqueConnection);
   });

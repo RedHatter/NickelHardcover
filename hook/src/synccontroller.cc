@@ -47,7 +47,13 @@ bool SyncController::isEnabled() { return settings->value(key + "/enabled", fals
 
 void SyncController::setEnabled(bool value) { settings->setValue(key + "/enabled", value); }
 
-void SyncController::setLinkedBook(QString value) { settings->setValue(key + "/linkedbook", value); }
+void SyncController::setLinkedBook(QString value) {
+  if (value.isEmpty()) {
+    settings->remove(key + "/linkedbook");
+  } else {
+    settings->setValue(key + "/linkedbook", value);
+  }
+}
 
 QString SyncController::getLinkedBook() { return settings->value(key + "/linkedbook").toString(); }
 
