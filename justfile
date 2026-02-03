@@ -59,9 +59,9 @@ clean:
 # Run `logread` over ssh
 logs:
   #!/usr/bin/env expect
-  spawn ssh $KOBO_SERVER
+  spawn ssh $::env(KOBO_SERVER)
   expect "password: "
-  send "$KOBO_PASSWORD\r"
+  send "$::env(KOBO_PASSWORD)\r"
   expect -ex {[root@kobo ~]#}
   send "logread -f\r"
   interact
