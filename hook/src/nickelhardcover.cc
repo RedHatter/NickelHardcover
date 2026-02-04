@@ -44,7 +44,8 @@ void (*MenuTextItem__setText)(MenuTextItem *_this, QString const &text);
 void (*MenuTextItem__registerForTapGestures)(MenuTextItem *_this);
 
 typedef QWidget ReadingMenuView;
-void (*ReadingMenuView__constructor)(ReadingMenuView *_this, QWidget *parent, bool unkown);
+void (*ReadingMenuView__constructor)(ReadingMenuView *_this, QWidget *parent, bool unknown);
+void (*ReadingMenuView__constructor_2)(ReadingMenuView *_this, QWidget*, QByteArray const& unknownArray, bool unknownBool);
 
 N3Dialog *(*N3DialogFactory__getDialog)(QWidget *content, bool idk);
 void (*N3Dialog__disableCloseButton)(N3Dialog *__this);
@@ -72,8 +73,9 @@ static struct nh_info NickelHardcover = (struct nh_info){
 
 // clang-format off
 static struct nh_hook NickelHardcoverHook[] = {
-  { .sym = "_ZN17ReadingController9setVolumeERK6VolumeRK8Bookmark", .sym_new = "_nh_set_volume",                    .lib = "libnickel.so.1.0.0", .out = nh_symoutptr(ReadingController__setVolume), .desc = "The main entry point" },
-  { .sym = "_ZN15ReadingMenuViewC1EP7QWidgetb",                     .sym_new = "_nh_reading_menu_view_constructor", .lib = "libnickel.so.1.0.0", .out = nh_symoutptr(ReadingMenuView__constructor), .desc = "Used to inject menu items" },
+  { .sym = "_ZN17ReadingController9setVolumeERK6VolumeRK8Bookmark", .sym_new = "_nh_set_volume",                      .lib = "libnickel.so.1.0.0", .out = nh_symoutptr(ReadingController__setVolume),   .desc = "The main entry point" },
+  { .sym = "_ZN15ReadingMenuViewC1EP7QWidgetb",                     .sym_new = "_nh_reading_menu_view_constructor",   .lib = "libnickel.so.1.0.0", .out = nh_symoutptr(ReadingMenuView__constructor),   .desc = "Used to inject menu items", .optional = true },
+  { .sym = "_ZN15ReadingMenuViewC1EP7QWidgetRK10QByteArrayb",       .sym_new = "_nh_reading_menu_view_constructor_2", .lib = "libnickel.so.1.0.0", .out = nh_symoutptr(ReadingMenuView__constructor_2), .desc = "Used to inject menu items", .optional = true }, // Version 4.44+
   {0},
 };
 
@@ -160,16 +162,26 @@ extern "C" __attribute__((visibility("default"))) void _nh_set_volume(ReadingCon
   return ReadingController__setVolume(_this, volume, bookmark);
 }
 
+void injectMenuWidget (ReadingMenuView *parent) {
+  QHBoxLayout *childLayout = parent->findChild<QHBoxLayout *>("bottomHorizontalLayout");
+
+  if (childLayout) {
+    childLayout->insertWidget(childLayout->count() - 1, MenuController::getInstance()->buildWidget(parent));
+  } else {
+    nh_log("Error: unable to find bottomHorizontalLayout");
+  }
+}
+
 extern "C" __attribute__((visibility("default"))) void _nh_reading_menu_view_constructor(ReadingMenuView *_this, QWidget *parent,
                                                                                          bool unknown) {
   nh_log("ReadingMenuView::ReadingMenuView(%p, %p, %s)", _this, parent, unknown ? "true" : "false");
   ReadingMenuView__constructor(_this, parent, unknown);
+  injectMenuWidget(parent);
+}
 
-  QHBoxLayout *childLayout = _this->findChild<QHBoxLayout *>("bottomHorizontalLayout");
-
-  if (childLayout) {
-    childLayout->insertWidget(childLayout->count() - 1, MenuController::getInstance()->buildWidget(_this));
-  } else {
-    nh_log("Error: unable to find bottomHorizontalLayout");
-  }
+extern "C" __attribute__((visibility("default"))) void _nh_reading_menu_view_constructor_2(ReadingMenuView *_this, QWidget *parent,
+                                                                                         QByteArray const& unknownArray, bool unknownBool) {
+  nh_log("ReadingMenuView::ReadingMenuView(%p, %p, %s)", _this, parent, unknownBool ? "true" : "false");
+  ReadingMenuView__constructor_2(_this, parent, unknownArray, unknownBool);
+  injectMenuWidget(parent);
 }
