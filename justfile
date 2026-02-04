@@ -29,7 +29,8 @@ package: build
   mkdir -p usr/local/Kobo/imageformats/ mnt/onboard/.adds/NickelHardcover usr/share/NickelHardcover
   cp ../hook/libhardcover.so                                                 usr/local/Kobo/imageformats/
   cp ../cli/target/arm-unknown-linux-musleabihf/release/nickel-hardcover-cli mnt/onboard/.adds/NickelHardcover/cli
-  cp ../res/*                                                                usr/share/NickelHardcover
+  cp ../res/config.ini                                                       mnt/onboard/.adds/NickelHardcover
+  cp ../res/*.png                                                            usr/share/NickelHardcover
   tar -vczf ../KoboRoot.tgz . | grep '[^/]$'
   cd ..
   rm -r KoboRoot
