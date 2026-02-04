@@ -11,6 +11,9 @@ Sync reading progress from Kobo eReaders to [Hardcover.app](https://hardcover.ap
 2. Copy the KoboRoot.tgz file to the `.kobo` directory on your Kobo
 3. Eject/disconnect your Kobo, and it should automatically reboot
 
+### Upgrading
+To upgrade NickelHardcover use the same steps as above, no need to uninstall first. However this will wipe the config file so either make a backup first or re-configure the mod after.
+
 ## Configuration
 In order to function NickelHardcover needs to be configured with an authorization token from your Hardcover.app account.
 
