@@ -1,9 +1,10 @@
+#include <QHBoxLayout>
 #include <QStackedWidget>
 #include <QString>
-#include "QHBoxLayout"
 
 #include <NickelHook.h>
 
+#include "files.h"
 #include "menucontroller.h"
 #include "synccontroller.h"
 
@@ -45,7 +46,7 @@ void (*MenuTextItem__registerForTapGestures)(MenuTextItem *_this);
 
 typedef QWidget ReadingMenuView;
 void (*ReadingMenuView__constructor)(ReadingMenuView *_this, QWidget *parent, bool unknown);
-void (*ReadingMenuView__constructor_2)(ReadingMenuView *_this, QWidget*, QByteArray const& unknownArray, bool unknownBool);
+void (*ReadingMenuView__constructor_2)(ReadingMenuView *_this, QWidget *, QByteArray const &unknownArray, bool unknownBool);
 
 N3Dialog *(*N3DialogFactory__getDialog)(QWidget *content, bool idk);
 void (*N3Dialog__disableCloseButton)(N3Dialog *__this);
@@ -65,11 +66,10 @@ TouchLineEdit *(*TouchLineEdit__constructor)(TouchLineEdit *__this, QWidget *par
 SettingContainer *(*SettingContainer__constructor)(SettingContainer *__this, QWidget *parent);
 void (*SettingContainer__setShowBottomLine)(SettingContainer *__this, bool enabled);
 
-static struct nh_info NickelHardcover = (struct nh_info){
-    .name = "NickelHardcover",
-    .desc = "Updates reading progress on Hardcover.app",
-    .uninstall_flag = "/mnt/onboard/nickelhardcover_uninstall",
-};
+static struct nh_info NickelHardcover = (struct nh_info){.name = "NickelHardcover",
+                                                         .desc = "Updates reading progress on Hardcover.app",
+                                                         .uninstall_flag = "/mnt/onboard/nickelhardcover_uninstall",
+                                                         .uninstall_xflag = "/mnt/onboard/.adds/NickelHardcover"};
 
 // clang-format off
 static struct nh_hook NickelHardcoverHook[] = {
@@ -132,7 +132,25 @@ static struct nh_dlsym NickelHardcoverDlsym[] = {
 };
 // clang-format on
 
-NickelHook(.init = nullptr, .info = &NickelHardcover, .hook = NickelHardcoverHook, .dlsym = NickelHardcoverDlsym);
+bool hardcover_uninstall() {
+  nh_delete_file(Files::config);
+  nh_delete_file(Files::settings);
+  nh_delete_file(Files::cli);
+  nh_delete_dir(Files::adds_directory);
+
+  nh_delete_file(Files::icon);
+  nh_delete_file(Files::icon_selected);
+  nh_delete_file(Files::cover1);
+  nh_delete_file(Files::cover2);
+  nh_delete_file(Files::cover3);
+  nh_delete_file(Files::cover4);
+  nh_delete_dir(Files::share_directory);
+
+  return true;
+}
+
+NickelHook(.init = nullptr, .info = &NickelHardcover, .hook = NickelHardcoverHook, .dlsym = NickelHardcoverDlsym,
+           .uninstall = &hardcover_uninstall);
 
 QStackedWidget *stackedWidget = nullptr;
 
@@ -162,7 +180,7 @@ extern "C" __attribute__((visibility("default"))) void _nh_set_volume(ReadingCon
   return ReadingController__setVolume(_this, volume, bookmark);
 }
 
-void injectMenuWidget (ReadingMenuView *parent) {
+void injectMenuWidget(ReadingMenuView *parent) {
   QHBoxLayout *childLayout = parent->findChild<QHBoxLayout *>("bottomHorizontalLayout");
 
   if (childLayout) {
@@ -179,8 +197,8 @@ extern "C" __attribute__((visibility("default"))) void _nh_reading_menu_view_con
   injectMenuWidget(parent);
 }
 
-extern "C" __attribute__((visibility("default"))) void _nh_reading_menu_view_constructor_2(ReadingMenuView *_this, QWidget *parent,
-                                                                                         QByteArray const& unknownArray, bool unknownBool) {
+extern "C" __attribute__((visibility("default"))) void
+_nh_reading_menu_view_constructor_2(ReadingMenuView *_this, QWidget *parent, QByteArray const &unknownArray, bool unknownBool) {
   nh_log("ReadingMenuView::ReadingMenuView(%p, %p, %s)", _this, parent, unknownBool ? "true" : "false");
   ReadingMenuView__constructor_2(_this, parent, unknownArray, unknownBool);
   injectMenuWidget(parent);

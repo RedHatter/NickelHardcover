@@ -3,8 +3,9 @@
 #include <QJsonObject>
 #include <QNetworkReply>
 
-#include "NickelHook.h"
+#include <NickelHook.h>
 
+#include "../files.h"
 #include "../synccontroller.h"
 #include "bookrow.h"
 #include "elidedlabel.h"
@@ -19,7 +20,7 @@ BookCover::BookCover(QJsonObject json, QWidget *parent) : QLabel(parent) {
     QNetworkReply *reply = SyncController::getInstance()->network->get(QNetworkRequest(QUrl(imageUrl.toString())));
     QObject::connect(reply, &QNetworkReply::finished, this, &BookCover::finished);
   } else {
-    setPixmap(QPixmap("/usr/share/NickelHardcover/cover" + QString::number(qrand() % 4 + 1) + ".png"));
+    setPixmap(QPixmap(QString(Files::share_directory) + "/cover" + QString::number(qrand() % 4 + 1) + ".png"));
   }
 }
 

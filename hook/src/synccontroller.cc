@@ -5,9 +5,8 @@
 #include <QSettings>
 #include <QTimer>
 
+#include "files.h"
 #include "synccontroller.h"
-
-const QString PATH = "/mnt/onboard/.adds/NickelHardcover/";
 
 SyncController *SyncController::instance;
 
@@ -20,20 +19,20 @@ SyncController *SyncController::getInstance() {
 };
 
 SyncController::SyncController(QObject *parent) : QObject(parent) {
-  QSettings config(PATH + "config.ini", QSettings::IniFormat);
+  QSettings config(Files::config, QSettings::IniFormat);
   frequency = config.value("frequency", 15).toInt();
   if (frequency < 5) {
     frequency = 5;
   }
 
-  settings = new QSettings(PATH + "settings.ini", QSettings::IniFormat);
+  settings = new QSettings(Files::settings, QSettings::IniFormat);
   network = new QNetworkAccessManager();
 
   MainWindowController *mwc = MainWindowController__sharedInstance();
   QWidget *cv = MainWindowController__currentView(mwc);
   QWidget *window = cv->window();
   inProgress = new QLabel(window);
-  inProgress->setPixmap(QPixmap("/usr/share/NickelHardcover/icon.png"));
+  inProgress->setPixmap(QPixmap(Files::icon));
   inProgress->resize(90, 90);
   inProgress->move(window->width() - 144, window->height() - 144);
 };
@@ -169,9 +168,9 @@ void SyncController::run() {
   QProcess *process = new QProcess();
   QString linkedBook = getLinkedBook();
   if (linkedBook.isEmpty()) {
-    process->start(PATH + "cli", {"update", contentId, QString::number(percent)});
+    process->start(Files::cli, {"update", contentId, QString::number(percent)});
   } else {
-    process->start(PATH + "cli", {"update", contentId, QString::number(percent), linkedBook});
+    process->start(Files::cli, {"update", contentId, QString::number(percent), linkedBook});
   }
   QObject::connect(process, &QProcess::readyReadStandardOutput, this, &SyncController::readyReadStandardOutput);
   QObject::connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &SyncController::finished);
@@ -213,7 +212,8 @@ void SyncController::finished(int exitCode) {
 }
 
 void SyncController::closeDialog() {
-  if (dialog == nullptr) return;
+  if (dialog == nullptr)
+    return;
 
   dialog->close();
   dialog->deleteLater();

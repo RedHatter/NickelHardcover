@@ -43,4 +43,4 @@ When a book is open you should a new menu on the top right with 3 menu items.
 
 ## Uninstall
 
-To uninstall NickelHardcover simply create a file called `nickelhardcover_uninstall` on the root of you device and delete the folder `.adds/NickelHardcover`.
+To uninstall NickelHardcover simply create a file called `nickelhardcover_uninstall` on the root of you device and restart your Kobo.

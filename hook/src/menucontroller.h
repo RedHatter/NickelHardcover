@@ -23,7 +23,7 @@ public:
 private:
   MenuController(QObject *parent = nullptr);
 
-  QWidgetAction* addMenuItem(NickelTouchMenu *menu, QString label);
+  QWidgetAction *addMenuItem(NickelTouchMenu *menu, QString label);
 
   static MenuController *instance;
 };

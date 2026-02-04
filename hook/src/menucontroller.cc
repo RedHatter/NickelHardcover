@@ -1,8 +1,9 @@
 #include <NickelHook.h>
 #include <QLabel>
-#include <QWidgetAction>
 #include <QPixmap>
+#include <QWidgetAction>
 
+#include "files.h"
 #include "menucontroller.h"
 #include "search/searchdialog.h"
 #include "synccontroller.h"
@@ -22,8 +23,8 @@ MenuController::MenuController(QObject *parent) : QObject(parent) {};
 QWidget *MenuController::buildWidget(QWidget *parent) {
   TouchLabel *icon = reinterpret_cast<TouchLabel *>(calloc(1, 128));
   TouchLabel__constructor(icon, parent, 0);
-  TouchLabel__setSelectedPixmap(icon, QPixmap("/usr/share/NickelHardcover/icon-selected.png"));
-  TouchLabel__setDeselectedPixmap(icon, QPixmap("/usr/share/NickelHardcover/icon.png"));
+  TouchLabel__setSelectedPixmap(icon, QPixmap(Files::icon_selected));
+  TouchLabel__setDeselectedPixmap(icon, QPixmap(Files::icon));
 
   QWidget::connect(icon, SIGNAL(tapped(bool)), this, SLOT(showMenu(bool)));
 
@@ -34,22 +35,20 @@ void MenuController::showMenu(bool checked) {
   nh_log("MenuController::showMenu(%s)", checked ? "true" : "false");
 
   TouchLabel *icon = qobject_cast<TouchLabel *>(sender());
-  icon->setPixmap(QPixmap("/usr/share/NickelHardcover/icon-selected.png"));
+  icon->setPixmap(QPixmap(Files::icon_selected));
 
   NickelTouchMenu *menu = reinterpret_cast<NickelTouchMenu *>(calloc(1, 512));
   NickelTouchMenu__constructor(menu, icon, 0);
   NickelTouchMenu__showDecoration(menu, true);
   QWidget::connect(menu, &QMenu::aboutToHide, menu, &QWidget::deleteLater);
-  QWidget::connect(menu, &QMenu::aboutToHide, icon, [icon] {
-    icon->setPixmap(QPixmap("/usr/share/NickelHardcover/icon.png"));
-  });
+  QWidget::connect(menu, &QMenu::aboutToHide, icon, [icon] { icon->setPixmap(QPixmap(Files::icon)); });
 
   QWidgetAction *action = addMenuItem(menu, "Sync now");
   QObject::connect(action, &QAction::triggered, this, &MenuController::syncNow);
 
   menu->addSeparator();
 
-  SyncController* ctl = SyncController::getInstance();
+  SyncController *ctl = SyncController::getInstance();
 
   action = addMenuItem(menu, ctl->isEnabled() ? "Disable auto-sync" : "Enable auto-sync");
   QObject::connect(action, &QAction::triggered, this, &MenuController::toggleEnabled);
@@ -63,7 +62,7 @@ void MenuController::showMenu(bool checked) {
   menu->popup(icon->mapToGlobal(icon->geometry().bottomRight()) + QPoint(0, 6));
 }
 
-QWidgetAction* MenuController::addMenuItem(NickelTouchMenu *menu, QString label) {
+QWidgetAction *MenuController::addMenuItem(NickelTouchMenu *menu, QString label) {
   MenuTextItem *item = reinterpret_cast<MenuTextItem *>(calloc(1, 256));
   MenuTextItem__constructor(item, menu, false, true);
   MenuTextItem__setText(item, label);
@@ -89,14 +88,14 @@ void MenuController::syncNow(bool checked) {
 void MenuController::toggleEnabled(bool checked) {
   nh_log("MenuController::toggleEnabled(%s)", checked ? "true" : "false");
 
-  SyncController* ctl = SyncController::getInstance();
+  SyncController *ctl = SyncController::getInstance();
   ctl->setEnabled(!ctl->isEnabled());
 }
 
 void MenuController::linkBook(bool checked) {
   nh_log("MenuController::linkBook(%s)", checked ? "true" : "false");
 
-  SyncController* ctl = SyncController::getInstance();
+  SyncController *ctl = SyncController::getInstance();
 
   if (ctl->getLinkedBook().isEmpty()) {
     SearchDialogContent::showSearchDialog(ctl->query);

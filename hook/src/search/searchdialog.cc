@@ -11,6 +11,7 @@
 #include <QTimer>
 #include <QVBoxLayout>
 
+#include "../files.h"
 #include "../synccontroller.h"
 #include "bookrow.h"
 #include "searchdialog.h"
@@ -110,7 +111,7 @@ void SearchDialogContent::search(int page) {
   results->addWidget(loadingLabel, 1);
 
   QProcess *cli = new QProcess();
-  cli->start("/mnt/onboard/.adds/NickelHardcover/cli", {"search", QString::number(limit), QString::number(page), query});
+  cli->start(Files::cli, {"search", QString::number(limit), QString::number(page), query});
   QObject::connect(cli, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &SearchDialogContent::finished);
 }
 
