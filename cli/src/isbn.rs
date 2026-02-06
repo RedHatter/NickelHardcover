@@ -97,7 +97,7 @@ fn get_identifiers(oebps: &str) -> Vec<String> {
 }
 
 pub fn get_isbn(content_id: String) -> Vec<String> {
-  if content_id.starts_with("file://") {
+  let isbn = if content_id.starts_with("file://") {
     let file = File::open(Path::new(&content_id[7..]))
       .expect(&format!("Failed to open book file `{content_id}`"));
     let mut archive =
@@ -139,5 +139,11 @@ pub fn get_isbn(content_id: String) -> Vec<String> {
       .expect("Failed to find ISBN in row with content id `{content_id}` in SQLite database");
 
     vec![isbn]
+  };
+
+  if isbn.is_empty() {
+    panic!("Failed to find ISBN for book `{content_id}`");
   }
+
+  isbn
 }
