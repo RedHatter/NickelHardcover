@@ -20,9 +20,15 @@ build-hook:
 # Cross compile all code for Kobo
 build: build-hook build-cli
 
+# Use inkscape to export the svgs to png
+[group('package')]
+[working-directory: 'res']
+build-res:
+  inkscape --export-type=png $(pwd)/*.svg
+
 # Package files into installable KoboRoot.tgz
-[group('build')]
-package: build
+[group('package')]
+package: build build-res
   #!/usr/bin/env sh
   mkdir KoboRoot
   cd KoboRoot
@@ -36,6 +42,7 @@ package: build
   rm -r KoboRoot
 
 # Copy KoboRoot.tgz onto kobo device
+[group('package')]
 copy-package: package
   cp KoboRoot.tgz /media/$(whoami)/KOBOeReader/.kobo/
   sudo eject /media/$(whoami)/KOBOeReader/
@@ -55,7 +62,7 @@ format:
 clean:
   cd hook && make clean
   cd cli && cargo clean
-  rm KoboRoot.tgz
+  rm KoboRoot.tgz res/icon*.png res/*star*.png
 
 # Run `logread` over ssh
 logs:

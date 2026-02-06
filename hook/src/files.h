@@ -10,5 +10,9 @@ constexpr char const *cover1 = "./usr/share/NickelHardcover/cover1.png";
 constexpr char const *cover2 = "./usr/share/NickelHardcover/cover2.png";
 constexpr char const *cover3 = "./usr/share/NickelHardcover/cover3.png";
 constexpr char const *cover4 = "./usr/share/NickelHardcover/cover4.png";
+constexpr char const *right_star = "./usr/share/NickelHardcover/right-star.png";
+constexpr char const *right_star_selected = "./usr/share/NickelHardcover/right-star-selected.png";
+constexpr char const *left_star = "./usr/share/NickelHardcover/left-star.png";
+constexpr char const *left_star_selected = "./usr/share/NickelHardcover/left-star-selected.png";
 constexpr char const *share_directory = "./usr/share/NickelHardcover";
 } // namespace Files

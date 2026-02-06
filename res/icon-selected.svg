@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   height="90"
+   viewBox="0 -960 1800 1800"
+   width="90"
+   fill="#ffffff"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="icon-selected.svg"
+   inkscape:version="1.4.3 (fcd0343856, 2026-01-01)"
+   inkscape:export-filename="../res/icon-selected.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="8.566304"
+     inkscape:cx="35.838093"
+     inkscape:cy="56.208605"
+     inkscape:window-width="3374"
+     inkscape:window-height="1371"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg1" />
+  <circle
+     style="fill:#000000;stroke-width:15.7034"
+     id="path2"
+     cx="900"
+     cy="-60"
+     r="900" />
+  <path
+     d="M 562,460 Q 530.8,460 507.4,436.6 484,413.2 484,382 v -884 q 0,-31.2 23.4,-54.6 23.4,-23.4 54.6,-23.4 h 676 q 31.2,0 54.6,23.4 23.4,23.4 23.4,54.6 v 884 q 0,31.2 -23.4,54.6 -23.4,23.4 -54.6,23.4 z m 0,-78 h 676 v -884 h -78 v 345.8 L 1033.9,-229 907.8,-156.2 V -502 H 562 Z m 0,0 v -884 z m 345.8,-538.2 126.1,-72.8 126.1,72.8 -126.1,-72.8 z"
+     id="path1"
+     style="stroke-width:1.3" />
+</svg>
