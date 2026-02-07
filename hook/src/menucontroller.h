@@ -16,6 +16,7 @@ public Q_SLOTS:
   void syncNow(bool checked);
   void toggleEnabled(bool checked);
   void linkBook(bool checked);
+  void review(bool checked);
 
 public:
   QWidget *buildWidget(QWidget *parent = nullptr);

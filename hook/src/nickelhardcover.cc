@@ -34,8 +34,9 @@ void (*WirelessWorkflowManager__connectWireless)(WirelessWorkflowManager *_this,
 bool (*WirelessWorkflowManager__isInternetAccessible)(WirelessWorkflowManager *_this);
 
 void (*TouchLabel__constructor)(TouchLabel *_this, QWidget *parent, QFlags<Qt::WindowType>);
-void (*TouchLabel__setSelectedPixmap)(TouchLabel *_this, QPixmap const &image);
-void (*TouchLabel__setDeselectedPixmap)(TouchLabel *_this, QPixmap const &image);
+void (*TouchLabel__setHitStateEnabled)(TouchLabel *_this, bool enabled);
+
+void (*TouchCheckBox__constructor)(TouchCheckBox *_this, QWidget *parent);
 
 void (*NickelTouchMenu__constructor)(NickelTouchMenu *_this, QWidget *parent, int pos);
 void (*NickelTouchMenu__showDecoration)(NickelTouchMenu *_this, bool show);
@@ -59,12 +60,17 @@ void (*PagingFooter__setTotalPages)(PagingFooter *__this, int current);
 void (*PagingFooter__setCurrentPage)(PagingFooter *__this, int current);
 
 KeyboardReceiver *(*KeyboardReceiver__constructor)(KeyboardReceiver *__this, QLineEdit *parent, bool idk);
+KeyboardReceiver *(*KeyboardReceiver__TextEdit_constructor)(KeyboardReceiver *__this, QTextEdit *parent, bool idk);
 SearchKeyboardController *(*KeyboardFrame__createKeyboard)(KeyboardFrame *__this, int keyboardScript, QLocale locale);
 void (*SearchKeyboardController__setReceiver)(SearchKeyboardController *__this, KeyboardReceiver *receiver, bool idk);
+void (*SearchKeyboardController__setGoText)(SearchKeyboardController *__this, QString const &text);
 TouchLineEdit *(*TouchLineEdit__constructor)(TouchLineEdit *__this, QWidget *parent);
 
 SettingContainer *(*SettingContainer__constructor)(SettingContainer *__this, QWidget *parent);
 void (*SettingContainer__setShowBottomLine)(SettingContainer *__this, bool enabled);
+
+void (*TouchTextEdit__constructor)(TouchTextEdit *__this, QWidget *parent);
+void (*TouchTextEdit__setCustomPlaceholderText)(TouchTextEdit *__this, QString const &text);
 
 static struct nh_info NickelHardcover = (struct nh_info){.name = "NickelHardcover",
                                                          .desc = "Updates reading progress on Hardcover.app",
@@ -101,8 +107,9 @@ static struct nh_dlsym NickelHardcoverDlsym[] = {
   { .name = "_ZN15WirelessManager14sharedInstanceEv",                          .out = nh_symoutptr(WirelessManager__sharedInstance) },
 
   { .name = "_ZN10TouchLabelC1EP7QWidget6QFlagsIN2Qt10WindowTypeEE",           .out = nh_symoutptr(TouchLabel__constructor) },
-  { .name = "_ZN10TouchLabel17setSelectedPixmapERK7QPixmap",                   .out = nh_symoutptr(TouchLabel__setSelectedPixmap) },
-  { .name = "_ZN10TouchLabel19setDeselectedPixmapERK7QPixmap",                 .out = nh_symoutptr(TouchLabel__setDeselectedPixmap) },
+  { .name = "_ZN10TouchLabel18setHitStateEnabledEb",                           .out = nh_symoutptr(TouchLabel__setHitStateEnabled) },
+
+  { .name = "_ZN13TouchCheckBoxC1EP7QWidget",                                  .out = nh_symoutptr(TouchCheckBox__constructor) },
 
   { .name = "_ZN15NickelTouchMenuC1EP7QWidget18DecorationPosition",            .out = nh_symoutptr(NickelTouchMenu__constructor) },
   { .name = "_ZN15NickelTouchMenu14showDecorationEb",                          .out = nh_symoutptr(NickelTouchMenu__showDecoration) },
@@ -122,11 +129,16 @@ static struct nh_dlsym NickelHardcoverDlsym[] = {
 
   { .name = "_ZN13TouchLineEditC1EP7QWidget",                                  .out = nh_symoutptr(TouchLineEdit__constructor) },
   { .name = "_ZN16KeyboardReceiverC1EP9QLineEditb",                            .out = nh_symoutptr(KeyboardReceiver__constructor) },
+  { .name = "_ZN16KeyboardReceiverC1EP9QTextEditb",                            .out = nh_symoutptr(KeyboardReceiver__TextEdit_constructor) },
   { .name = "_ZN13KeyboardFrame14createKeyboardE14KeyboardScriptRK7QLocale",   .out = nh_symoutptr(KeyboardFrame__createKeyboard) },
   { .name = "_ZN24SearchKeyboardController11setReceiverEP16KeyboardReceiverb", .out = nh_symoutptr(SearchKeyboardController__setReceiver) },
+  { .name = "_ZN24SearchKeyboardController9setGoTextERK7QString",              .out = nh_symoutptr(SearchKeyboardController__setGoText) },
 
   { .name = "_ZN16SettingContainerC1EP7QWidget",                               .out = nh_symoutptr(SettingContainer__constructor) },
   { .name = "_ZN16SettingContainer17setShowBottomLineEb",                      .out = nh_symoutptr(SettingContainer__setShowBottomLine) },
+
+  { .name = "_ZN13TouchTextEditC1EP7QWidget",                                  .out = nh_symoutptr(TouchTextEdit__constructor) },
+  { .name = "_ZN13TouchTextEdit24setCustomPlaceholderTextERK7QString",         .out = nh_symoutptr(TouchTextEdit__setCustomPlaceholderText) },
 
   {0},
 };
@@ -161,7 +173,8 @@ extern "C" __attribute__((visibility("default"))) void _nh_set_volume(ReadingCon
 
   SyncController *syncController = SyncController::getInstance();
   syncController->setContentId(Content__getId(volume));
-  syncController->query = Content__getTitle(volume) + " " + Content__getAttribution(volume);
+  syncController->title = Content__getTitle(volume);
+  syncController->author = Content__getAttribution(volume);
 
   MainWindowController *mwc = MainWindowController__sharedInstance();
   QWidget *cv = MainWindowController__currentView(mwc);

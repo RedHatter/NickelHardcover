@@ -26,7 +26,8 @@ public:
   void setLastProgress(int value);
   int getLastProgress();
 
-  QString query;
+  QString title;
+  QString author;
   QNetworkAccessManager *network;
 
 public Q_SLOTS:

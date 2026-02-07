@@ -1,8 +1,10 @@
+#include <QCheckBox>
 #include <QDialog>
 #include <QFrame>
 #include <QLabel>
 #include <QLineEdit>
 #include <QMenu>
+#include <QTextEdit>
 #include <QWidget>
 
 typedef void MainWindowController;
@@ -35,11 +37,13 @@ extern void (*ComboButton__renameItem)(ComboButton *_this, int index, QString co
 
 typedef QWidget KeyboardReceiver;
 extern KeyboardReceiver *(*KeyboardReceiver__constructor)(KeyboardReceiver *__this, QLineEdit *parent, bool idk);
+extern KeyboardReceiver *(*KeyboardReceiver__TextEdit_constructor)(KeyboardReceiver *__this, QTextEdit *parent, bool idk);
 
 typedef QWidget KeyboardFrame;
 typedef QObject SearchKeyboardController;
 extern SearchKeyboardController *(*KeyboardFrame__createKeyboard)(KeyboardFrame *__this, int keyboardScript, QLocale locale);
 extern void (*SearchKeyboardController__setReceiver)(SearchKeyboardController *__this, KeyboardReceiver *receiver, bool idk);
+extern void (*SearchKeyboardController__setGoText)(SearchKeyboardController *__this, QString const &text);
 
 extern N3Dialog *(*N3DialogFactory__getDialog)(QWidget *content, bool idk);
 extern void (*N3Dialog__disableCloseButton)(N3Dialog *__this);
@@ -61,8 +65,10 @@ extern void (*SettingContainer__setShowBottomLine)(SettingContainer *__this, boo
 
 typedef QLabel TouchLabel;
 extern void (*TouchLabel__constructor)(TouchLabel *_this, QWidget *parent, QFlags<Qt::WindowType>);
-extern void (*TouchLabel__setSelectedPixmap)(TouchLabel *_this, QPixmap const &image);
-extern void (*TouchLabel__setDeselectedPixmap)(TouchLabel *_this, QPixmap const &image);
+extern void (*TouchLabel__setHitStateEnabled)(TouchLabel *_this, bool enabled);
+
+typedef QCheckBox TouchCheckBox;
+extern void (*TouchCheckBox__constructor)(TouchCheckBox *_this, QWidget *parent);
 
 typedef QMenu NickelTouchMenu;
 extern void (*NickelTouchMenu__constructor)(NickelTouchMenu *_this, QWidget *parent, int pos);
@@ -72,3 +78,7 @@ typedef QWidget MenuTextItem;
 extern void (*MenuTextItem__constructor)(MenuTextItem *_this, QWidget *parent, bool checkable, bool italic);
 extern void (*MenuTextItem__setText)(MenuTextItem *_this, QString const &text);
 extern void (*MenuTextItem__registerForTapGestures)(MenuTextItem *_this);
+
+typedef QFrame TouchTextEdit;
+extern void (*TouchTextEdit__constructor)(TouchTextEdit *__this, QWidget *parent);
+extern void (*TouchTextEdit__setCustomPlaceholderText)(TouchTextEdit *__this, QString const &text);
