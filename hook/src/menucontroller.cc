@@ -1,10 +1,12 @@
-#include <NickelHook.h>
 #include <QLabel>
 #include <QPixmap>
 #include <QWidgetAction>
 
+#include <NickelHook.h>
+
 #include "files.h"
 #include "menucontroller.h"
+#include "review/reviewdialog.h"
 #include "search/searchdialog.h"
 #include "synccontroller.h"
 
@@ -23,8 +25,8 @@ MenuController::MenuController(QObject *parent) : QObject(parent) {};
 QWidget *MenuController::buildWidget(QWidget *parent) {
   TouchLabel *icon = reinterpret_cast<TouchLabel *>(calloc(1, 128));
   TouchLabel__constructor(icon, parent, 0);
-  TouchLabel__setSelectedPixmap(icon, QPixmap(Files::icon_selected));
-  TouchLabel__setDeselectedPixmap(icon, QPixmap(Files::icon));
+  TouchLabel__setHitStateEnabled(icon, false);
+  icon->setPixmap(QPixmap(Files::icon));
 
   QWidget::connect(icon, SIGNAL(tapped(bool)), this, SLOT(showMenu(bool)));
 
@@ -57,6 +59,11 @@ void MenuController::showMenu(bool checked) {
 
   action = addMenuItem(menu, ctl->getLinkedBook().isEmpty() ? "Manually link book" : "Unlink book");
   QObject::connect(action, &QAction::triggered, this, &MenuController::linkBook);
+
+  menu->addSeparator();
+
+  action = addMenuItem(menu, "Write a review");
+  QObject::connect(action, &QAction::triggered, this, &MenuController::review);
 
   menu->ensurePolished();
   menu->popup(icon->mapToGlobal(icon->geometry().bottomRight()) + QPoint(0, 6));
@@ -98,8 +105,14 @@ void MenuController::linkBook(bool checked) {
   SyncController *ctl = SyncController::getInstance();
 
   if (ctl->getLinkedBook().isEmpty()) {
-    SearchDialogContent::showSearchDialog(ctl->query);
+    SearchDialogContent::showSearchDialog(ctl->title + " " + ctl->author);
   } else {
     ctl->setLinkedBook("");
   }
+}
+
+void MenuController::review(bool checked) {
+  nh_log("MenuController::review(%s)", checked ? "true" : "false");
+
+  ReviewDialogContent::showReviewDialog();
 }

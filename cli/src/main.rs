@@ -4,12 +4,112 @@ use std::panic;
 use serde_json::{Value, json};
 
 use crate::{
-  hardcover::update_or_insert_read_by_id, hardcover::update_or_insert_read_by_isbn, isbn::get_isbn,
+  hardcover::{
+    review::{get_review_by_book, get_review_by_isbn, update_review},
+    search::search_books,
+    update::{update_or_insert_read_by_book, update_or_insert_read_by_isbn},
+  },
+  isbn::get_isbn,
 };
 
-mod config;
 mod hardcover;
+
+mod config;
 mod isbn;
+
+use argh::FromArgs;
+
+/// The CLI for NickelHardcover.
+#[derive(FromArgs, PartialEq, Debug)]
+struct Arguments {
+  #[argh(subcommand)]
+  command: Commands,
+}
+
+#[derive(FromArgs, PartialEq, Debug)]
+#[argh(subcommand)]
+enum Commands {
+  Search(Search),
+  Update(Update),
+  Review(Review),
+  GetReview(GetReview),
+}
+
+/// Search for books.
+#[derive(FromArgs, PartialEq, Debug)]
+#[argh(subcommand, name = "search")]
+struct Search {
+  /// how many results per page
+  #[argh(option)]
+  limit: i64,
+
+  /// which page
+  #[argh(option)]
+  page: i64,
+
+  /// search query
+  #[argh(option)]
+  query: String,
+}
+
+/// Update read percentage.
+#[derive(FromArgs, PartialEq, Debug)]
+#[argh(subcommand, name = "update")]
+struct Update {
+  /// kobo book id or epub file path
+  #[argh(option)]
+  content_id: Option<String>,
+
+  /// hardcover.app book id
+  #[argh(option)]
+  book_id: Option<i64>,
+
+  /// read percentage
+  #[argh(option)]
+  value: i64,
+}
+
+/// Update user book review.
+#[derive(FromArgs, PartialEq, Debug)]
+#[argh(subcommand, name = "review")]
+struct Review {
+  /// kobo book id or epub file path
+  #[argh(option)]
+  content_id: Option<String>,
+
+  /// hardcover.app book id
+  #[argh(option)]
+  book_id: Option<i64>,
+
+  /// book rating
+  #[argh(option)]
+  rating: f32,
+
+  /// review body text
+  #[argh(option)]
+  text: String,
+
+  /// sponsored or ARC Review
+  #[argh(switch)]
+  sponsored: bool,
+
+  /// review contains spoilers
+  #[argh(switch)]
+  spoilers: bool,
+}
+
+/// Retrieve user book review.
+#[derive(FromArgs, PartialEq, Debug)]
+#[argh(subcommand, name = "get-review")]
+struct GetReview {
+  /// kobo book id or epub file path
+  #[argh(option)]
+  content_id: Option<String>,
+
+  /// hardcover.app book id
+  #[argh(option)]
+  book_id: Option<i64>,
+}
 
 #[tokio::main]
 async fn main() {
@@ -25,25 +125,10 @@ async fn main() {
     }));
   }
 
-  let mut args = env::args();
-  args.next();
-
-  let cmd = args.next();
-
-  match cmd.as_deref() {
-    Some("search") => {
-      let limit = args
-        .next()
-        .expect("`limit` is a required argument")
-        .parse::<i64>()
-        .expect("`limit` must be a number");
-      let page = args
-        .next()
-        .expect("`page` is a required argument")
-        .parse::<i64>()
-        .expect("`page` must be a number");
-      let query = args.next().expect("`query` is a required argument");
-      let results = hardcover::search_books(query, limit, page).await;
+  let args: Arguments = argh::from_env();
+  match args.command {
+    Commands::Search(args) => {
+      let results = search_books(args.query, args.limit, args.page).await;
       let hits = results
         .get("hits")
         .and_then(Value::as_array)
@@ -79,46 +164,69 @@ async fn main() {
       let json = json!({
         "results": hits,
         "page": results.get("page"),
-        "total": results.get("found").and_then(Value::as_i64).unwrap_or(limit) / limit
+        "total": results.get("found").and_then(Value::as_i64).unwrap_or(args.limit) / args.limit
       });
 
       println!("{}", json.to_string());
     }
-    Some("update") => {
-      let content_id = args.next().expect("`content_id` is a required argument");
-      let percent = args
-        .next()
-        .expect("`percent` is a required argument")
-        .parse::<i64>()
-        .expect("`percent` must be a number");
-      let book_id = args.next();
-
-      match book_id {
-        Some(id) => {
-          println!(
-            "Running cli with content id `{content_id}`, book `{id}` and percent `{percent}`"
-          );
-          update_or_insert_read_by_id(
-            percent,
-            id.parse::<i64>().expect("`book_id` must be a number"),
-          )
-          .await;
-        }
-        None => {
-          println!("Running cli with content id `{content_id}` and percent `{percent}`");
-          let isbn = get_isbn(content_id.clone());
-          println!(
-            "Found ISBN `{}` for content id `{content_id}`",
-            isbn.join(", ")
-          );
-          update_or_insert_read_by_isbn(percent, isbn).await;
-        }
+    Commands::Update(args) => {
+      if let Some(content_id) = args.content_id {
+        println!(
+          "Running cli with content id `{content_id}` and percent `{}`",
+          args.value
+        );
+        let isbn = get_isbn(content_id.clone());
+        println!(
+          "Found ISBN `{}` for content id `{content_id}`",
+          isbn.join(", ")
+        );
+        update_or_insert_read_by_isbn(args.value, isbn).await;
+      } else if let Some(book_id) = args.book_id {
+        println!(
+          "Running cli with book `{book_id}` and percent `{}`",
+          args.value
+        );
+        update_or_insert_read_by_book(args.value, book_id).await;
+      } else {
+        eprintln!("One of --content-id or --book-id is required");
       }
     }
-    _ => {
-      println!("Usage:");
-      println!("  cli search <limit> <query>");
-      println!("  cli update <content_id> <percent> [book_id]");
+    Commands::Review(args) => {
+      let review = if let Some(content_id) = args.content_id {
+        let isbn = get_isbn(content_id.clone());
+        println!(
+          "Found ISBN `{}` for content id `{content_id}`",
+          isbn.join(", ")
+        );
+
+        get_review_by_isbn(isbn).await
+      } else if let Some(book_id) = args.book_id {
+        get_review_by_book(book_id).await
+      } else {
+        panic!("One of --content-id or --book-id is required");
+      };
+
+      println!("Found user book `{}`", review.user_book_id);
+
+      update_review(
+        args.rating,
+        args.text,
+        args.spoilers,
+        args.sponsored,
+        review.user_book_id,
+      )
+      .await;
+    }
+    Commands::GetReview(args) => {
+      let review = if let Some(content_id) = args.content_id {
+        get_review_by_isbn(get_isbn(content_id)).await
+      } else if let Some(book_id) = args.book_id {
+        get_review_by_book(book_id).await
+      } else {
+        panic!("One of --content-id or --book-id is required");
+      };
+
+      println!("{}", json!(review));
     }
   }
 }

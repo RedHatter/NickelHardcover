@@ -1,4 +1,3 @@
-#include <NickelHook.h>
 #include <QApplication>
 #include <QDialog>
 #include <QJsonArray>
@@ -10,6 +9,8 @@
 #include <QSignalMapper>
 #include <QTimer>
 #include <QVBoxLayout>
+
+#include <NickelHook.h>
 
 #include "../files.h"
 #include "../synccontroller.h"
@@ -40,8 +41,7 @@ void SearchDialogContent::showSearchDialog(QString query) {
     dlg->deleteLater();
   });
 
-  KeyboardFrame *frame = N3Dialog__keyboardFrame(dlg);
-  content->setKeyboardFrame(frame);
+  content->setKeyboardFrame(N3Dialog__keyboardFrame(dlg));
 
   dlg->show();
   content->commit();
@@ -111,7 +111,7 @@ void SearchDialogContent::search(int page) {
   results->addWidget(loadingLabel, 1);
 
   QProcess *cli = new QProcess();
-  cli->start(Files::cli, {"search", QString::number(limit), QString::number(page), query});
+  cli->start(Files::cli, {"search", "--limit", QString::number(limit), "--page", QString::number(page), "--query", query});
   QObject::connect(cli, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &SearchDialogContent::finished);
 }
 

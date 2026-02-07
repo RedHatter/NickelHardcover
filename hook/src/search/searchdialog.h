@@ -3,8 +3,6 @@
 
 #include "../nickelhardcover.h"
 
-N3Dialog *createSearchDialog(QString query);
-
 class SearchDialogContent : public QWidget {
   Q_OBJECT
 

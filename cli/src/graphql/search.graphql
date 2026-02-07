@@ -1,0 +1,5 @@
+query SearchBooks($query: String!, $limit: Int!, $page: Int!) {
+	search(query: $query, query_type: "Book", per_page: $limit, page: $page) {
+		results
+	}
+}

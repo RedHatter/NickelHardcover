@@ -42,6 +42,8 @@ void SyncController::setContentId(QString value) {
   key = value.replace('/', '-').replace('\\', '-');
 }
 
+QString SyncController::getContentId() { return contentId; }
+
 bool SyncController::isEnabled() { return settings->value(key + "/enabled", false).toBool(); }
 
 void SyncController::setEnabled(bool value) { settings->setValue(key + "/enabled", value); }
@@ -168,9 +170,9 @@ void SyncController::run() {
   QProcess *process = new QProcess();
   QString linkedBook = getLinkedBook();
   if (linkedBook.isEmpty()) {
-    process->start(Files::cli, {"update", contentId, QString::number(percent)});
+    process->start(Files::cli, {"update", "--content-id", contentId, "--value", QString::number(percent)});
   } else {
-    process->start(Files::cli, {"update", contentId, QString::number(percent), linkedBook});
+    process->start(Files::cli, {"update", "--book-id", linkedBook, "--value", QString::number(percent)});
   }
   QObject::connect(process, &QProcess::readyReadStandardOutput, this, &SyncController::readyReadStandardOutput);
   QObject::connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &SyncController::finished);

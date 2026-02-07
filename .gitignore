@@ -6,3 +6,4 @@
 cli/target
 KoboRoot.tgz
 files
+res/*.png
