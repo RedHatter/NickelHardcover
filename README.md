@@ -20,9 +20,10 @@ In order to function NickelHardcover needs to be configured with an authorizatio
 1. Visit [hardcover.app/account/api](https://hardcover.app/account/api) and sign-in
 2. Copy the contents of the text box starting with "Bearer"
 ![Authorization token](https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/authorization_token.png?raw=true)
-3. Connect your Kobo and edit the file `.adds/NickelHardcover/config.ini`
+3. Connect your Kobo and edit the file `.adds/NickelHardcover/config_example.ini`
 4. On the first line, labeled "authorization", remove the starting semicolon and paste the token copied in step 2 after the the equals sign
-5. Save the file and eject/disconnect your Kobo
+5. Save the file as `config.ini`
+6. Eject/disconnect your Kobo
 
 Once edited the configuration file should look similar to the following.
 ```
@@ -36,11 +37,11 @@ frequency = 15
 ![Book overflow menu](https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/menu.png?raw=true)
 
 When a book is open you should a new menu on the top right with 3 menu items.
-* **Sync now**  
+* **Sync now**
   Triggers an update to the reading progress on Hardcover.app
-* **Enable auto-sync**  
+* **Enable auto-sync**
   Enables automatically updating the reading progress every 15 minutes (configurable)
-* **Manually link book**  
+* **Manually link book**
   NickelHardcover attempts to determine what book to update on Hardcover.app using the ISBN of the open book. If that fails this option allows you to manually select which book to update.
 
 
