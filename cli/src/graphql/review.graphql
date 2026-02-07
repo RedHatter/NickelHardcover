@@ -1,35 +1,25 @@
-fragment Review on user_books {
-	id
-	rating
-	review_has_spoilers
-	review_slate
-	reviewed_at
-	sponsored_review
-}
-
-query GetUserBookByIsbn($isbn: [String!]!, $user_id: Int!) {
+query GetUserBookReview($isbn: [String!]!, $book_id: Int!, $user_id: Int!) {
 	editions(
 		where: {
 			_or: [
 				{ asin: { _in: $isbn } }
 				{ isbn_10: { _in: $isbn } }
 				{ isbn_13: { _in: $isbn } }
+				{ book_id: { _eq: $book_id } }
 			]
 		}
+		limit: 1
 	) {
 		book {
-			user_books(where: { user_id: { _eq: $user_id } }) {
-				...Review
+			user_books(where: { user_id: { _eq: $user_id } }, limit: 1) {
+				id
+				rating
+				review_has_spoilers
+				review_slate
+				reviewed_at
+				sponsored_review
 			}
 		}
-	}
-}
-
-query GetUserBookByBook($book_id: Int!, $user_id: Int!) {
-	user_books(
-		where: { user_id: { _eq: $user_id }, book_id: { _eq: $book_id } }
-	) {
-		...Review
 	}
 }
 

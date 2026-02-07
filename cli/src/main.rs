@@ -5,7 +5,7 @@ use serde_json::{Value, json};
 
 use crate::{
   hardcover::{
-    review::{get_review_by_book, get_review_by_isbn, update_review},
+    review::{get_review, update_review},
     search::search_books,
     update::{update_or_insert_read_by_book, update_or_insert_read_by_isbn},
   },
@@ -192,19 +192,15 @@ async fn main() {
       }
     }
     Commands::Review(args) => {
-      let review = if let Some(content_id) = args.content_id {
-        let isbn = get_isbn(content_id.clone());
-        println!(
-          "Found ISBN `{}` for content id `{content_id}`",
-          isbn.join(", ")
-        );
-
-        get_review_by_isbn(isbn).await
-      } else if let Some(book_id) = args.book_id {
-        get_review_by_book(book_id).await
-      } else {
+      if args.content_id.is_none() && args.book_id.is_none() {
         panic!("One of --content-id or --book-id is required");
-      };
+      }
+
+      let review = get_review(
+        args.content_id.map(get_isbn).unwrap_or(Vec::new()),
+        args.book_id,
+      )
+      .await;
 
       println!("Found user book `{}`", review.user_book_id);
 
@@ -218,13 +214,15 @@ async fn main() {
       .await;
     }
     Commands::GetReview(args) => {
-      let review = if let Some(content_id) = args.content_id {
-        get_review_by_isbn(get_isbn(content_id)).await
-      } else if let Some(book_id) = args.book_id {
-        get_review_by_book(book_id).await
-      } else {
+      if args.content_id.is_none() && args.book_id.is_none() {
         panic!("One of --content-id or --book-id is required");
-      };
+      }
+
+      let review = get_review(
+        args.content_id.map(get_isbn).unwrap_or(Vec::new()),
+        args.book_id,
+      )
+      .await;
 
       println!("{}", json!(review));
     }

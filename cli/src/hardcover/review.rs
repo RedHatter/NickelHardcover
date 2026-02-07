@@ -20,16 +20,7 @@ pub struct GetUserId;
   response_derives = "Serialize,Debug",
   variables_derives = "Deserialize"
 )]
-pub struct GetUserBookByIsbn;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-  schema_path = "src/graphql/schema.graphql",
-  query_path = "src/graphql/review.graphql",
-  response_derives = "Serialize,Debug",
-  variables_derives = "Deserialize"
-)]
-pub struct GetUserBookByBook;
+pub struct GetUserBookReview;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -50,7 +41,7 @@ pub struct Review {
   pub sponsored_review: bool,
 }
 
-pub async fn get_review_by_isbn(isbn: Vec<String>) -> Review {
+pub async fn get_review(isbn: Vec<String>, book_id: Option<i64>) -> Review {
   let user_id = send_request::<get_user_id::Variables, get_user_id::ResponseData>(
     GetUserId::build_query(get_user_id::Variables {}),
   )
@@ -60,10 +51,11 @@ pub async fn get_review_by_isbn(isbn: Vec<String>) -> Review {
   .expect("Failed to find Hardcover.app user")
   .id;
 
-  let res = send_request::<get_user_book_by_isbn::Variables, get_user_book_by_isbn::ResponseData>(
-    GetUserBookByIsbn::build_query(get_user_book_by_isbn::Variables {
+  let res = send_request::<get_user_book_review::Variables, get_user_book_review::ResponseData>(
+    GetUserBookReview::build_query(get_user_book_review::Variables {
       user_id,
       isbn: isbn.clone(),
+      book_id: book_id.unwrap_or(0),
     }),
   )
   .await;
@@ -71,51 +63,18 @@ pub async fn get_review_by_isbn(isbn: Vec<String>) -> Review {
     .editions
     .first()
     .expect(&format!(
-      "Failed to find edition with ASIN/ISBN `{}`",
-      isbn.join(", ")
+      "Failed to find edition with ASIN/ISBN `{}` or book_id `{}`",
+      isbn.join(", "),
+      book_id.unwrap_or(0)
     ))
     .book
     .user_books
     .first()
     .expect(&format!(
-      "Failed to find user book with ASIN/ISBN `{}`",
-      isbn.join(", ")
+      "Failed to find user book with ASIN/ISBN `{}` or book_id `{}`",
+      isbn.join(", "),
+      book_id.unwrap_or(0)
     ));
-
-  Review {
-    user_book_id: user_book.id,
-    rating: user_book.rating,
-    review_has_spoilers: user_book.review_has_spoilers,
-    review_text: user_book
-      .review_slate
-      .get("document")
-      .map(reduce_slate)
-      .unwrap_or(String::new())
-      .trim()
-      .to_string(),
-    reviewed_at: user_book.reviewed_at.clone(),
-    sponsored_review: user_book.sponsored_review,
-  }
-}
-
-pub async fn get_review_by_book(book_id: i64) -> Review {
-  let user_id = send_request::<get_user_id::Variables, get_user_id::ResponseData>(
-    GetUserId::build_query(get_user_id::Variables {}),
-  )
-  .await
-  .me
-  .first()
-  .expect("Failed to find Hardcover.app user")
-  .id;
-
-  let res = send_request::<get_user_book_by_book::Variables, get_user_book_by_book::ResponseData>(
-    GetUserBookByBook::build_query(get_user_book_by_book::Variables { user_id, book_id }),
-  )
-  .await;
-  let user_book = res
-    .user_books
-    .first()
-    .expect(&format!("Failed to find user book for book `{book_id}`"));
 
   Review {
     user_book_id: user_book.id,
