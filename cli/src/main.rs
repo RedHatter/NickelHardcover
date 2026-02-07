@@ -7,7 +7,7 @@ use crate::{
   hardcover::{
     review::{get_review, update_review},
     search::search_books,
-    update::{update_or_insert_read_by_book, update_or_insert_read_by_isbn},
+    update::update_or_insert_read,
   },
   isbn::get_isbn,
 };
@@ -170,26 +170,16 @@ async fn main() {
       println!("{}", json.to_string());
     }
     Commands::Update(args) => {
-      if let Some(content_id) = args.content_id {
-        println!(
-          "Running cli with content id `{content_id}` and percent `{}`",
-          args.value
-        );
-        let isbn = get_isbn(content_id.clone());
-        println!(
-          "Found ISBN `{}` for content id `{content_id}`",
-          isbn.join(", ")
-        );
-        update_or_insert_read_by_isbn(args.value, isbn).await;
-      } else if let Some(book_id) = args.book_id {
-        println!(
-          "Running cli with book `{book_id}` and percent `{}`",
-          args.value
-        );
-        update_or_insert_read_by_book(args.value, book_id).await;
-      } else {
-        eprintln!("One of --content-id or --book-id is required");
+      if args.content_id.is_none() && args.book_id.is_none() {
+        panic!("One of --content-id or --book-id is required");
       }
+
+      update_or_insert_read(
+        args.content_id.map(get_isbn).unwrap_or(Vec::new()),
+        args.book_id.unwrap_or(0),
+        args.value,
+      )
+      .await;
     }
     Commands::Review(args) => {
       if args.content_id.is_none() && args.book_id.is_none() {
@@ -198,7 +188,7 @@ async fn main() {
 
       let review = get_review(
         args.content_id.map(get_isbn).unwrap_or(Vec::new()),
-        args.book_id,
+        args.book_id.unwrap_or(0),
       )
       .await;
 
@@ -220,7 +210,7 @@ async fn main() {
 
       let review = get_review(
         args.content_id.map(get_isbn).unwrap_or(Vec::new()),
-        args.book_id,
+        args.book_id.unwrap_or(0),
       )
       .await;
 

@@ -98,21 +98,16 @@ fn get_identifiers(oebps: &str) -> Vec<String> {
 
 pub fn get_isbn(content_id: String) -> Vec<String> {
   let isbn = if content_id.starts_with("file://") {
-    let file = File::open(Path::new(&content_id[7..]))
-      .expect(&format!("Failed to open book file `{content_id}`"));
-    let mut archive =
-      ZipArchive::new(file).expect("Failed to open book file `{content_id}` as archive");
+    let file = File::open(Path::new(&content_id[7..])).expect(&format!("Failed to open book file `{content_id}`"));
+    let mut archive = ZipArchive::new(file).expect("Failed to open book file `{content_id}` as archive");
 
     let mut manifest = String::new();
     archive
       .by_name("META-INF/container.xml")
-      .expect(&format!(
-        "Failed to read container manifest in `{content_id}`"
-      ))
+      .expect(&format!("Failed to read container manifest in `{content_id}`"))
       .read_to_string(&mut manifest)
       .unwrap();
-    let oebps_path =
-      get_oebps_path(&manifest).expect(&format!("Failed to find oebps rootfile in `{content_id}`"));
+    let oebps_path = get_oebps_path(&manifest).expect(&format!("Failed to find oebps rootfile in `{content_id}`"));
 
     let mut oebps = String::new();
     archive
@@ -133,9 +128,7 @@ pub fn get_isbn(content_id: String) -> Vec<String> {
       .query_map([&content_id], |row| row.get(0))
       .expect("Failed to query rows from SQLite database")
       .next()
-      .expect(&format!(
-        "Failed to find content id `{content_id}` in SQLite database",
-      ))
+      .expect(&format!("Failed to find content id `{content_id}` in SQLite database",))
       .expect("Failed to find ISBN in row with content id `{content_id}` in SQLite database");
 
     vec![isbn]

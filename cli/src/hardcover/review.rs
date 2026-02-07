@@ -41,21 +41,23 @@ pub struct Review {
   pub sponsored_review: bool,
 }
 
-pub async fn get_review(isbn: Vec<String>, book_id: Option<i64>) -> Review {
-  let user_id = send_request::<get_user_id::Variables, get_user_id::ResponseData>(
-    GetUserId::build_query(get_user_id::Variables {}),
-  )
+pub async fn get_review(isbn: Vec<String>, book_id: i64) -> Review {
+  let user_id = send_request::<get_user_id::Variables, get_user_id::ResponseData>(GetUserId::build_query(
+    get_user_id::Variables {},
+  ))
   .await
   .me
   .first()
   .expect("Failed to find Hardcover.app user")
   .id;
 
+  let all_isbns = isbn.join(", ");
+
   let res = send_request::<get_user_book_review::Variables, get_user_book_review::ResponseData>(
     GetUserBookReview::build_query(get_user_book_review::Variables {
       user_id,
       isbn: isbn.clone(),
-      book_id: book_id.unwrap_or(0),
+      book_id,
     }),
   )
   .await;
@@ -63,17 +65,13 @@ pub async fn get_review(isbn: Vec<String>, book_id: Option<i64>) -> Review {
     .editions
     .first()
     .expect(&format!(
-      "Failed to find edition with ASIN/ISBN `{}` or book_id `{}`",
-      isbn.join(", "),
-      book_id.unwrap_or(0)
+      "Failed to find edition with ASIN/ISBN `{all_isbns}` or book_id `{book_id}`",
     ))
     .book
     .user_books
     .first()
     .expect(&format!(
-      "Failed to find user book with ASIN/ISBN `{}` or book_id `{}`",
-      isbn.join(", "),
-      book_id.unwrap_or(0)
+      "Failed to find user book with ASIN/ISBN `{all_isbns}` or book_id `{book_id}`",
     ));
 
   Review {
@@ -117,8 +115,8 @@ pub async fn update_review(
     })
     .collect();
 
-  let res = send_request::<update_review::Variables, update_review::ResponseData>(
-    UpdateReview::build_query(update_review::Variables {
+  let res = send_request::<update_review::Variables, update_review::ResponseData>(UpdateReview::build_query(
+    update_review::Variables {
       rating: if rating == 0.0 { None } else { Some(rating) },
       review_slate: serde_json::json!({
         "document": {
@@ -133,8 +131,8 @@ pub async fn update_review(
       reviewed_at: Local::now().format("%Y-%m-%d").to_string(),
       review_has_spoilers,
       user_book_id,
-    }),
-  )
+    },
+  ))
   .await;
 
   if let Some(error) = res.update_user_book.and_then(|res| res.error) {
@@ -144,11 +142,7 @@ pub async fn update_review(
 
 fn reduce_slate(data: &Value) -> String {
   return match data {
-    Value::Array(array) => array
-      .iter()
-      .map(reduce_slate)
-      .collect::<Vec<String>>()
-      .join(""),
+    Value::Array(array) => array.iter().map(reduce_slate).collect::<Vec<String>>().join(""),
     Value::Object(map) => {
       let mut str = match map.get("type").and_then(Value::as_str) {
         Some("paragraph") => "\n\n".to_string(),
@@ -156,11 +150,7 @@ fn reduce_slate(data: &Value) -> String {
       };
 
       let value = match map.get("object").and_then(Value::as_str) {
-        Some("text") => map
-          .get("text")
-          .and_then(Value::as_str)
-          .unwrap_or("")
-          .to_string(),
+        Some("text") => map.get("text").and_then(Value::as_str).unwrap_or("").to_string(),
         _ => map
           .iter()
           .map(|(_, value)| reduce_slate(value))

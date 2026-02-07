@@ -13,9 +13,9 @@ use super::utils::{jsonb, send_request};
 pub struct SearchBooks;
 
 pub async fn search_books(query: String, limit: i64, page: i64) -> Map<String, Value> {
-  return send_request::<search_books::Variables, search_books::ResponseData>(
-    SearchBooks::build_query(search_books::Variables { query, limit, page }),
-  )
+  return send_request::<search_books::Variables, search_books::ResponseData>(SearchBooks::build_query(
+    search_books::Variables { query, limit, page },
+  ))
   .await
   .search
   .expect("Failed to find field `search` in Hardcover.app results")

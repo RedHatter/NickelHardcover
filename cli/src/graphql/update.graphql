@@ -4,68 +4,62 @@ query GetUserId {
 	}
 }
 
-query GetEdition($isbn: [String!]!, $user_id: Int!) {
+query GetEdition($isbn: [String!]!, $book_id: Int!, $user_id: Int!) {
 	editions(
 		where: {
 			_or: [
 				{ asin: { _in: $isbn } }
 				{ isbn_10: { _in: $isbn } }
 				{ isbn_13: { _in: $isbn } }
+				{ book_id: { _eq: $book_id } }
 			]
 		}
+		limit: 1
 	) {
-		id
-		pages
 		book {
 			id
 			pages
-			user_books(where: { user_id: { _eq: $user_id } }) {
+			default_ebook_edition {
 				id
-				status_id
-				user_book_reads(
-					order_by: { started_at: desc }
-					limit: 1
-					where: { finished_at: { _is_null: true } }
-				) {
-					id
-					started_at
-				}
-			}
-		}
-	}
-}
-
-query GetBook($book_id: Int!, $user_id: Int!) {
-	books(where: { id: { _eq: $book_id } }) {
-		id
-		pages
-		user_books(where: { user_id: { _eq: $user_id } }) {
-			id
-			status_id
-			edition {
 				pages
-				id
 			}
-			user_book_reads(
-				where: { finished_at: { _is_null: true } }
-				order_by: { started_at: desc }
+			default_cover_edition {
+				id
+				pages
+			}
+			editions(
+				where: {
+					_or: [
+						{ asin: { _in: $isbn } }
+						{ isbn_10: { _in: $isbn } }
+						{ isbn_13: { _in: $isbn } }
+					]
+				}
 				limit: 1
 			) {
 				id
-				started_at
+				pages
+			}
+			user_books(where: { user_id: { _eq: $user_id } }) {
+				id
+				status_id
 				edition {
-					id
 					pages
+					id
+				}
+				user_book_reads(
+					where: { finished_at: { _is_null: true } }
+					order_by: { started_at: desc }
+					limit: 1
+				) {
+					id
+					started_at
+					edition {
+						id
+						pages
+					}
 				}
 			}
-		}
-		default_ebook_edition {
-			id
-			pages
-		}
-		default_cover_edition {
-			id
-			pages
 		}
 	}
 }

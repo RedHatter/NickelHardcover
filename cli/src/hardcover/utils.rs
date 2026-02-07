@@ -13,9 +13,7 @@ pub type timestamp = String;
 
 static USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"),);
 
-pub async fn send_request<T: Serialize, R: for<'a> Deserialize<'a> + std::fmt::Debug>(
-  request_body: QueryBody<T>,
-) -> R {
+pub async fn send_request<T: Serialize, R: for<'a> Deserialize<'a> + std::fmt::Debug>(request_body: QueryBody<T>) -> R {
   assert!(
     !CONFIG.authorization.is_empty(),
     "Please set the Hardcover.app authorization token in `.adds/nickelpagesync/config.ini`"
@@ -44,7 +42,5 @@ pub async fn send_request<T: Serialize, R: for<'a> Deserialize<'a> + std::fmt::D
     );
   }
 
-  res
-    .data
-    .expect("Missing field `data` on Hardcover.app response")
+  res.data.expect("Missing field `data` on Hardcover.app response")
 }
