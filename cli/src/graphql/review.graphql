@@ -1,0 +1,57 @@
+fragment Review on user_books {
+	id
+	rating
+	review_has_spoilers
+	review_slate
+	reviewed_at
+	sponsored_review
+}
+
+query GetUserBookByIsbn($isbn: [String!]!, $user_id: Int!) {
+	editions(
+		where: {
+			_or: [
+				{ asin: { _in: $isbn } }
+				{ isbn_10: { _in: $isbn } }
+				{ isbn_13: { _in: $isbn } }
+			]
+		}
+	) {
+		book {
+			user_books(where: { user_id: { _eq: $user_id } }) {
+				...Review
+			}
+		}
+	}
+}
+
+query GetUserBookByBook($book_id: Int!, $user_id: Int!) {
+	user_books(
+		where: { user_id: { _eq: $user_id }, book_id: { _eq: $book_id } }
+	) {
+		...Review
+	}
+}
+
+mutation UpdateReview(
+	$rating: numeric
+	$review_slate: jsonb!
+	$sponsored_review: Boolean!
+	$reviewed_at: date!
+	$review_has_spoilers: Boolean!
+	$user_book_id: Int!
+) {
+	update_user_book(
+		id: $user_book_id
+		object: {
+			rating: $rating
+			review_slate: $review_slate
+			sponsored_review: $sponsored_review
+			reviewed_at: $reviewed_at
+			review_has_spoilers: $review_has_spoilers
+		}
+	) {
+		id
+		error
+	}
+}
