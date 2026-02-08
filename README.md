@@ -1,9 +1,17 @@
 # NickelHardcover
-Sync reading progress from Kobo eReaders to [Hardcover.app](https://hardcover.app/).
+Hardcover.app integration for Kobo eReaders [Hardcover.app](https://hardcover.app/).
 
 **Warning: Firmware version 5.x is not supported yet.**
 
 ![Updating reading progress](https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/updating.png?raw=true)
+![Review dialog](https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/review.png?raw=true)
+![Hardcover menu](https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/menu.png?raw=true)
+![Search dialog](https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/search.png?raw=true)
+
+## Features
+
+* Automatically update reading progress on Hardcover.app
+* Review and rate books
 
 ## Installation
 
@@ -12,6 +20,7 @@ Sync reading progress from Kobo eReaders to [Hardcover.app](https://hardcover.ap
 3. Eject/disconnect your Kobo, and it should automatically reboot
 
 ## Configuration
+
 In order to function NickelHardcover needs to be configured with an authorization token from your Hardcover.app account.
 
 1. Visit [hardcover.app/account/api](https://hardcover.app/account/api) and sign-in
@@ -31,15 +40,15 @@ frequency = 15
 
 ## Usage
 
-![Book overflow menu](https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/menu.png?raw=true)
-
-When a book is open you should a new menu on the top right with 3 menu items.
-* **Sync now**
+When a book is open you should a new menu on the top right with 4 menu items.
+* **Sync now**  
   Triggers an update to the reading progress on Hardcover.app
-* **Enable auto-sync**
+* **Enable auto-sync**  
   Enables automatically updating the reading progress every 15 minutes (configurable)
-* **Manually link book**
+* **Manually link book**  
   NickelHardcover attempts to determine what book to update on Hardcover.app using the ISBN of the open book. If that fails this option allows you to manually select which book to update.
+* **Write a review**  
+  Review and rate the current book.
 
 
 ## Uninstall
