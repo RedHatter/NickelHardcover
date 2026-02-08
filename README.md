@@ -27,11 +27,11 @@ In order to function NickelHardcover needs to be configured with an authorizatio
 2. Copy the contents of the text box starting with "Bearer"
 ![Authorization token](https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/authorization_token.png?raw=true)
 3. Connect your Kobo and edit the file `.adds/NickelHardcover/config_example.ini`
-4. On the first line, labeled "authorization", remove the starting semicolon and paste the token copied in step 2 after the the equals sign
+4. On the first line, labeled "authorization", remove the starting semicolon and paste the token (copied in step 2) after the the equals sign
 5. Save the file as `config.ini`
 6. Eject/disconnect your Kobo
 
-Once edited the configuration file should look similar to the following.
+Once the above steps are done you should end up with a file named `config.ini` with contents similar to the following.
 ```
 authorization = Bearer MrDIPsXoT02KrqumxgFsZ.dDxWNFxqotRGJcFvNm68mergYHi2uWSEobGa4S2P5PUMr6Gj8P4SV9hUq4dl2PDJJoggxFuSFf1MQEm8BM1a7mb6IcCokea4x1V9POQqD6bpBH0pJ5nHQVRpKLfqVOzKWpAcLS4OOpZZSlwPJIBisZMaVsJOYe6ujxgzIX5V1sDTWRtq1r4IapP0r9q7oVrq5rZjz9GrGT1rl87nnh91Plncr7u2zLMsfxK1PHGkArbPt1PZ7VL7jiTM2JsrhuV7kHawAxCZHfxONQw4wCVdRssDUhL4JDnljDk2qvMURPfkY4sctYyWturhAKjdwmuvQmfOqoXeT1sxi8qoUDsnQaJ9VexX199cYHcM2wxQn2LOYSa3OtKQ6SKCP4YR1WKKrGn4UBwebnkbZKVmDy8YFLu9h7WwfQgl8QvDT7d4LKXYCRC4ZhHoFlF27VQrLpqaglSQdDInkyUy0Z8MnDh7mxzpKy4O9WQftm2NkqxZEW4z2wmRTeVbdVyo2DdLT82K7
 sqlite_path = /mnt/onboard/.kobo/KoboReader.sqlite
@@ -40,7 +40,7 @@ frequency = 15
 
 ## Usage
 
-When a book is open you should a new menu on the top right with 4 menu items.
+When a book is open you should find a new menu on the top right with 4 menu items.
 * **Sync now**  
   Triggers an update to the reading progress on Hardcover.app
 * **Enable auto-sync**  
@@ -50,7 +50,6 @@ When a book is open you should a new menu on the top right with 4 menu items.
 * **Write a review**  
   Review and rate the current book.
 
-
 ## Uninstall
 
-To uninstall NickelHardcover simply create a file called `nickelhardcover_uninstall` on the root of you device and restart your Kobo.
+To uninstall NickelHardcover simply create a file called `nickelhardcover_uninstall` on the root of you device and manually restart your Kobo.
