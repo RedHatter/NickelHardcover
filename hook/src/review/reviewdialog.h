@@ -10,6 +10,7 @@ public:
   static void showReviewDialog();
 
 public Q_SLOTS:
+  void networkConnected();
   void commit();
   void buildDialog();
   void buildContent(int exitCode);

@@ -20,7 +20,19 @@
 void SearchDialogContent::showSearchDialog(QString query) {
   SearchDialogContent *content = new SearchDialogContent(query);
 
-  N3Dialog *dlg = N3DialogFactory__getDialog(content, true);
+  WirelessWorkflowManager *wfm = WirelessWorkflowManager__sharedInstance();
+
+  if (WirelessWorkflowManager__isInternetAccessible(wfm)) {
+    content->networkConnected();
+  } else {
+    WirelessWorkflowManager__connectWireless(wfm, false, false);
+    WirelessManager *wm = WirelessManager__sharedInstance();
+    QObject::connect(wm, SIGNAL(networkConnected()), content, SLOT(networkConnected()));
+  }
+}
+
+void SearchDialogContent::networkConnected() {
+  N3Dialog *dlg = N3DialogFactory__getDialog(this, true);
   N3Dialog__disableCloseButton(dlg);
   N3Dialog__enableBackButton(dlg, true);
   N3Dialog__setTitle(dlg, "Search");
@@ -35,16 +47,16 @@ void SearchDialogContent::showSearchDialog(QString query) {
     }
   });
   QObject::connect(dlg, SIGNAL(backTapped()), dlg, SLOT(deleteLater()));
-  QObject::connect(content, &SearchDialogContent::tapped, dlg, [dlg](QString id) {
+  QObject::connect(this, &SearchDialogContent::tapped, dlg, [dlg](QString id) {
     nh_log("SearchResults::tapped(%s)", qPrintable(id));
     SyncController::getInstance()->setLinkedBook(id);
     dlg->deleteLater();
   });
 
-  content->setKeyboardFrame(N3Dialog__keyboardFrame(dlg));
+  setKeyboardFrame(N3Dialog__keyboardFrame(dlg));
 
   dlg->show();
-  content->commit();
+  commit();
 }
 
 SearchDialogContent::SearchDialogContent(QString query, QWidget *parent) : QWidget(parent) {

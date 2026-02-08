@@ -12,6 +12,7 @@ public:
   void setKeyboardFrame(KeyboardFrame *frame);
 
 public Q_SLOTS:
+  void networkConnected();
   void commit();
   void search(int page);
 

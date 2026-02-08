@@ -15,6 +15,18 @@
 void ReviewDialogContent::showReviewDialog() {
   ReviewDialogContent *content = new ReviewDialogContent();
 
+  WirelessWorkflowManager *wfm = WirelessWorkflowManager__sharedInstance();
+
+  if (WirelessWorkflowManager__isInternetAccessible(wfm)) {
+    content->networkConnected();
+  } else {
+    WirelessWorkflowManager__connectWireless(wfm, false, false);
+    WirelessManager *wm = WirelessManager__sharedInstance();
+    QObject::connect(wm, SIGNAL(networkConnected()), content, SLOT(networkConnected()));
+  }
+}
+
+void ReviewDialogContent::networkConnected() {
   SyncController *ctl = SyncController::getInstance();
   QProcess *process = new QProcess();
   QString linkedBook = ctl->getLinkedBook();
@@ -24,7 +36,7 @@ void ReviewDialogContent::showReviewDialog() {
     process->start(Files::cli, {"get-review", "--book-id", linkedBook});
   }
 
-  QObject::connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), content, &ReviewDialogContent::buildContent);
+  QObject::connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &ReviewDialogContent::buildContent);
 }
 
 void ReviewDialogContent::buildDialog() {
