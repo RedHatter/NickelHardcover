@@ -82,22 +82,10 @@ void SyncController::pageChanged() {
   if (!isEnabled())
     return;
 
-  qint64 currentTimestamp = QDateTime::currentMSecsSinceEpoch();
-
-  if (timestamp == INT64_MAX) {
-    timestamp = currentTimestamp;
-    return;
-  }
-
-  int duration = (currentTimestamp - timestamp) / 1000 / 60;
-  nh_log("Page changed. It has been %d minutes since the last sync attempt", duration);
-
-  if (duration >= frequency) {
-    prepare(true);
-  }
+  prepare(false);
 }
 
-void SyncController::prepare(bool silent) {
+void SyncController::prepare(bool manual) {
   MainWindowController *mwc = MainWindowController__sharedInstance();
   QWidget *cv = MainWindowController__currentView(mwc);
   QString name = cv->objectName();
@@ -108,37 +96,50 @@ void SyncController::prepare(bool silent) {
     return;
   }
 
-  if (!silent) {
+  if (manual) {
     dialog = ConfirmationDialogFactory__getConfirmationDialog(nullptr);
     ConfirmationDialog__showCloseButton(dialog, false);
     dialog->open();
   }
 
-  percent = ReadingView__getCalculatedReadProgressEv(cv);
-  if (percent == 0) {
-    percent = 1;
+  percentage = ReadingView__getCalculatedReadProgressEv(cv);
+  if (percentage == 0) {
+    percentage = 1;
   }
 
-  if (silent && getLastProgress() == percent) {
+  qint64 currentTimestamp = QDateTime::currentMSecsSinceEpoch();
+
+  if (timestamp == INT64_MAX) {
+    timestamp = currentTimestamp;
+  }
+
+  int duration = (currentTimestamp - timestamp) / 1000 / 60;
+
+  if (!manual && percentage != 100 && duration < frequency) {
+    nh_log("It has been %d minutes of %d at %d%% skipping update", duration, frequency, percentage);
+    return;
+  }
+
+  if (!manual && percentage == getLastProgress()) {
     nh_log("Reading progress hasn't changed skipping update");
     return;
   }
 
-  timestamp = QDateTime::currentMSecsSinceEpoch();
+  timestamp = currentTimestamp;
 
   WirelessWorkflowManager *wfm = WirelessWorkflowManager__sharedInstance();
 
   if (WirelessWorkflowManager__isInternetAccessible(wfm)) {
     run();
   } else {
-    if (silent) {
-      WirelessWorkflowManager__connectWirelessSilently(wfm);
-    } else {
+    if (manual) {
       if (dialog) {
         ConfirmationDialog__setText(dialog, "Connecting to wifi...");
       }
 
       WirelessWorkflowManager__connectWireless(wfm, false, false);
+    } else {
+      WirelessWorkflowManager__connectWirelessSilently(wfm);
     }
 
     WirelessManager *wm = WirelessManager__sharedInstance();
@@ -165,14 +166,14 @@ void SyncController::run() {
 
   inProgress->show();
 
-  setLastProgress(percent);
+  setLastProgress(percentage);
 
   QProcess *process = new QProcess();
   QString linkedBook = getLinkedBook();
   if (linkedBook.isEmpty()) {
-    process->start(Files::cli, {"update", "--content-id", contentId, "--value", QString::number(percent)});
+    process->start(Files::cli, {"update", "--content-id", contentId, "--value", QString::number(percentage)});
   } else {
-    process->start(Files::cli, {"update", "--book-id", linkedBook, "--value", QString::number(percent)});
+    process->start(Files::cli, {"update", "--book-id", linkedBook, "--value", QString::number(percentage)});
   }
   QObject::connect(process, &QProcess::readyReadStandardOutput, this, &SyncController::readyReadStandardOutput);
   QObject::connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &SyncController::finished);

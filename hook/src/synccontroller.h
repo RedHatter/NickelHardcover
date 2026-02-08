@@ -50,7 +50,7 @@ private:
   QString contentId = nullptr;
   QString key = nullptr;
   qint64 timestamp = INT64_MAX;
-  int percent = 0;
+  int percentage = 0;
   int frequency;
   QLabel *inProgress;
   ConfirmationDialog *dialog = nullptr;

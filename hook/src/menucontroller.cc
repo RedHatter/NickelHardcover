@@ -89,7 +89,7 @@ QWidgetAction *MenuController::addMenuItem(NickelTouchMenu *menu, QString label)
 void MenuController::syncNow(bool checked) {
   nh_log("MenuController::syncNow(%s)", checked ? "true" : "false");
 
-  SyncController::getInstance()->prepare(false);
+  SyncController::getInstance()->prepare(true);
 }
 
 void MenuController::toggleEnabled(bool checked) {
