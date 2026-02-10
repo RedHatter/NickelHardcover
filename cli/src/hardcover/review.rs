@@ -54,11 +54,7 @@ pub async fn get_review(isbn: Vec<String>, book_id: i64) -> Review {
   let all_isbns = isbn.join(", ");
 
   let res = send_request::<get_user_book_review::Variables, get_user_book_review::ResponseData>(
-    GetUserBookReview::build_query(get_user_book_review::Variables {
-      user_id,
-      isbn: isbn.clone(),
-      book_id,
-    }),
+    GetUserBookReview::build_query(get_user_book_review::Variables { user_id, isbn, book_id }),
   )
   .await;
   let user_book = res
@@ -145,12 +141,12 @@ fn reduce_slate(data: &Value) -> String {
     Value::Array(array) => array.iter().map(reduce_slate).collect::<Vec<String>>().join(""),
     Value::Object(map) => {
       let mut str = match map.get("type").and_then(Value::as_str) {
-        Some("paragraph") => "\n\n".to_string(),
+        Some("paragraph") => "\n\n".into(),
         _ => String::new(),
       };
 
       let value = match map.get("object").and_then(Value::as_str) {
-        Some("text") => map.get("text").and_then(Value::as_str).unwrap_or("").to_string(),
+        Some("text") => map.get("text").and_then(Value::as_str).unwrap_or("").into(),
         _ => map
           .iter()
           .map(|(_, value)| reduce_slate(value))

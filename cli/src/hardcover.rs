@@ -1,3 +1,4 @@
+pub mod journal;
 pub mod review;
 pub mod search;
 pub mod update;

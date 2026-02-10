@@ -35,10 +35,13 @@ pub async fn send_request<T: Serialize, R: for<'a> Deserialize<'a> + std::fmt::D
     .expect("Failed to parse Hardcover.app response");
 
   if let Some(errors) = res.errors {
-    let messages: Vec<String> = errors.iter().map(|err| err.message.clone()).collect();
     panic!(
       "Hardcover.app request failed with the following message:\n  {}",
-      messages.join("\n  ")
+      errors
+        .iter()
+        .map(|err| err.message.clone())
+        .collect::<Vec<String>>()
+        .join("\n  ")
     );
   }
 

@@ -5,6 +5,7 @@ use serde_json::{Value, json};
 
 use crate::{
   hardcover::{
+    journal::insert_journal,
     review::{get_review, update_review},
     search::search_books,
     update::update_or_insert_read,
@@ -14,6 +15,7 @@ use crate::{
 
 mod hardcover;
 
+mod bookmarks;
 mod config;
 mod isbn;
 
@@ -52,13 +54,13 @@ struct Search {
   query: String,
 }
 
-/// Update read percentage.
+/// Update read percentage and create journal entries for bookmarks.
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand, name = "update")]
 struct Update {
   /// kobo book id or epub file path
   #[argh(option)]
-  content_id: Option<String>,
+  content_id: String,
 
   /// hardcover.app book id
   #[argh(option)]
@@ -67,6 +69,10 @@ struct Update {
   /// read percentage
   #[argh(option)]
   value: i64,
+
+  /// process bookmarks created after this ISO 8601 date
+  #[argh(option)]
+  after: Option<String>,
 }
 
 /// Update user book review.
@@ -170,16 +176,46 @@ async fn main() {
       println!("{}", json.to_string());
     }
     Commands::Update(args) => {
-      if args.content_id.is_none() && args.book_id.is_none() {
-        panic!("One of --content-id or --book-id is required");
-      }
+      let isbn = if args.book_id.is_none() {
+        get_isbn(&args.content_id)
+      } else {
+        Vec::new()
+      };
 
-      update_or_insert_read(
-        args.content_id.map(get_isbn).unwrap_or(Vec::new()),
-        args.book_id.unwrap_or(0),
-        args.value,
-      )
-      .await;
+      let (book_id, edition_id, possible) = update_or_insert_read(isbn, args.book_id.unwrap_or(0), args.value).await;
+
+      let bookmarks = bookmarks::get_bookmarks(args.content_id, args.after);
+
+      for bookmark in bookmarks.iter() {
+        let page = (possible as f64 * bookmark.location).round() as i64;
+        let percent = bookmark.location * 100.0;
+
+        insert_journal(insert_journal::Variables {
+          book_id,
+          edition_id,
+          event: "quote".into(),
+          entry: bookmark.text.clone(),
+          action_at: bookmark.date_created.clone(),
+          page,
+          possible,
+          percent,
+        })
+        .await;
+
+        if !bookmark.annotation.is_empty() {
+          insert_journal(insert_journal::Variables {
+            book_id,
+            edition_id,
+            event: "note".into(),
+            entry: bookmark.annotation.clone(),
+            action_at: bookmark.date_created.clone(),
+            page,
+            possible,
+            percent,
+          })
+          .await;
+        }
+      }
     }
     Commands::Review(args) => {
       if args.content_id.is_none() && args.book_id.is_none() {
@@ -187,7 +223,7 @@ async fn main() {
       }
 
       let review = get_review(
-        args.content_id.map(get_isbn).unwrap_or(Vec::new()),
+        args.content_id.map(|id| get_isbn(&id)).unwrap_or(Vec::new()),
         args.book_id.unwrap_or(0),
       )
       .await;
@@ -209,7 +245,7 @@ async fn main() {
       }
 
       let review = get_review(
-        args.content_id.map(get_isbn).unwrap_or(Vec::new()),
+        args.content_id.map(|id| get_isbn(&id)).unwrap_or(Vec::new()),
         args.book_id.unwrap_or(0),
       )
       .await;

@@ -48,7 +48,7 @@ pub struct GetEdition;
 )]
 pub struct UpdateUserBookStatus;
 
-pub async fn update_or_insert_read(isbn: Vec<String>, book_id: i64, percentage: i64) {
+pub async fn update_or_insert_read(isbn: Vec<String>, book_id: i64, percentage: i64) -> (i64, i64, i64) {
   let user_id = send_request::<get_user_id::Variables, get_user_id::ResponseData>(GetUserId::build_query(
     get_user_id::Variables {},
   ))
@@ -179,4 +179,6 @@ pub async fn update_or_insert_read(isbn: Vec<String>, book_id: i64, percentage: 
   if let Some(error) = res.update_user_book_read.and_then(|res| res.error) {
     panic!("{error}");
   }
+
+  (book.id, edition_id, pages)
 }

@@ -96,7 +96,7 @@ fn get_identifiers(oebps: &str) -> Vec<String> {
   vec
 }
 
-pub fn get_isbn(content_id: String) -> Vec<String> {
+pub fn get_isbn(content_id: &str) -> Vec<String> {
   let isbn = if content_id.starts_with("file://") {
     let file = File::open(Path::new(&content_id[7..])).expect(&format!("Failed to open book file `{content_id}`"));
     let mut archive = ZipArchive::new(file).expect("Failed to open book file `{content_id}` as archive");
@@ -123,13 +123,19 @@ pub fn get_isbn(content_id: String) -> Vec<String> {
         "Failed to connect to SQLite data base `{}`",
         &CONFIG.sqlite_path
       ))
-      .prepare("SELECT ISBN FROM content WHERE BookTitle is null AND ContentId is (?1) LIMIT 1;")
-      .expect("Failed to parpare SQLite query")
+      .prepare(
+        "SELECT ISBN
+        FROM content
+        WHERE BookTitle is null
+        AND ContentId is (?1)
+        LIMIT 1;",
+      )
+      .expect("Failed to parpare SQLite ISBN query")
       .query_map([&content_id], |row| row.get(0))
-      .expect("Failed to query rows from SQLite database")
+      .expect("Failed to query ISBN from SQLite database")
       .next()
-      .expect(&format!("Failed to find content id `{content_id}` in SQLite database",))
-      .expect("Failed to find ISBN in row with content id `{content_id}` in SQLite database");
+      .expect("Failed to map ISBN from SQLite database")
+      .expect(&format!("Failed to find content id `{content_id}` in SQLite database"));
 
     vec![isbn]
   };
