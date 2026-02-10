@@ -62,6 +62,10 @@ void SyncController::setLastProgress(int value) { settings->setValue(key + "/pro
 
 int SyncController::getLastProgress() { return settings->value(key + "/progress", 0).toInt(); }
 
+void SyncController::setLastSynced(QString value) { settings->setValue(key + "/lastSync", value); }
+
+QString SyncController::getLastSynced() { return settings->value(key + "/lastSync").toString(); }
+
 void SyncController::currentViewIndexChanged(int index) {
   if (index < 0)
     return;
@@ -102,7 +106,7 @@ void SyncController::prepare(bool manual) {
     dialog->open();
   }
 
-  percentage = ReadingView__getCalculatedReadProgressEv(cv);
+  percentage = ReadingView__getCalculatedReadProgress(cv);
   if (percentage == 0) {
     percentage = 1;
   }
@@ -168,13 +172,20 @@ void SyncController::run() {
 
   setLastProgress(percentage);
 
-  QProcess *process = new QProcess();
+  QStringList arguments = {"update", "--content-id", contentId, "--value", QString::number(percentage)};
+
   QString linkedBook = getLinkedBook();
-  if (linkedBook.isEmpty()) {
-    process->start(Files::cli, {"update", "--content-id", contentId, "--value", QString::number(percentage)});
-  } else {
-    process->start(Files::cli, {"update", "--book-id", linkedBook, "--value", QString::number(percentage)});
+  if (!linkedBook.isEmpty()) {
+    arguments.append({"--book-id", linkedBook});
   }
+
+  QString lastSynced = getLastSynced();
+  if (!lastSynced.isEmpty()) {
+    arguments.append({"--after", lastSynced});
+  }
+
+  QProcess *process = new QProcess();
+  process->start(Files::cli, arguments);
   QObject::connect(process, &QProcess::readyReadStandardOutput, this, &SyncController::readyReadStandardOutput);
   QObject::connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &SyncController::finished);
 }
@@ -209,6 +220,8 @@ void SyncController::finished(int exitCode) {
 
     ConfirmationDialogFactory__showErrorDialog("Hardcover.app", QString(stderr));
   } else if (dialog) {
+    setLastSynced(QDateTime::currentDateTimeUtc().toString(Qt::ISODate));
+
     ConfirmationDialog__setText(dialog, "Success!");
     QTimer::singleShot(800, this, &SyncController::closeDialog);
   }

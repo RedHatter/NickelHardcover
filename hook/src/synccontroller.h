@@ -26,6 +26,9 @@ public:
   void setLastProgress(int value);
   int getLastProgress();
 
+  void setLastSynced(QString value);
+  QString getLastSynced();
+
   QString title;
   QString author;
   QNetworkAccessManager *network;

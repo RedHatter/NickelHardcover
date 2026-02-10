@@ -29,7 +29,7 @@ extern void (*ConfirmationDialog__showCloseButton)(ConfirmationDialog *_this, bo
 typedef QObject WirelessManager;
 extern WirelessManager *(*WirelessManager__sharedInstance)();
 
-extern int (*ReadingView__getCalculatedReadProgressEv)(QWidget *_this);
+extern int (*ReadingView__getCalculatedReadProgress)(QWidget *_this);
 
 typedef QFrame ComboButton;
 extern void (*ComboButton__addItem)(ComboButton *_this, QString const &label, QVariant const &data, bool);
