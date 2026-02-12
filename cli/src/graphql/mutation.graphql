@@ -100,3 +100,10 @@ mutation InsertJournal(
 		id
 	}
 }
+
+mutation UpdateJournal($journal_id: Int!, $entry: String!) {
+	update_reading_journal(id: $journal_id, object: { entry: $entry }) {
+		errors
+		id
+	}
+}

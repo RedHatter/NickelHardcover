@@ -74,3 +74,13 @@ query GetEdition($isbn: [String!]!, $book_id: Int!, $user_id: Int!) {
 		}
 	}
 }
+
+query GetJournal($action_at: timestamptz!, $user_id: Int!) {
+	reading_journals(
+		where: { user_id: { _eq: $user_id }, action_at: { _eq: $action_at } }
+	) {
+		entry
+		event
+		id
+	}
+}

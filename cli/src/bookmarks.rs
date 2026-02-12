@@ -11,7 +11,7 @@ pub struct Bookmark {
   pub location: f64,
 }
 
-pub fn get_bookmarks(content_id: String, after_datetime: Option<String>) -> Vec<Bookmark> {
+pub fn get_bookmarks(content_id: String, after_datetime: Option<&String>) -> Vec<Bookmark> {
   let connection = Connection::open_with_flags(&CONFIG.sqlite_path, OpenFlags::SQLITE_OPEN_READ_ONLY).expect(&format!(
     "Failed to connect to SQLite data base `{}`",
     &CONFIG.sqlite_path
@@ -47,7 +47,7 @@ pub fn get_bookmarks(content_id: String, after_datetime: Option<String>) -> Vec<
         AND before.ContentType = 9
         AND before.VolumeIndex < chapter.VolumeIndex
       WHERE VolumeID = (?1)
-      AND Bookmark.DateCreated > (?2)
+      AND Bookmark.DateModified > (?2)
       AND Hidden = 'false'
       AND bookmark.Text != ''
       AND EXISTS (
@@ -61,8 +61,8 @@ pub fn get_bookmarks(content_id: String, after_datetime: Option<String>) -> Vec<
     .query_map(
       [
         &content_id,
-        &after_datetime.unwrap_or(
-          NaiveDate::from_yo_opt(2000, 1)
+        after_datetime.unwrap_or(
+          &NaiveDate::from_yo_opt(2000, 1)
             .expect("Failed to construct NaiveDate")
             .and_hms_opt(1, 0, 0)
             .expect("Failed to construct NaiveDateTime")

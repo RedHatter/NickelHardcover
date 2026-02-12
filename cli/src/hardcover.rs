@@ -9,7 +9,9 @@ use crate::config::CONFIG;
 pub type date = String;
 pub type jsonb = serde_json::Map<String, serde_json::Value>;
 pub type numeric = f32;
+pub type bigint = i64;
 pub type timestamp = String;
+pub type timestamptz = String;
 
 static USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"),);
 
@@ -90,9 +92,7 @@ pub async fn update_or_insert_user_book(
   isbn: Vec<String>,
   book_id: i64,
   object: update_user_book::UserBookUpdateInput,
-) -> (i64, i64, i64, Option<i64>) {
-  println!("{:#?}", object);
-
+) -> (i64, i64, i64, Option<i64>, i64) {
   let user_id = send_request::<get_user_id::Variables, get_user_id::ResponseData>(GetUserId::build_query(
     get_user_id::Variables {},
   ))
@@ -204,5 +204,5 @@ pub async fn update_or_insert_user_book(
       .and_then(|user_book| user_book.user_book_reads.first().map(|read| read.id))
   };
 
-  (book.id, edition_id, pages, user_read_id)
+  (book.id, edition_id, pages, user_read_id, user_id)
 }
