@@ -1,5 +1,8 @@
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QLabel>
 #include <QPixmap>
+#include <QProcess>
 #include <QWidgetAction>
 
 #include <NickelHook.h>
@@ -10,40 +13,25 @@
 #include "search/searchdialog.h"
 #include "synccontroller.h"
 
-MenuController *MenuController::instance;
-
-MenuController *MenuController::getInstance() {
-  if (!instance) {
-    instance = new MenuController();
-  };
-
-  return instance;
-};
-
-MenuController::MenuController(QObject *parent) : QObject(parent) {};
-
-QWidget *MenuController::buildWidget(QWidget *parent) {
-  TouchLabel *icon = reinterpret_cast<TouchLabel *>(calloc(1, 128));
+MenuController::MenuController(QWidget *parent) : QWidget(parent) {
+  icon = reinterpret_cast<TouchLabel *>(calloc(1, 128));
   TouchLabel__constructor(icon, parent, 0);
   TouchLabel__setHitStateEnabled(icon, false);
   icon->setPixmap(QPixmap(Files::icon));
 
-  QWidget::connect(icon, SIGNAL(tapped(bool)), this, SLOT(showMenu(bool)));
+  QWidget::connect(icon, SIGNAL(tapped(bool)), this, SLOT(showMainMenu(bool)));
+};
 
-  return icon;
-}
+void MenuController::showMainMenu(bool checked) {
+  nh_log("MenuController::showMainMenu(%s)", checked ? "true" : "false");
 
-void MenuController::showMenu(bool checked) {
-  nh_log("MenuController::showMenu(%s)", checked ? "true" : "false");
-
-  TouchLabel *icon = qobject_cast<TouchLabel *>(sender());
   icon->setPixmap(QPixmap(Files::icon_selected));
 
   NickelTouchMenu *menu = reinterpret_cast<NickelTouchMenu *>(calloc(1, 512));
   NickelTouchMenu__constructor(menu, icon, 0);
   NickelTouchMenu__showDecoration(menu, true);
   QWidget::connect(menu, &QMenu::aboutToHide, menu, &QWidget::deleteLater);
-  QWidget::connect(menu, &QMenu::aboutToHide, icon, [icon] { icon->setPixmap(QPixmap(Files::icon)); });
+  QWidget::connect(menu, &QMenu::aboutToHide, icon, [this] { icon->setPixmap(QPixmap(Files::icon)); });
 
   QWidgetAction *action = addMenuItem(menu, "Sync now");
   QObject::connect(action, &QAction::triggered, this, &MenuController::syncNow);
@@ -62,6 +50,16 @@ void MenuController::showMenu(bool checked) {
 
   menu->addSeparator();
 
+  action = addMenuItem(menu, "Update book status");
+  QObject::connect(action, &QAction::triggered, this, &MenuController::setBookStatus);
+
+  QLabel *extraField = action->defaultWidget()->findChild<QLabel *>("extraField");
+  if (extraField) {
+    extraField->setPixmap(QPixmap(Files::right));
+  }
+
+  menu->addSeparator();
+
   action = addMenuItem(menu, "Write a review");
   QObject::connect(action, &QAction::triggered, this, &MenuController::review);
 
@@ -69,19 +67,23 @@ void MenuController::showMenu(bool checked) {
   menu->popup(icon->mapToGlobal(icon->geometry().bottomRight()) + QPoint(0, 6));
 }
 
-QWidgetAction *MenuController::addMenuItem(NickelTouchMenu *menu, QString label) {
+QWidgetAction *MenuController::addMenuItem(NickelTouchMenu *menu, QString label, bool checkable, bool checked) {
   MenuTextItem *item = reinterpret_cast<MenuTextItem *>(calloc(1, 256));
-  MenuTextItem__constructor(item, menu, false, true);
+  MenuTextItem__constructor(item, menu, checkable, true);
   MenuTextItem__setText(item, label);
   MenuTextItem__registerForTapGestures(item);
+
+  if (checked) {
+    MenuTextItem__setSelected(item, true);
+  }
 
   QWidgetAction *action = new QWidgetAction(menu);
   action->setDefaultWidget(item);
   action->setEnabled(true);
   menu->addAction(action);
 
-  QWidget::connect(action, &QAction::triggered, menu, &QMenu::hide);
-  QWidget::connect(item, SIGNAL(tapped(bool)), action, SIGNAL(triggered()));
+  QObject::connect(action, &QAction::triggered, menu, &QMenu::hide);
+  QObject::connect(item, SIGNAL(tapped(bool)), action, SIGNAL(triggered()));
 
   return action;
 }
@@ -115,4 +117,121 @@ void MenuController::review(bool checked) {
   nh_log("MenuController::review(%s)", checked ? "true" : "false");
 
   ReviewDialogContent::showReviewDialog();
+}
+
+void MenuController::setBookStatus(bool checked) {
+  nh_log("MenuController::setBookStatus(%s)", checked ? "true" : "false");
+
+  WirelessWorkflowManager *wfm = WirelessWorkflowManager__sharedInstance();
+
+  if (WirelessWorkflowManager__isInternetAccessible(wfm)) {
+    networkConnected();
+  } else {
+    WirelessWorkflowManager__connectWireless(wfm, false, false);
+    WirelessManager *wm = WirelessManager__sharedInstance();
+    QObject::connect(wm, SIGNAL(networkConnected()), this, SLOT(networkConnected()));
+  }
+}
+
+void MenuController::networkConnected() {
+  nh_log("MenuController::networkConnected()");
+
+  SyncController *ctl = SyncController::getInstance();
+  QProcess *process = new QProcess();
+  QString linkedBook = ctl->getLinkedBook();
+  if (linkedBook.isEmpty()) {
+    process->start(Files::cli, {"get-user-book", "--content-id", ctl->getContentId()});
+  } else {
+    process->start(Files::cli, {"get-user-book", "--book-id", linkedBook});
+  }
+
+  QObject::connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &MenuController::showStatusMenu);
+}
+
+void MenuController::showStatusMenu(int exitCode) {
+  nh_log("MenuController::showStatusMenu()");
+
+  QProcess *cli = qobject_cast<QProcess *>(sender());
+
+  if (exitCode > 0) {
+    QByteArray stderr = cli->readAllStandardError();
+    nh_log("Error from command line \"%s\"", qPrintable(stderr));
+    ConfirmationDialogFactory__showErrorDialog("Hardcover.app", QString(stderr));
+
+    return;
+  }
+
+  icon->setPixmap(QPixmap(Files::icon_selected));
+
+  NickelTouchMenu *menu = reinterpret_cast<NickelTouchMenu *>(calloc(1, 512));
+  NickelTouchMenu__constructor(menu, icon, 0);
+  NickelTouchMenu__showDecoration(menu, true);
+
+  QWidget::connect(menu, &QMenu::aboutToHide, menu, &QWidget::deleteLater);
+  QWidget::connect(menu, &QMenu::aboutToHide, icon, [this] { icon->setPixmap(QPixmap(Files::icon)); });
+  QWidget::connect(menu, &QMenu::triggered, this, &MenuController::statusSelected);
+
+  QWidgetAction *action = addMenuItem(menu, "Back", true, true);
+  QWidget::connect(action, SIGNAL(triggered(bool)), icon, SIGNAL(tapped(bool)));
+
+  QLabel *check = action->defaultWidget()->findChild<QLabel *>("check");
+  if (check) {
+    check->setPixmap(QPixmap(Files::left));
+  }
+
+  menu->addSeparator();
+
+  QByteArray json = cli->readAllStandardOutput();
+  QJsonObject doc = QJsonDocument::fromJson(json).object();
+
+  int status = doc.value("status_id").toInt(0);
+
+  action = addMenuItem(menu, "Want to Read", true, status == 1);
+  action->setData(1);
+  menu->addSeparator();
+
+  action = addMenuItem(menu, "Currently Reading", true, status == 2);
+  action->setData(2);
+  menu->addSeparator();
+
+  action = addMenuItem(menu, "Read", true, status == 3);
+  action->setData(3);
+  menu->addSeparator();
+
+  action = addMenuItem(menu, "Did Not Finish", true, status == 5);
+  action->setData(5);
+
+  menu->ensurePolished();
+  menu->popup(icon->mapToGlobal(icon->geometry().bottomRight()) + QPoint(0, 6));
+}
+
+void MenuController::statusSelected(QAction *action) {
+  int status = action->data().toInt();
+  nh_log("MenuController::statusSelected(%i)", status);
+
+  QStringList arguments = {"set-user-book", "--status", QString::number(status)};
+
+  SyncController *ctl = SyncController::getInstance();
+  QString linkedBook = ctl->getLinkedBook();
+  if (linkedBook.isEmpty()) {
+    arguments.append({"--content-id", ctl->getContentId()});
+  } else {
+    arguments.append({"--book-id", linkedBook});
+  }
+
+  QProcess *process = new QProcess();
+  process->start(Files::cli, arguments);
+  QObject::connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &MenuController::finished);
+}
+
+void MenuController::finished(int exitCode) {
+  QProcess *cli = qobject_cast<QProcess *>(sender());
+
+  if (exitCode > 0) {
+    QByteArray stderr = cli->readAllStandardError();
+    nh_log("Error from command line \"%s\"", qPrintable(stderr));
+    ConfirmationDialogFactory__showErrorDialog("Hardcover.app", QString(stderr));
+
+    return;
+  }
 }

@@ -43,6 +43,7 @@ void (*NickelTouchMenu__showDecoration)(NickelTouchMenu *_this, bool show);
 
 void (*MenuTextItem__constructor)(MenuTextItem *_this, QWidget *parent, bool checkable, bool italic);
 void (*MenuTextItem__setText)(MenuTextItem *_this, QString const &text);
+void (*MenuTextItem__setSelected)(MenuTextItem *_this, bool selected);
 void (*MenuTextItem__registerForTapGestures)(MenuTextItem *_this);
 
 typedef QWidget ReadingMenuView;
@@ -115,6 +116,7 @@ static struct nh_dlsym NickelHardcoverDlsym[] = {
   { .name = "_ZN15NickelTouchMenu14showDecorationEb",                          .out = nh_symoutptr(NickelTouchMenu__showDecoration) },
   { .name = "_ZN12MenuTextItemC1EP7QWidgetbb",                                 .out = nh_symoutptr(MenuTextItem__constructor) },
   { .name = "_ZN12MenuTextItem7setTextERK7QString",                            .out = nh_symoutptr(MenuTextItem__setText) },
+  { .name = "_ZN12MenuTextItem11setSelectedEb",                                .out = nh_symoutptr(MenuTextItem__setSelected) },
   { .name = "_ZN12MenuTextItem22registerForTapGesturesEv",                     .out = nh_symoutptr(MenuTextItem__registerForTapGestures) },
 
   { .name = "_ZN15N3DialogFactory9getDialogEP7QWidgetb",                       .out = nh_symoutptr(N3DialogFactory__getDialog) },
@@ -197,7 +199,8 @@ void injectMenuWidget(ReadingMenuView *parent) {
   QHBoxLayout *childLayout = parent->findChild<QHBoxLayout *>("bottomHorizontalLayout");
 
   if (childLayout) {
-    childLayout->insertWidget(childLayout->count() - 1, MenuController::getInstance()->buildWidget(parent));
+    MenuController *ctl = new MenuController(parent);
+    childLayout->insertWidget(childLayout->count() - 1, ctl->icon);
   } else {
     nh_log("Error: unable to find bottomHorizontalLayout");
   }

@@ -6,6 +6,8 @@ constexpr char const *adds_directory = "/mnt/onboard/.adds/NickelHardcover";
 
 constexpr char const *icon = "./usr/share/NickelHardcover/icon.png";
 constexpr char const *icon_selected = "./usr/share/NickelHardcover/icon-selected.png";
+constexpr char const *left = "./usr/share/NickelHardcover/left.png";
+constexpr char const *right = "./usr/share/NickelHardcover/right.png";
 constexpr char const *cover1 = "./usr/share/NickelHardcover/cover1.png";
 constexpr char const *cover2 = "./usr/share/NickelHardcover/cover2.png";
 constexpr char const *cover3 = "./usr/share/NickelHardcover/cover3.png";

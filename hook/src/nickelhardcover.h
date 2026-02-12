@@ -77,6 +77,7 @@ extern void (*NickelTouchMenu__showDecoration)(NickelTouchMenu *_this, bool show
 typedef QWidget MenuTextItem;
 extern void (*MenuTextItem__constructor)(MenuTextItem *_this, QWidget *parent, bool checkable, bool italic);
 extern void (*MenuTextItem__setText)(MenuTextItem *_this, QString const &text);
+extern void (*MenuTextItem__setSelected)(MenuTextItem *_this, bool selected);
 extern void (*MenuTextItem__registerForTapGestures)(MenuTextItem *_this);
 
 typedef QFrame TouchTextEdit;

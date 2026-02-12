@@ -4,27 +4,27 @@
 
 #include "nickelhardcover.h"
 
-class MenuController : public QObject {
+class MenuController : public QWidget {
   Q_OBJECT
 
 public:
-  static MenuController *getInstance();
+  MenuController(QWidget *parent = nullptr);
+  TouchLabel *icon;
 
 public Q_SLOTS:
-  void showMenu(bool checked);
+  void showMainMenu(bool checked);
 
   void syncNow(bool checked);
   void toggleEnabled(bool checked);
   void linkBook(bool checked);
   void review(bool checked);
+  void setBookStatus(bool checked);
 
-public:
-  QWidget *buildWidget(QWidget *parent = nullptr);
+  void networkConnected();
+  void showStatusMenu(int exitCode);
+  void statusSelected(QAction *action);
+  void finished(int exitCode);
 
 private:
-  MenuController(QObject *parent = nullptr);
-
-  QWidgetAction *addMenuItem(NickelTouchMenu *menu, QString label);
-
-  static MenuController *instance;
+  QWidgetAction *addMenuItem(NickelTouchMenu *menu, QString label, bool checkable = false, bool checked = false);
 };
