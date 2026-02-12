@@ -31,9 +31,9 @@ void ReviewDialogContent::networkConnected() {
   QProcess *process = new QProcess();
   QString linkedBook = ctl->getLinkedBook();
   if (linkedBook.isEmpty()) {
-    process->start(Files::cli, {"get-review", "--content-id", ctl->getContentId()});
+    process->start(Files::cli, {"get-user-book", "--content-id", ctl->getContentId()});
   } else {
-    process->start(Files::cli, {"get-review", "--book-id", linkedBook});
+    process->start(Files::cli, {"get-user-book", "--book-id", linkedBook});
   }
 
   QObject::connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &ReviewDialogContent::buildContent);
@@ -164,7 +164,7 @@ void ReviewDialogContent::commit() {
   nh_log("ReviewDialogContent::commit()");
 
   QTextEdit *textEdit = findChild<QTextEdit *>();
-  QStringList args = {"review", "--rating", QString::number(rating), "--text", textEdit->toPlainText()};
+  QStringList args = {"set-user-book", "--rating", QString::number(rating), "--text", textEdit->toPlainText()};
 
   SyncController *ctl = SyncController::getInstance();
   QString linkedBook = ctl->getLinkedBook();
