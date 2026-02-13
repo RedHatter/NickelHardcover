@@ -163,6 +163,10 @@ void SyncController::run() {
 
   setLastProgress(percentage);
 
+  if (percentage == 100) {
+    setEnabled(false);
+  }
+
   QStringList arguments = {"update", "--content-id", contentId, "--value", QString::number(percentage)};
 
   QString linkedBook = getLinkedBook();
