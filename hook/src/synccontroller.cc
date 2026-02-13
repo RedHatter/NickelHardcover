@@ -21,6 +21,7 @@ SyncController *SyncController::getInstance() {
 
 SyncController::SyncController(QObject *parent) : QObject(parent) {
   QSettings config(Files::config, QSettings::IniFormat);
+  enabledDefault = config.value("auto_sync_default", false).toBool();
   threshold = config.value("threshold", 5).toInt();
   if (threshold < 1) {
     threshold = 1;
@@ -47,7 +48,7 @@ void SyncController::setContentId(QString value) {
 
 QString SyncController::getContentId() { return contentId; }
 
-bool SyncController::isEnabled() { return settings->value(key + "/enabled", false).toBool(); }
+bool SyncController::isEnabled() { return settings->value(key + "/enabled", enabledDefault).toBool(); }
 
 void SyncController::setEnabled(bool value) { settings->setValue(key + "/enabled", value); }
 

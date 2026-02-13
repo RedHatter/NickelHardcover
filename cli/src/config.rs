@@ -29,6 +29,7 @@ impl<'de> Deserialize<'de> for SyncBookmarks {
 #[serde(default)]
 pub struct Config {
   pub authorization: String,
+  pub auto_sync_default: bool,
   pub sqlite_path: String,
   pub sync_bookmarks: SyncBookmarks,
   pub threshold: i32,
@@ -38,6 +39,7 @@ impl Default for Config {
   fn default() -> Self {
     Self {
       authorization: "".into(),
+      auto_sync_default: false,
       sqlite_path: "/mnt/onboard/.kobo/KoboReader.sqlite".into(),
       sync_bookmarks: SyncBookmarks::Always,
       threshold: 5,
@@ -68,6 +70,7 @@ pub static CONFIG: LazyLock<Config> = LazyLock::new(|| {
 
   Config {
     authorization: config.authorization,
+    auto_sync_default: config.auto_sync_default,
     sqlite_path: exe_dir
       .join(config.sqlite_path)
       .to_str()

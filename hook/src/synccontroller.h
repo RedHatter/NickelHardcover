@@ -50,12 +50,15 @@ private:
   static SyncController *instance;
 
   QSettings *settings = nullptr;
+  QLabel *inProgress;
+  ConfirmationDialog *dialog = nullptr;
+
   QString contentId = nullptr;
   QString key = nullptr;
   int percentage = 0;
+
+  bool enabledDefault;
   int threshold;
-  QLabel *inProgress;
-  ConfirmationDialog *dialog = nullptr;
 
   void run();
   void logLines(QByteArray msg);
