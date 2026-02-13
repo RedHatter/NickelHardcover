@@ -72,7 +72,7 @@ mutation InsertJournal(
 	$edition_id: Int!
 	$event: String!
 	$entry: String!
-	$action_at: date!
+	$action_at: date
 	$page: Int!
 	$possible: Int!
 	$percent: Float!

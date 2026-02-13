@@ -62,9 +62,9 @@ void SyncController::setLastProgress(int value) { settings->setValue(key + "/pro
 
 int SyncController::getLastProgress() { return settings->value(key + "/progress", 0).toInt(); }
 
-void SyncController::setLastSynced(QString value) { settings->setValue(key + "/lastSync", value); }
+void SyncController::setLastSynced(QString value) { settings->setValue(key + "/lastSynced", value); }
 
-QString SyncController::getLastSynced() { return settings->value(key + "/lastSync").toString(); }
+QString SyncController::getLastSynced() { return settings->value(key + "/lastSynced").toString(); }
 
 void SyncController::currentViewIndexChanged(int index) {
   if (index < 0)

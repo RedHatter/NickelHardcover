@@ -3,6 +3,7 @@ use chrono::Local;
 use graphql_client::GraphQLQuery;
 
 use crate::bookmarks::get_bookmarks;
+use crate::config::{CONFIG, SyncBookmarks};
 use crate::hardcover::{
   bigint, date, send_request, timestamptz, update_or_insert_user_book, update_user_book::UserBookUpdateInput,
 };
@@ -101,7 +102,17 @@ pub async fn run(args: Update) {
     panic!("{error}");
   }
 
-  let bookmarks = get_bookmarks(args.content_id, args.after.as_ref());
+  if CONFIG.sync_bookmarks == SyncBookmarks::Never
+    || (CONFIG.sync_bookmarks == SyncBookmarks::Finished && args.value != 100)
+  {
+    return;
+  }
+
+  let after = match CONFIG.sync_bookmarks {
+    SyncBookmarks::Finished => args.after.as_ref(),
+    _ => None,
+  };
+  let bookmarks = get_bookmarks(args.content_id, after);
 
   for bookmark in bookmarks.iter() {
     let reading_journals = if args.after.clone().is_some_and(|after| bookmark.date_created < after) {
@@ -119,6 +130,10 @@ pub async fn run(args: Update) {
 
     let page = (possible as f64 * bookmark.location).round() as i64;
     let percent = bookmark.location * 100.0;
+    let action_at = match CONFIG.sync_bookmarks {
+      SyncBookmarks::Finished => None,
+      _ => Some(bookmark.date_created.clone()),
+    };
 
     insert_or_update_journal(
       insert_journal::Variables {
@@ -126,7 +141,7 @@ pub async fn run(args: Update) {
         edition_id,
         event: "quote".into(),
         entry: bookmark.text.clone(),
-        action_at: bookmark.date_created.clone(),
+        action_at: action_at.clone(),
         page,
         possible,
         percent,
@@ -142,7 +157,7 @@ pub async fn run(args: Update) {
           edition_id,
           event: "note".into(),
           entry: bookmark.annotation.clone(),
-          action_at: bookmark.date_created.clone(),
+          action_at: action_at.clone(),
           page,
           possible,
           percent,
@@ -163,10 +178,7 @@ pub async fn insert_or_update_journal(
     .find(|journal| journal.event.as_ref() == Some(&object.event))
   {
     if journal.entry.as_ref() != Some(&object.entry) {
-      println!(
-        "Update `{}` with id `{}` at `{}`",
-        object.event, journal.id, object.action_at
-      );
+      println!("Update `{}` with id `{}`", object.event, journal.id,);
 
       let res = send_request::<update_journal::Variables, update_journal::ResponseData>(UpdateJournal::build_query(
         update_journal::Variables {
@@ -180,15 +192,12 @@ pub async fn insert_or_update_journal(
         panic!("{:#?}", errors);
       }
     } else {
-      println!(
-        "Skipping `{}` with id `{}` at `{}`",
-        object.event, journal.id, object.action_at
-      );
+      println!("Skipping `{}` with id `{}`", object.event, journal.id,);
     }
   } else {
     println!(
-      "Insert `{}` for book `{}` and edition `{}` at `{}`",
-      object.event, object.book_id, object.edition_id, object.action_at
+      "Insert `{}` for book `{}` and edition `{}`",
+      object.event, object.book_id, object.edition_id,
     );
 
     let res =

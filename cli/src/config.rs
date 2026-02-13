@@ -1,21 +1,46 @@
 use std::fs;
 use std::sync::LazyLock;
 
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
+use serde::{Deserialize, Deserializer, de};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, PartialEq, Debug)]
+pub enum SyncBookmarks {
+  Always,
+  Never,
+  Finished,
+}
+
+impl<'de> Deserialize<'de> for SyncBookmarks {
+  fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+  where
+    D: Deserializer<'de>,
+  {
+    match String::deserialize(deserializer)? {
+      s if s.eq_ignore_ascii_case("Always") => Ok(SyncBookmarks::Always),
+      s if s.eq_ignore_ascii_case("Never") => Ok(SyncBookmarks::Never),
+      s if s.eq_ignore_ascii_case("Finished") => Ok(SyncBookmarks::Finished),
+      s => Err(de::Error::custom(format!("{s} is not a valid value"))),
+    }
+  }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(default)]
 pub struct Config {
   pub authorization: String,
   pub sqlite_path: String,
+  pub sync_bookmarks: SyncBookmarks,
   pub frequency: i32,
 }
 
 impl Default for Config {
   fn default() -> Self {
     Self {
-      sqlite_path: "/mnt/onboard/.kobo/KoboReader.sqlite".into(),
       authorization: "".into(),
-      frequency: 15,
+      sqlite_path: "/mnt/onboard/.kobo/KoboReader.sqlite".into(),
+      sync_bookmarks: SyncBookmarks::Always,
+      frequency: 10,
     }
   }
 }
@@ -48,6 +73,7 @@ pub static CONFIG: LazyLock<Config> = LazyLock::new(|| {
       .to_str()
       .expect("Failed to get SQLite path")
       .to_string(),
+    sync_bookmarks: config.sync_bookmarks,
     frequency: config.frequency,
   }
 });
