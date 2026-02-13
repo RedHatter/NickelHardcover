@@ -52,9 +52,8 @@ private:
   QSettings *settings = nullptr;
   QString contentId = nullptr;
   QString key = nullptr;
-  qint64 timestamp = INT64_MAX;
   int percentage = 0;
-  int frequency;
+  int threshold;
   QLabel *inProgress;
   ConfirmationDialog *dialog = nullptr;
 

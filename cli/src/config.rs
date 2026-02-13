@@ -31,7 +31,7 @@ pub struct Config {
   pub authorization: String,
   pub sqlite_path: String,
   pub sync_bookmarks: SyncBookmarks,
-  pub frequency: i32,
+  pub threshold: i32,
 }
 
 impl Default for Config {
@@ -40,7 +40,7 @@ impl Default for Config {
       authorization: "".into(),
       sqlite_path: "/mnt/onboard/.kobo/KoboReader.sqlite".into(),
       sync_bookmarks: SyncBookmarks::Always,
-      frequency: 10,
+      threshold: 5,
     }
   }
 }
@@ -74,6 +74,6 @@ pub static CONFIG: LazyLock<Config> = LazyLock::new(|| {
       .expect("Failed to get SQLite path")
       .to_string(),
     sync_bookmarks: config.sync_bookmarks,
-    frequency: config.frequency,
+    threshold: config.threshold,
   }
 });

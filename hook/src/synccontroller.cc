@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <NickelHook.h>
 #include <QDateTime>
 #include <QLabel>
@@ -20,9 +21,11 @@ SyncController *SyncController::getInstance() {
 
 SyncController::SyncController(QObject *parent) : QObject(parent) {
   QSettings config(Files::config, QSettings::IniFormat);
-  frequency = config.value("frequency", 15).toInt();
-  if (frequency < 5) {
-    frequency = 5;
+  threshold = config.value("threshold", 5).toInt();
+  if (threshold < 1) {
+    threshold = 1;
+  } else if (threshold > 100) {
+    threshold = 100;
   }
 
   settings = new QSettings(Files::settings, QSettings::IniFormat);
@@ -111,25 +114,12 @@ void SyncController::prepare(bool manual) {
     percentage = 1;
   }
 
-  qint64 currentTimestamp = QDateTime::currentMSecsSinceEpoch();
-
-  if (timestamp == INT64_MAX) {
-    timestamp = currentTimestamp;
-  }
-
-  int duration = (currentTimestamp - timestamp) / 1000 / 60;
-
-  if (!manual && percentage != 100 && duration < frequency) {
-    nh_log("It has been %d minutes of %d at %d%% skipping update", duration, frequency, percentage);
+  int threshold = 5;
+  int lastProgress = getLastProgress();
+  if (!manual && percentage != 100 && abs(lastProgress - percentage) < threshold) {
+    nh_log("Reading progress is %d%% with a last synced progress of %d%% and a threshold of %d%%. Skipping update", percentage, lastProgress, threshold);
     return;
   }
-
-  if (!manual && percentage == getLastProgress()) {
-    nh_log("Reading progress hasn't changed skipping update");
-    return;
-  }
-
-  timestamp = currentTimestamp;
 
   WirelessWorkflowManager *wfm = WirelessWorkflowManager__sharedInstance();
 
