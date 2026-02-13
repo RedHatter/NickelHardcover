@@ -117,7 +117,7 @@ void SyncController::prepare(bool manual) {
 
   int threshold = 5;
   int lastProgress = getLastProgress();
-  if (!manual && percentage != 100 && abs(lastProgress - percentage) < threshold) {
+  if (!manual && (percentage != 100 || lastProgress == 100) && abs(lastProgress - percentage) < threshold) {
     nh_log("Reading progress is %d%% with a last synced progress of %d%% and a threshold of %d%%. Skipping update", percentage, lastProgress, threshold);
     return;
   }
