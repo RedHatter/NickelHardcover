@@ -48,7 +48,9 @@ impl Default for Config {
 }
 
 pub static CONFIG: LazyLock<Config> = LazyLock::new(|| {
-  let current_exe = std::env::current_exe().expect("Failed to get current exe path");
+  let current_exe = std::env::current_exe()
+    .map_err(|e| panic!("Failed to get current exe path: {e}"))
+    .unwrap();
   let exe_dir = current_exe
     .as_path()
     .parent()
@@ -56,14 +58,22 @@ pub static CONFIG: LazyLock<Config> = LazyLock::new(|| {
   let config_path = exe_dir.join("config.ini");
 
   let config = if config_path.exists() {
-    let content = fs::read_to_string(config_path).expect("Failed to read config file");
-    let config: Config = serini::from_str(&content).expect("Failed to parse config file");
+    let content = fs::read_to_string(config_path)
+      .map_err(|e| panic!("Failed to read config file: {e}"))
+      .unwrap();
+    let config: Config = serini::from_str(&content)
+      .map_err(|e| panic!("Failed to parse config file: {e}"))
+      .unwrap();
 
     config
   } else {
     let config = Config::default();
-    let ini = serini::to_string(&config).expect("Failed to parse default config");
-    fs::write(config_path, ini).expect("Failed to write default config");
+    let ini = serini::to_string(&config)
+      .map_err(|e| panic!("Failed to parse default config: {e}"))
+      .unwrap();
+    fs::write(config_path, ini)
+      .map_err(|e| panic!("Failed to write default config: {e}"))
+      .unwrap();
 
     config
   };

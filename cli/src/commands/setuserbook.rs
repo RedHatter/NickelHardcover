@@ -41,7 +41,7 @@ pub struct SetUserBook {
   spoilers: Option<bool>,
 }
 
-pub async fn run(args: SetUserBook) {
+pub async fn run(args: SetUserBook) -> Result<(), String> {
   if args.content_id.is_none() && args.book_id.is_none() {
     panic!("One of --content-id or --book-id is required");
   }
@@ -65,35 +65,40 @@ pub async fn run(args: SetUserBook) {
       } else {
         None
       },
-      review_slate: args.text.map(|text| {
-        serde_json::json!({
-          "document": {
-            "object": "document",
-            "children": text
-              .split('\n')
-              .filter(|str| !str.is_empty())
-              .map(|str| {
-                serde_json::json!({
-                  "data": {},
-                  "type": "paragraph",
-                  "object": "block",
-                  "children": [
-                    {
-                      "text": str,
-                      "object": "text"
-                    }
-                  ]
+      review_slate: args
+        .text
+        .map(|text| {
+          serde_json::json!({
+            "document": {
+              "object": "document",
+              "children": text
+                .split('\n')
+                .filter(|str| !str.is_empty())
+                .map(|str| {
+                  serde_json::json!({
+                    "data": {},
+                    "type": "paragraph",
+                    "object": "block",
+                    "children": [
+                      {
+                        "text": str,
+                        "object": "text"
+                      }
+                    ]
+                  })
                 })
-              })
-              .collect::<Vec<Value>>()
-          }
+                .collect::<Vec<Value>>()
+            }
+          })
+          .as_object()
+          .map(|obj| obj.clone())
+          .ok_or("Failed to generate slate json")
         })
-        .as_object()
-        .expect("Failed to generate slate json")
-        .clone()
-      }),
+        .transpose()?,
       ..UserBookUpdateInput::default()
     },
   )
-  .await;
+  .await?;
+
+  Ok(())
 }

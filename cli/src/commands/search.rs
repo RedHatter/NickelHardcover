@@ -30,7 +30,7 @@ pub struct Search {
   query: String,
 }
 
-pub async fn run(args: Search) {
+pub async fn run(args: Search) -> Result<(), String> {
   let results = send_request::<search_books::Variables, search_books::ResponseData>(SearchBooks::build_query(
     search_books::Variables {
       query: args.query,
@@ -38,16 +38,16 @@ pub async fn run(args: Search) {
       page: args.page,
     },
   ))
-  .await
+  .await?
   .search
-  .expect("Failed to find field `search` in Hardcover.app results")
+  .ok_or("Failed to find field <i>search</i> in Hardcover.app results")?
   .results
-  .expect("Failed to find field `results` in Hardcover.app results");
+  .ok_or("Failed to find field <i>results</i> in Hardcover.app results")?;
 
   let hits = results
     .get("hits")
     .and_then(Value::as_array)
-    .expect("Failed to find field `hits` in Hardcover.app results")
+    .ok_or("Failed to find field <i>hits</i> in Hardcover.app results")?
     .iter()
     .map(|hit| {
       hit.get("document").map(|doc| {
@@ -85,4 +85,6 @@ pub async fn run(args: Search) {
     })
     .to_string()
   );
+
+  Ok(())
 }

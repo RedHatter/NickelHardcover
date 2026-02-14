@@ -10,36 +10,35 @@ use zip::ZipArchive;
 
 use crate::config::CONFIG;
 
-fn get_oebps_path(manifest: &str) -> Option<String> {
+fn get_oebps_path(manifest: &str) -> Result<String, String> {
   let mut reader = Reader::from_str(manifest);
 
   loop {
     match reader.read_event() {
-      Err(e) => panic!(
-        "Error reading container manifest at position {}: {:?}",
-        reader.error_position(),
-        e
-      ),
+      Err(e) => {
+        return Err(format!(
+          "Error reading container manifest at position {}: {:?}",
+          reader.error_position(),
+          e
+        ));
+      }
       Ok(Event::Eof) => break,
       Ok(Event::Empty(e)) => {
         if e.name().as_ref() == b"rootfile" {
           let attrs: HashMap<_, _> = e
             .attributes()
-            .map(|a| {
-              let attr = a.unwrap();
-              (attr.key, attr.unescape_value())
-            })
+            .filter_map(|attr| attr.ok().map(|attr| (attr.key, attr.unescape_value())))
             .collect();
 
           if attrs[&QName(b"media-type")]
             .as_ref()
-            .expect("Failed to decode attribute value")
+            .map_err(|e| format!("Failed to decode `media-type` attribute value: {e}"))?
             == "application/oebps-package+xml"
           {
-            return Some(
+            return Ok(
               attrs[&QName(b"full-path")]
                 .as_ref()
-                .expect("Failed to decode attribute value")
+                .map_err(|e| format!("Failed to decode `full-path` attribute value: {e}"))?
                 .to_string(),
             );
           }
@@ -49,10 +48,10 @@ fn get_oebps_path(manifest: &str) -> Option<String> {
     }
   }
 
-  None
+  Err("Failed to find oebps root file path".into())
 }
 
-fn get_identifiers(oebps: &str) -> Vec<String> {
+fn get_identifiers(oebps: &str) -> Result<Vec<String>, String> {
   let mut reader = Reader::from_str(oebps);
 
   let mut vec: Vec<String> = Vec::new();
@@ -61,11 +60,13 @@ fn get_identifiers(oebps: &str) -> Vec<String> {
 
   loop {
     match reader.read_event() {
-      Err(e) => panic!(
-        "Error reading oebps file at position {}: {:?}",
-        reader.error_position(),
-        e
-      ),
+      Err(e) => {
+        return Err(format!(
+          "Error reading oebps file at position {}: {:?}",
+          reader.error_position(),
+          e
+        ));
+      }
       Ok(Event::Eof) => break,
       Ok(Event::Start(e)) => match e.local_name().as_ref() {
         b"metadata" => metadata_open = true,
@@ -93,56 +94,73 @@ fn get_identifiers(oebps: &str) -> Vec<String> {
     }
   }
 
-  vec
+  Ok(vec)
+}
+
+fn read_epub_isbn(content_id: &str) -> Result<Vec<String>, String> {
+  let file = File::open(Path::new(&content_id[7..])).map_err(|e| format!("Failed to open file: {e}"))?;
+  let mut archive = ZipArchive::new(file).map_err(|e| format!("Failed to parse file as archive: {e}"))?;
+
+  let mut manifest = String::new();
+  archive
+    .by_name("META-INF/container.xml")
+    .map_err(|e| format!("Failed to open container manifest: {e}"))?
+    .read_to_string(&mut manifest)
+    .map_err(|e| format!("Failed to read container manifest: {e}"))?;
+  let oebps_path = get_oebps_path(&manifest)?;
+
+  let mut oebps = String::new();
+  archive
+    .by_name(&oebps_path)
+    .map_err(|e| (format!("Failed to open oebps root file <i>{oebps_path}</i>: {e}")))?
+    .read_to_string(&mut oebps)
+    .map_err(|e| format!("Failed to read oebps root file: {e}"))?;
+
+  let isbn = get_identifiers(&oebps)?;
+
+  if isbn.is_empty() {
+    panic!("Couldn't find an ISBN in the epub metadata. Please link book manually.");
+  }
+
+  Ok(isbn)
+}
+
+fn read_sqlite_isbn(content_id: &str) -> Result<String, String> {
+  let isbn = Connection::open_with_flags(&CONFIG.sqlite_path, OpenFlags::SQLITE_OPEN_READ_ONLY)
+    .map_err(|e| format!("Failed to connect to the database <i>{}</i>: {e}", &CONFIG.sqlite_path))?
+    .prepare(
+      "SELECT ISBN
+      FROM content
+      WHERE BookTitle is null
+      AND ContentId is (?1)
+      LIMIT 1;",
+    )
+    .map_err(|e| format!("Failed to parpare query: {e}"))?
+    .query_map([&content_id], |row| row.get(0))
+    .map_err(|e| format!("Failed to run query: {e}"))?
+    .next()
+    .ok_or("Query returned no results")?
+    .map_err(|e| format!("Failed to map query result: {e}"))?;
+
+  Ok(isbn)
 }
 
 pub fn get_isbn(content_id: &str) -> Vec<String> {
-  let isbn = if content_id.starts_with("file://") {
-    let file = File::open(Path::new(&content_id[7..])).expect(&format!("Failed to open book file `{content_id}`"));
-    let mut archive = ZipArchive::new(file).expect("Failed to open book file `{content_id}` as archive");
-
-    let mut manifest = String::new();
-    archive
-      .by_name("META-INF/container.xml")
-      .expect(&format!("Failed to read container manifest in `{content_id}`"))
-      .read_to_string(&mut manifest)
-      .unwrap();
-    let oebps_path = get_oebps_path(&manifest).expect(&format!("Failed to find oebps rootfile in `{content_id}`"));
-
-    let mut oebps = String::new();
-    archive
-      .by_name(&oebps_path)
-      .expect(&format!("Failed to read oebps file in `{content_id}`"))
-      .read_to_string(&mut oebps)
-      .unwrap();
-
-    get_identifiers(&oebps)
+  if content_id.starts_with("file://") {
+    match read_epub_isbn(content_id) {
+      Err(msg) => {
+        panic!("Encountered an unexpeced error while parsing epub metadata. Please link book manually.<br><br>{msg}");
+      }
+      Ok(isbn) => isbn,
+    }
   } else {
-    let isbn = Connection::open_with_flags(&CONFIG.sqlite_path, OpenFlags::SQLITE_OPEN_READ_ONLY)
-      .expect(&format!(
-        "Failed to connect to SQLite data base `{}`",
-        &CONFIG.sqlite_path
-      ))
-      .prepare(
-        "SELECT ISBN
-        FROM content
-        WHERE BookTitle is null
-        AND ContentId is (?1)
-        LIMIT 1;",
-      )
-      .expect("Failed to parpare SQLite ISBN query")
-      .query_map([&content_id], |row| row.get(0))
-      .expect("Failed to query ISBN from SQLite database")
-      .next()
-      .expect("Failed to map ISBN from SQLite database")
-      .expect(&format!("Failed to find content id `{content_id}` in SQLite database"));
-
-    vec![isbn]
-  };
-
-  if isbn.is_empty() {
-    panic!("Failed to find ISBN for book `{content_id}`");
+    match read_sqlite_isbn(content_id) {
+      Err(msg) => {
+        panic!(
+          "Encountered an unexpeced error while fetching ISBN from the database. Please link book manually.<br><br>{msg}"
+        );
+      }
+      Ok(isbn) => vec![isbn],
+    }
   }
-
-  isbn
 }

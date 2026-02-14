@@ -11,11 +11,9 @@ pub struct Bookmark {
   pub location: f64,
 }
 
-pub fn get_bookmarks(content_id: String, after_datetime: Option<&String>) -> Vec<Bookmark> {
-  let connection = Connection::open_with_flags(&CONFIG.sqlite_path, OpenFlags::SQLITE_OPEN_READ_ONLY).expect(&format!(
-    "Failed to connect to SQLite data base `{}`",
-    &CONFIG.sqlite_path
-  ));
+pub fn get_bookmarks(content_id: String, after_datetime: Option<&String>) -> Result<Vec<Bookmark>, String> {
+  let connection = Connection::open_with_flags(&CONFIG.sqlite_path, OpenFlags::SQLITE_OPEN_READ_ONLY)
+    .map_err(|e| format!("Failed to connect to the database <i>{}</i>: {e}", &CONFIG.sqlite_path))?;
 
   let total_word_count: f64 = connection
     .prepare(
@@ -23,12 +21,12 @@ pub fn get_bookmarks(content_id: String, after_datetime: Option<&String>) -> Vec
       FROM content
       WHERE BookId = (?1)",
     )
-    .expect("Failed to parpare SQLite total word count query")
+    .map_err(|e| format!("Failed to parpare total word count query: {e}"))?
     .query_map([&content_id], |row| row.get(0))
-    .expect("Failed to query total word count from SQLite database")
+    .map_err(|e| format!("Failed to run total word count query: {e}"))?
     .next()
-    .expect("Failed to map total word count from SQLite database")
-    .expect("Failed to find total word count in SQLite database");
+    .ok_or("Total word count query returned no results")?
+    .map_err(|e| format!("Failed to map total word count query result: {e}"))?;
 
   connection
     .prepare(
@@ -57,15 +55,15 @@ pub fn get_bookmarks(content_id: String, after_datetime: Option<&String>) -> Vec
       )
       GROUP BY Bookmark.BookmarkID;",
     )
-    .expect("Failed to parpare SQLite bookmark query")
+    .map_err(|e| format!("Failed to parpare bookmark query: {e}"))?
     .query_map(
       [
         &content_id,
         after_datetime.unwrap_or(
           &NaiveDate::from_yo_opt(2000, 1)
-            .expect("Failed to construct NaiveDate")
+            .ok_or("Failed to construct NaiveDate")?
             .and_hms_opt(1, 0, 0)
-            .expect("Failed to construct NaiveDateTime")
+            .ok_or("Failed to construct NaiveDateTime")?
             .and_utc()
             .to_rfc3339(),
         ),
@@ -82,7 +80,7 @@ pub fn get_bookmarks(content_id: String, after_datetime: Option<&String>) -> Vec
         })
       },
     )
-    .expect("Failed to query bookmarks from SQLite database")
-    .map(|row| row.expect("Failed to map bookmark in SQLite response"))
+    .map_err(|e| format!("Failed to run bookmark query: {e}"))?
+    .map(|row| row.map_err(|e| format!("Failed to map bookmark query result: {e}")))
     .collect()
 }

@@ -43,10 +43,14 @@ async fn main() {
   }
 
   let args: Arguments = argh::from_env();
-  match args.command {
+  let res = match args.command {
     Commands::Search(args) => search::run(args).await,
     Commands::Update(args) => update::run(args).await,
     Commands::SetUserBook(args) => setuserbook::run(args).await,
     Commands::GetUserBook(args) => getuserbook::run(args).await,
+  };
+
+  if let Err(e) = res {
+    panic!("Encountered an unexpeced error. Please report this.<br><br>{e}");
   }
 }

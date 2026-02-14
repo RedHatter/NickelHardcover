@@ -15,7 +15,9 @@ pub type timestamptz = String;
 
 static USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"),);
 
-pub async fn send_request<T: Serialize, R: for<'a> Deserialize<'a> + std::fmt::Debug>(request_body: QueryBody<T>) -> R {
+pub async fn send_request<T: Serialize, R: for<'a> Deserialize<'a> + std::fmt::Debug>(
+  request_body: QueryBody<T>,
+) -> Result<R, String> {
   assert!(
     !CONFIG.authorization.is_empty(),
     "Please set the Hardcover.app authorization token in `.adds/nickelpagesync/config.ini`"
@@ -24,30 +26,30 @@ pub async fn send_request<T: Serialize, R: for<'a> Deserialize<'a> + std::fmt::D
   let client = Client::builder()
     .user_agent(USER_AGENT)
     .build()
-    .expect("Failed to construct http client");
+    .map_err(|e| format!("Failed to construct http client: {e}"))?;
   let res: Response<R> = client
     .post("https://api.hardcover.app/v1/graphql")
     .header("authorization", &CONFIG.authorization)
     .json(&request_body)
     .send()
     .await
-    .expect("Failed to send Hardcover.app request")
+    .map_err(|e| format!("Failed to send Hardcover.app request: {e}"))?
     .json()
     .await
-    .expect("Failed to parse Hardcover.app response");
+    .map_err(|e| format!("Failed to parse Hardcover.app response: {e}"))?;
 
   if let Some(errors) = res.errors {
-    panic!(
-      "Hardcover.app request failed with the following message:\n  {}",
+    return Err(format!(
+      "Hardcover.app request failed:<br>{}",
       errors
         .iter()
-        .map(|err| err.message.clone())
-        .collect::<Vec<String>>()
-        .join("\n  ")
-    );
+        .map(|err| err.message.as_ref())
+        .collect::<Vec<&str>>()
+        .join("<br>")
+    ));
   }
 
-  res.data.expect("Missing field `data` on Hardcover.app response")
+  res.data.ok_or("Missing field `data` on Hardcover.app response".into())
 }
 
 #[derive(GraphQLQuery)]
@@ -88,18 +90,26 @@ pub struct UpdateUserBook;
 )]
 pub struct InsertUserBook;
 
+pub struct UserBookResult {
+  pub book_id: i64,
+  pub edition_id: i64,
+  pub pages: i64,
+  pub user_id: i64,
+  pub user_read_id: Option<i64>,
+}
+
 pub async fn update_or_insert_user_book(
   isbn: Vec<String>,
   book_id: i64,
   object: update_user_book::UserBookUpdateInput,
-) -> (i64, i64, i64, Option<i64>, i64) {
+) -> Result<UserBookResult, String> {
   let user_id = send_request::<get_user_id::Variables, get_user_id::ResponseData>(GetUserId::build_query(
     get_user_id::Variables {},
   ))
-  .await
+  .await?
   .me
   .first()
-  .expect("Failed to find Hardcover.app user")
+  .ok_or("Failed to find Hardcover.app user")?
   .id;
 
   println!("Found user id {user_id}");
@@ -110,14 +120,18 @@ pub async fn update_or_insert_user_book(
   let res = send_request::<get_edition::Variables, get_edition::ResponseData>(GetEdition::build_query(
     get_edition::Variables { isbn, book_id, user_id },
   ))
-  .await;
+  .await?;
 
   let book = &res
     .editions
     .first()
-    .expect(&format!(
-      "Failed to find edition with ISBN/ASIN `{all_isbns}` or book_id `{book_id}`"
-    ))
+    .expect(&if book_id != 0 {
+      format!("Unable to find book id <i>{book_id}</i> on Hardcover.app. Please manually un-link and re-link book.")
+    } else {
+      format!(
+        "Unable to find a book edition on Hardcover.app with ISBN/ASIN <i>{all_isbns}</i>. Please manually link book."
+      )
+    })
     .book;
 
   let edition_id = book
@@ -127,9 +141,7 @@ pub async fn update_or_insert_user_book(
     .or(book.editions.first().map(|edition| edition.id)) // ISBN edition
     .or(book.default_ebook_edition.as_ref().map(|edition| edition.id))
     .or(book.default_cover_edition.as_ref().map(|edition| edition.id))
-    .expect(&format!(
-      "Failed to select edition for book with ISBN/ASIN `{all_isbns}` or id `{book_id}`"
-    ));
+    .ok_or(format!("Failed to select edition for book <i>{}</i>", book.id))?;
 
   let pages = book
     .user_books
@@ -140,8 +152,9 @@ pub async fn update_or_insert_user_book(
     .or(book.default_cover_edition.as_ref().and_then(|edition| edition.pages))
     .or(book.pages)
     .expect(&format!(
-      "Failed to find page count for book with ISBN/ASIN `{all_isbns}` or id `{book_id}`"
-    ));
+        "Unable to find the total page count for book <i>{}</i>. Please update the book on Hardcover.app with the correct page count.",
+        book.id)
+      );
 
   let user_read_id = if let Some(user_book) = book.user_books.first() {
     if object.review_slate.is_some()
@@ -157,16 +170,16 @@ pub async fn update_or_insert_user_book(
           object,
         }),
       )
-      .await;
+      .await?;
 
-      if let Some(error) = res.update_user_book.as_ref().and_then(|res| res.error.as_ref()) {
-        panic!("{error}");
+      if let Some(error) = res.update_user_book.as_ref().and_then(|res| res.error.clone()) {
+        return Err(error);
       }
 
       res
         .update_user_book
         .and_then(|update| update.user_book)
-        .expect("Failed to find user book after setting status")
+        .ok_or(format!("Failed to find updated user book <i>{}</i>", user_book.id))?
         .user_book_reads
         .first()
         .map(|read| read.id)
@@ -192,10 +205,10 @@ pub async fn update_or_insert_user_book(
         },
       },
     ))
-    .await;
+    .await?;
 
-    if let Some(error) = res.insert_user_book.as_ref().and_then(|res| res.error.as_ref()) {
-      panic!("{error}");
+    if let Some(error) = res.insert_user_book.as_ref().and_then(|res| res.error.clone()) {
+      return Err(error);
     }
 
     res
@@ -204,5 +217,11 @@ pub async fn update_or_insert_user_book(
       .and_then(|user_book| user_book.user_book_reads.first().map(|read| read.id))
   };
 
-  (book.id, edition_id, pages, user_read_id, user_id)
+  Ok(UserBookResult {
+    book_id: book.id,
+    edition_id,
+    pages,
+    user_id,
+    user_read_id,
+  })
 }

@@ -18,7 +18,7 @@ pub struct GetUserBook {
   book_id: Option<i64>,
 }
 
-pub async fn run(args: GetUserBook) {
+pub async fn run(args: GetUserBook) -> Result<(), String> {
   if args.content_id.is_none() && args.book_id.is_none() {
     panic!("One of --content-id or --book-id is required");
   }
@@ -29,10 +29,10 @@ pub async fn run(args: GetUserBook) {
   let user_id = send_request::<get_user_id::Variables, get_user_id::ResponseData>(GetUserId::build_query(
     get_user_id::Variables {},
   ))
-  .await
+  .await?
   .me
   .first()
-  .expect("Failed to find Hardcover.app user")
+  .ok_or("Failed to find Hardcover.app user")?
   .id;
 
   let all_isbns = isbn.join(", ");
@@ -40,14 +40,18 @@ pub async fn run(args: GetUserBook) {
   let res = send_request::<get_edition::Variables, get_edition::ResponseData>(GetEdition::build_query(
     get_edition::Variables { isbn, book_id, user_id },
   ))
-  .await;
+  .await?;
 
   let user_book = res
     .editions
     .first()
-    .expect(&format!(
-      "Failed to find edition with ASIN/ISBN `{all_isbns}` or book_id `{book_id}`",
-    ))
+    .expect(&if book_id != 0 {
+      format!("Unable to find book id <i>{book_id}</i> on Hardcover.app. Please manually un-link and re-link book.")
+    } else {
+      format!(
+        "Unable to find a book edition on Hardcover.app with ISBN/ASIN <i>{all_isbns}</i>. Please manually link book."
+      )
+    })
     .book
     .user_books
     .first()
@@ -71,6 +75,8 @@ pub async fn run(args: GetUserBook) {
     .unwrap_or(json!({}));
 
   println!("{user_book}");
+
+  Ok(())
 }
 
 fn reduce_slate(data: &Value) -> String {
