@@ -148,6 +148,15 @@ void SearchDialogContent::finished() {
   QObject::connect(signalMapper, SIGNAL(mapped(QString)), this, SIGNAL(tapped(QString)));
 
   int length = resultsArray.size();
+
+  if (length < 1) {
+    QLabel *label = new QLabel("No results.");
+    label->setAlignment(Qt::AlignCenter);
+    label->setStyleSheet("QLabel { font-size: 8pt; }");
+    results->addWidget(label, 1);
+    return;
+  }
+
   for (int i = 0; i < length; i++) {
     QJsonObject obj = resultsArray.at(i).toObject();
     SettingContainer *row = buildBookRow(obj, i < length - 1);
