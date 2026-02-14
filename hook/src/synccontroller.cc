@@ -2,11 +2,11 @@
 #include <NickelHook.h>
 #include <QDateTime>
 #include <QLabel>
-#include <QProcess>
 #include <QSettings>
 #include <QTimer>
 
 #include "files.h"
+#include "cli.h"
 #include "synccontroller.h"
 
 SyncController *SyncController::instance;
@@ -167,39 +167,23 @@ void SyncController::run() {
     setEnabled(false);
   }
 
-  QStringList arguments = {"update", "--content-id", contentId, "--value", QString::number(percentage)};
-
-  QString linkedBook = getLinkedBook();
-  if (!linkedBook.isEmpty()) {
-    arguments.append({"--book-id", linkedBook});
-  }
-
-  QString lastSynced = getLastSynced();
-  if (!lastSynced.isEmpty()) {
-    arguments.append({"--after", lastSynced});
-  }
-
-  QProcess *process = new QProcess();
-  process->start(Files::cli, arguments);
-  QObject::connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &SyncController::finished);
+  CLI* cli = new CLI(this);
+  cli->update(percentage);
+  QObject::connect(cli, &CLI::success, this, &SyncController::success);
+  QObject::connect(cli, &CLI::failure, this, &SyncController::closeDialog);
 }
 
-void SyncController::finished(int exitCode) {
-  QProcess *cli = qobject_cast<QProcess *>(sender());
-  processCLIOutput(cli);
+void SyncController::success() {
   inProgress->hide();
+  setLastSynced(QDateTime::currentDateTimeUtc().toString(Qt::ISODate));
 
-  if (exitCode != 0) {
-    closeDialog();
-  } else if (dialog) {
-    setLastSynced(QDateTime::currentDateTimeUtc().toString(Qt::ISODate));
-
-    ConfirmationDialog__setText(dialog, "Success!");
-    QTimer::singleShot(800, this, &SyncController::closeDialog);
-  }
+  ConfirmationDialog__setText(dialog, "Success!");
+  QTimer::singleShot(800, this, &SyncController::closeDialog);
 }
 
 void SyncController::closeDialog() {
+  inProgress->hide();
+
   if (dialog == nullptr)
     return;
 

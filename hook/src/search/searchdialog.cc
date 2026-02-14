@@ -4,7 +4,6 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QLabel>
-#include <QProcess>
 #include <QScreen>
 #include <QSignalMapper>
 #include <QTimer>
@@ -12,6 +11,7 @@
 
 #include <NickelHook.h>
 
+#include "../cli.h"
 #include "../files.h"
 #include "../synccontroller.h"
 #include "bookrow.h"
@@ -47,11 +47,7 @@ void SearchDialogContent::networkConnected() {
     }
   });
   QObject::connect(dlg, SIGNAL(backTapped()), dlg, SLOT(deleteLater()));
-  QObject::connect(this, &SearchDialogContent::tapped, dlg, [dlg](QString id) {
-    nh_log("SearchResults::tapped(%s)", qPrintable(id));
-    SyncController::getInstance()->setLinkedBook(id);
-    dlg->deleteLater();
-  });
+  QObject::connect(this, &SearchDialogContent::close, dlg, &QDialog::deleteLater);
 
   setKeyboardFrame(N3Dialog__keyboardFrame(dlg));
 
@@ -122,17 +118,14 @@ void SearchDialogContent::search(int page) {
   loadingLabel->setStyleSheet("QLabel { font-size: 8pt; }");
   results->addWidget(loadingLabel, 1);
 
-  QProcess *cli = new QProcess();
-  cli->start(Files::cli, {"search", "--limit", QString::number(limit), "--page", QString::number(page), "--query", query});
-  QObject::connect(cli, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &SearchDialogContent::finished);
+  CLI* cli = new CLI(this);
+  cli->search(query, limit, page);
+  QObject::connect(cli, &CLI::response, this, &SearchDialogContent::response);
+  QObject::connect(cli, &CLI::failure, this, &SearchDialogContent::close);
 }
 
-void SearchDialogContent::finished() {
+void SearchDialogContent::response(QJsonObject doc) {
   clear();
-
-  QProcess *cli = qobject_cast<QProcess *>(sender());
-  QJsonObject doc = processCLIOutput(cli);
-  if (doc.isEmpty()) return;
 
   double total = doc.value("total").toDouble(1);
 
@@ -145,7 +138,7 @@ void SearchDialogContent::finished() {
   QJsonArray resultsArray = doc.value("results").toArray();
 
   QSignalMapper *signalMapper = new QSignalMapper(this);
-  QObject::connect(signalMapper, SIGNAL(mapped(QString)), this, SIGNAL(tapped(QString)));
+  QObject::connect(signalMapper, SIGNAL(mapped(QString)), this, SLOT(tapped(QString)));
 
   int length = resultsArray.size();
 
@@ -166,4 +159,10 @@ void SearchDialogContent::finished() {
   }
 
   results->addStretch(1);
+}
+
+void SearchDialogContent::tapped(QString id) {
+  nh_log("SearchDialogContent::tapped(%s)", qPrintable(id));
+  SyncController::getInstance()->setLinkedBook(id);
+  close();
 }

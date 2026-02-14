@@ -1,5 +1,6 @@
 #include <QVBoxLayout>
 #include <QWidget>
+#include <QJsonObject>
 
 #include "../nickelhardcover.h"
 
@@ -13,8 +14,7 @@ public Q_SLOTS:
   void networkConnected();
   void commit();
   void buildDialog();
-  void buildContent();
-  void finished();
+  void buildContent(QJsonObject doc);
 
   void setRating(float value);
   void setSpoilers(int state);

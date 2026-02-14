@@ -1,12 +1,12 @@
 #include <QApplication>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QProcess>
 #include <QScreen>
 #include <QTextEdit>
 
 #include <NickelHook.h>
 
+#include "../cli.h"
 #include "../files.h"
 #include "../synccontroller.h"
 #include "rating.h"
@@ -27,16 +27,9 @@ void ReviewDialogContent::showReviewDialog() {
 }
 
 void ReviewDialogContent::networkConnected() {
-  SyncController *ctl = SyncController::getInstance();
-  QProcess *process = new QProcess();
-  QString linkedBook = ctl->getLinkedBook();
-  if (linkedBook.isEmpty()) {
-    process->start(Files::cli, {"get-user-book", "--content-id", ctl->getContentId()});
-  } else {
-    process->start(Files::cli, {"get-user-book", "--book-id", linkedBook});
-  }
-
-  QObject::connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &ReviewDialogContent::buildContent);
+  CLI* cli = new CLI(this);
+  cli->getUserBook();
+  QObject::connect(cli, &CLI::response, this, &ReviewDialogContent::buildContent);
 }
 
 void ReviewDialogContent::buildDialog() {
@@ -71,13 +64,7 @@ void ReviewDialogContent::buildDialog() {
   dialog->show();
 }
 
-void ReviewDialogContent::buildContent() {
-  QProcess *cli = qobject_cast<QProcess *>(sender());
-  QJsonObject doc = processCLIOutput(cli);
-  if (doc.isEmpty()) return;
-
-  QByteArray json = cli->readAllStandardOutput();
-
+void ReviewDialogContent::buildContent(QJsonObject doc) {
   rating = doc.value("rating").toDouble(0);
   spoilers = doc.value("review_has_spoilers").toBool(false);
   sponsored = doc.value("sponsored_review").toBool(false);
@@ -157,32 +144,9 @@ void ReviewDialogContent::commit() {
   nh_log("ReviewDialogContent::commit()");
 
   QTextEdit *textEdit = findChild<QTextEdit *>();
-  QStringList args = {"set-user-book", "--rating", QString::number(rating), "--text", textEdit->toPlainText()};
 
-  SyncController *ctl = SyncController::getInstance();
-  QString linkedBook = ctl->getLinkedBook();
-  if (linkedBook.isEmpty()) {
-    args.append({"--content-id", ctl->getContentId()});
-  } else {
-    args.append({"--book-id", linkedBook});
-  }
-
-  if (spoilers) {
-    args.append("--spoilers");
-  }
-
-  if (sponsored) {
-    args.append("--sponsored");
-  }
-
-  QProcess *cli = new QProcess();
-  cli->start(Files::cli, args);
-  QObject::connect(cli, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &ReviewDialogContent::finished);
-}
-
-void ReviewDialogContent::finished() {
-  close();
-
-  QProcess *cli = qobject_cast<QProcess *>(sender());
-  processCLIOutput(cli);
+  CLI* cli = new CLI(this);
+  cli->setUserBook(rating, textEdit->toPlainText(), spoilers, sponsored);
+  QObject::connect(cli, &CLI::success, this, &ReviewDialogContent::close);
+  QObject::connect(cli, &CLI::failure, this, &ReviewDialogContent::close);
 }

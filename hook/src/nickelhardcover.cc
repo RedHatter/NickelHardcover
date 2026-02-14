@@ -221,39 +221,3 @@ _nh_reading_menu_view_constructor_2(ReadingMenuView *_this, QWidget *parent, QBy
   ReadingMenuView__constructor_2(_this, parent, unknownArray, unknownBool);
   injectMenuWidget(parent);
 }
-
-QJsonObject processCLIOutput (QProcess* cli) {
-  if (cli->exitCode() > 0) {
-    QByteArray stderr = cli->readAllStandardError();
-    nh_log("Error from command line \"%s\"", qPrintable(stderr));
-    ConfirmationDialogFactory__showErrorDialog("Hardcover.app", QString(stderr));
-
-    return QJsonObject();
-  }
-
-  QByteArray stdout = cli->readAllStandardOutput();
-
-  int index = stdout.indexOf("BEGIN_JSON");
-
-  QByteArray bytes = stdout;
-  if (index > -1) {
-    bytes = stdout.left(index);
-  }
-
-  QList<QByteArray> lines = bytes.split('\n');
-  for (QByteArray &line : lines) {
-    if (line.length() == 0)
-      continue;
-
-    nh_log("%s", qPrintable(line));
-  }
-
-  cli->deleteLater();
-
-  if (index > -1) {
-    QByteArray json = stdout.right(stdout.size() - index + 10);
-    return QJsonDocument::fromJson(json).object();
-  }
-
-  return QJsonObject();
-}

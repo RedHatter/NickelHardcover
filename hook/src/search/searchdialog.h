@@ -15,9 +15,11 @@ public Q_SLOTS:
   void networkConnected();
   void commit();
   void search(int page);
+  void response(QJsonObject doc);
+  void tapped(QString id);
 
 Q_SIGNALS:
-  void tapped(QString id);
+  void close();
 
 private:
   SearchDialogContent(QString query, QWidget *parent = nullptr);
@@ -29,7 +31,4 @@ private:
   KeyboardFrame *keyboard;
 
   void clear();
-  void finished();
-
-  void search();
 };

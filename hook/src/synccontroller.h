@@ -13,7 +13,6 @@ public:
 
   void prepare(bool silent);
 
-public:
   QString getContentId();
   void setContentId(QString value);
 
@@ -37,7 +36,7 @@ public Q_SLOTS:
   void currentViewIndexChanged(int index);
   void pageChanged();
   void networkConnected();
-  void finished(int exitCode);
+  void success();
   void closeDialog();
 
 Q_SIGNALS:

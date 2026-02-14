@@ -2,12 +2,12 @@
 #include <QJsonObject>
 #include <QLabel>
 #include <QPixmap>
-#include <QProcess>
 #include <QWidgetAction>
 
 #include <NickelHook.h>
 
 #include "files.h"
+#include "cli.h"
 #include "menucontroller.h"
 #include "review/reviewdialog.h"
 #include "search/searchdialog.h"
@@ -136,24 +136,13 @@ void MenuController::setBookStatus(bool checked) {
 void MenuController::networkConnected() {
   nh_log("MenuController::networkConnected()");
 
-  SyncController *ctl = SyncController::getInstance();
-  QProcess *process = new QProcess();
-  QString linkedBook = ctl->getLinkedBook();
-  if (linkedBook.isEmpty()) {
-    process->start(Files::cli, {"get-user-book", "--content-id", ctl->getContentId()});
-  } else {
-    process->start(Files::cli, {"get-user-book", "--book-id", linkedBook});
-  }
-
-  QObject::connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &MenuController::showStatusMenu);
+  CLI* cli = new CLI(this);
+  cli->getUserBook();
+  QObject::connect(cli, &CLI::response, this, &MenuController::showStatusMenu);
 }
 
-void MenuController::showStatusMenu() {
+void MenuController::showStatusMenu(QJsonObject doc) {
   nh_log("MenuController::showStatusMenu()");
-
-  QProcess *cli = qobject_cast<QProcess *>(sender());
-  QJsonObject doc = processCLIOutput(cli);
-  if (doc.isEmpty()) return;
 
   icon->setPixmap(QPixmap(Files::icon_selected));
 
@@ -200,22 +189,9 @@ void MenuController::statusSelected(QAction *action) {
   int status = action->data().toInt();
   nh_log("MenuController::statusSelected(%i)", status);
 
-  QStringList arguments = {"set-user-book", "--status", QString::number(status)};
+  if (status == 0) return;
 
-  SyncController *ctl = SyncController::getInstance();
-  QString linkedBook = ctl->getLinkedBook();
-  if (linkedBook.isEmpty()) {
-    arguments.append({"--content-id", ctl->getContentId()});
-  } else {
-    arguments.append({"--book-id", linkedBook});
-  }
-
-  QProcess *process = new QProcess();
-  process->start(Files::cli, arguments);
-  QObject::connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &MenuController::finished);
-}
-
-void MenuController::finished() {
-  QProcess *cli = qobject_cast<QProcess *>(sender());
-  processCLIOutput(cli);
+  CLI* cli = new CLI(this);
+  cli->setUserBook(status);
+  QObject::connect(cli, &CLI::response, this, &MenuController::showStatusMenu);
 }

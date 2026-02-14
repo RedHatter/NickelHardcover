@@ -1,4 +1,3 @@
-#include <QProcess>
 #include <QCheckBox>
 #include <QDialog>
 #include <QFrame>
@@ -85,5 +84,3 @@ extern void (*MenuTextItem__registerForTapGestures)(MenuTextItem *_this);
 typedef QFrame TouchTextEdit;
 extern void (*TouchTextEdit__constructor)(TouchTextEdit *__this, QWidget *parent);
 extern void (*TouchTextEdit__setCustomPlaceholderText)(TouchTextEdit *__this, QString const &text);
-
-QJsonObject processCLIOutput (QProcess* cli);
