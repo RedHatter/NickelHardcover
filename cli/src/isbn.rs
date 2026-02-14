@@ -122,6 +122,8 @@ fn read_epub_isbn(content_id: &str) -> Result<Vec<String>, String> {
     panic!("Couldn't find an ISBN in the epub metadata. Please link book manually.");
   }
 
+  println!("ISBN from epub `{}`", isbn.join(", "));
+
   Ok(isbn)
 }
 
@@ -141,6 +143,8 @@ fn read_sqlite_isbn(content_id: &str) -> Result<String, String> {
     .next()
     .ok_or("Query returned no results")?
     .map_err(|e| format!("Failed to map query result: {e}"))?;
+
+  println!("ISBN from database `{isbn}`");
 
   Ok(isbn)
 }

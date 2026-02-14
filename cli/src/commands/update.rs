@@ -67,6 +67,8 @@ pub struct Update {
 }
 
 pub async fn run(args: Update) -> Result<(), String> {
+  println!("{:?}", args);
+
   let isbn = if args.book_id.is_none() {
     get_isbn(&args.content_id)
   } else {
@@ -118,6 +120,8 @@ pub async fn run(args: Update) -> Result<(), String> {
     _ => None,
   };
   let bookmarks = get_bookmarks(args.content_id, after)?;
+
+  println!("{} bookmarks", bookmarks.len());
 
   for bookmark in bookmarks.iter() {
     let reading_journals = if args.after.clone().is_some_and(|after| bookmark.date_created < after) {

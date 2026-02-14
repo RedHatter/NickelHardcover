@@ -19,6 +19,8 @@ pub struct GetUserBook {
 }
 
 pub async fn run(args: GetUserBook) -> Result<(), String> {
+  println!("{:?}", args);
+
   if args.content_id.is_none() && args.book_id.is_none() {
     panic!("One of --content-id or --book-id is required");
   }
@@ -34,6 +36,8 @@ pub async fn run(args: GetUserBook) -> Result<(), String> {
   .first()
   .ok_or("Failed to find Hardcover.app user")?
   .id;
+
+  println!("user {user_id}");
 
   let all_isbns = isbn.join(", ");
 
@@ -74,7 +78,7 @@ pub async fn run(args: GetUserBook) -> Result<(), String> {
     })
     .unwrap_or(json!({}));
 
-  println!("{user_book}");
+  println!("BEGIN_JSON\n{user_book}");
 
   Ok(())
 }

@@ -112,7 +112,7 @@ pub async fn update_or_insert_user_book(
   .ok_or("Failed to find Hardcover.app user")?
   .id;
 
-  println!("Found user id {user_id}");
+  println!("user {user_id}");
 
   let all_isbns = isbn.join(", ");
 
@@ -216,6 +216,10 @@ pub async fn update_or_insert_user_book(
       .and_then(|insert| insert.user_book)
       .and_then(|user_book| user_book.user_book_reads.first().map(|read| read.id))
   };
+
+  if let Some(id) = user_read_id {
+    println!("user read `{id}`");
+  }
 
   Ok(UserBookResult {
     book_id: book.id,

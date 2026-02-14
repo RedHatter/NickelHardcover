@@ -181,39 +181,16 @@ void SyncController::run() {
 
   QProcess *process = new QProcess();
   process->start(Files::cli, arguments);
-  QObject::connect(process, &QProcess::readyReadStandardOutput, this, &SyncController::readyReadStandardOutput);
   QObject::connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &SyncController::finished);
 }
 
-void SyncController::logLines(QByteArray msg) {
-  QList<QByteArray> lines = msg.split('\n');
-  for (QByteArray &line : lines) {
-    if (line.length() == 0)
-      continue;
-
-    nh_log("%s", qPrintable(line));
-  }
-}
-
-void SyncController::readyReadStandardOutput() {
-  QProcess *process = qobject_cast<QProcess *>(sender());
-  logLines(process->readAllStandardOutput());
-}
-
 void SyncController::finished(int exitCode) {
-  sender()->deleteLater();
+  QProcess *cli = qobject_cast<QProcess *>(sender());
+  processCLIOutput(cli);
   inProgress->hide();
-
-  nh_log("cli finished with exit code %d", exitCode);
 
   if (exitCode != 0) {
     closeDialog();
-
-    QProcess *process = qobject_cast<QProcess *>(sender());
-    QByteArray stderr = process->readAllStandardError();
-    logLines(stderr);
-
-    ConfirmationDialogFactory__showErrorDialog("Hardcover.app", QString(stderr));
   } else if (dialog) {
     setLastSynced(QDateTime::currentDateTimeUtc().toString(Qt::ISODate));
 

@@ -29,7 +29,7 @@ private:
   KeyboardFrame *keyboard;
 
   void clear();
-  void finished(int exitCode);
+  void finished();
 
   void search();
 };

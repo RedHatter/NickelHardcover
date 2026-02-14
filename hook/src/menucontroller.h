@@ -21,9 +21,9 @@ public Q_SLOTS:
   void setBookStatus(bool checked);
 
   void networkConnected();
-  void showStatusMenu(int exitCode);
+  void showStatusMenu();
   void statusSelected(QAction *action);
-  void finished(int exitCode);
+  void finished();
 
 private:
   QWidgetAction *addMenuItem(NickelTouchMenu *menu, QString label, bool checkable = false, bool checked = false);

@@ -127,25 +127,12 @@ void SearchDialogContent::search(int page) {
   QObject::connect(cli, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &SearchDialogContent::finished);
 }
 
-void SearchDialogContent::finished(int exitCode) {
-  QProcess *cli = qobject_cast<QProcess *>(sender());
-
+void SearchDialogContent::finished() {
   clear();
 
-  if (exitCode > 0) {
-    QByteArray stderr = cli->readAllStandardError();
-    nh_log("Error from command line \"%s\"", qPrintable(stderr));
-
-    QLabel *errorLabel = new QLabel(stderr);
-    errorLabel->setAlignment(Qt::AlignCenter);
-    errorLabel->setStyleSheet("QLabel { font-size: 8pt; }");
-    results->addWidget(errorLabel);
-
-    return;
-  }
-
-  QByteArray json = cli->readAllStandardOutput();
-  QJsonObject doc = QJsonDocument::fromJson(json).object();
+  QProcess *cli = qobject_cast<QProcess *>(sender());
+  QJsonObject doc = processCLIOutput(cli);
+  if (doc.isEmpty()) return;
 
   double total = doc.value("total").toDouble(1);
 

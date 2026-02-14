@@ -13,9 +13,8 @@ public Q_SLOTS:
   void networkConnected();
   void commit();
   void buildDialog();
-  void buildContent(int exitCode);
-  void readyReadStandardOutput();
-  void finished(int exitCode);
+  void buildContent();
+  void finished();
 
   void setRating(float value);
   void setSpoilers(int state);

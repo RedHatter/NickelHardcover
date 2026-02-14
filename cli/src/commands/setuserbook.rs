@@ -42,6 +42,8 @@ pub struct SetUserBook {
 }
 
 pub async fn run(args: SetUserBook) -> Result<(), String> {
+  println!("{:?}", args);
+
   if args.content_id.is_none() && args.book_id.is_none() {
     panic!("One of --content-id or --book-id is required");
   }

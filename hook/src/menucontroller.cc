@@ -148,18 +148,12 @@ void MenuController::networkConnected() {
   QObject::connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &MenuController::showStatusMenu);
 }
 
-void MenuController::showStatusMenu(int exitCode) {
+void MenuController::showStatusMenu() {
   nh_log("MenuController::showStatusMenu()");
 
   QProcess *cli = qobject_cast<QProcess *>(sender());
-
-  if (exitCode > 0) {
-    QByteArray stderr = cli->readAllStandardError();
-    nh_log("Error from command line \"%s\"", qPrintable(stderr));
-    ConfirmationDialogFactory__showErrorDialog("Hardcover.app", QString(stderr));
-
-    return;
-  }
+  QJsonObject doc = processCLIOutput(cli);
+  if (doc.isEmpty()) return;
 
   icon->setPixmap(QPixmap(Files::icon_selected));
 
@@ -180,9 +174,6 @@ void MenuController::showStatusMenu(int exitCode) {
   }
 
   menu->addSeparator();
-
-  QByteArray json = cli->readAllStandardOutput();
-  QJsonObject doc = QJsonDocument::fromJson(json).object();
 
   int status = doc.value("status_id").toInt(0);
 
@@ -224,14 +215,7 @@ void MenuController::statusSelected(QAction *action) {
   QObject::connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &MenuController::finished);
 }
 
-void MenuController::finished(int exitCode) {
+void MenuController::finished() {
   QProcess *cli = qobject_cast<QProcess *>(sender());
-
-  if (exitCode > 0) {
-    QByteArray stderr = cli->readAllStandardError();
-    nh_log("Error from command line \"%s\"", qPrintable(stderr));
-    ConfirmationDialogFactory__showErrorDialog("Hardcover.app", QString(stderr));
-
-    return;
-  }
+  processCLIOutput(cli);
 }

@@ -71,19 +71,12 @@ void ReviewDialogContent::buildDialog() {
   dialog->show();
 }
 
-void ReviewDialogContent::buildContent(int exitCode) {
+void ReviewDialogContent::buildContent() {
   QProcess *cli = qobject_cast<QProcess *>(sender());
-
-  if (exitCode > 0) {
-    QByteArray stderr = cli->readAllStandardError();
-    nh_log("Error from command line \"%s\"", qPrintable(stderr));
-    ConfirmationDialogFactory__showErrorDialog("Hardcover.app", QString(stderr));
-
-    return;
-  }
+  QJsonObject doc = processCLIOutput(cli);
+  if (doc.isEmpty()) return;
 
   QByteArray json = cli->readAllStandardOutput();
-  QJsonObject doc = QJsonDocument::fromJson(json).object();
 
   rating = doc.value("rating").toDouble(0);
   spoilers = doc.value("review_has_spoilers").toBool(false);
@@ -184,32 +177,12 @@ void ReviewDialogContent::commit() {
 
   QProcess *cli = new QProcess();
   cli->start(Files::cli, args);
-  QObject::connect(cli, &QProcess::readyReadStandardOutput, this, &ReviewDialogContent::readyReadStandardOutput);
   QObject::connect(cli, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &ReviewDialogContent::finished);
 }
 
-void ReviewDialogContent::readyReadStandardOutput() {
-  QProcess *process = qobject_cast<QProcess *>(sender());
-
-  QByteArray msg = process->readAllStandardOutput();
-  QList<QByteArray> lines = msg.split('\n');
-
-  for (QByteArray &line : lines) {
-    if (line.length() == 0)
-      continue;
-
-    nh_log("%s", qPrintable(line));
-  }
-}
-
-void ReviewDialogContent::finished(int exitCode) {
-  QProcess *cli = qobject_cast<QProcess *>(sender());
-
+void ReviewDialogContent::finished() {
   close();
 
-  if (exitCode > 0) {
-    QByteArray stderr = cli->readAllStandardError();
-    nh_log("Error from command line \"%s\"", qPrintable(stderr));
-    ConfirmationDialogFactory__showErrorDialog("Hardcover.app", QString(stderr));
-  }
+  QProcess *cli = qobject_cast<QProcess *>(sender());
+  processCLIOutput(cli);
 }

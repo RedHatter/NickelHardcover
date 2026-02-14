@@ -37,7 +37,6 @@ public Q_SLOTS:
   void currentViewIndexChanged(int index);
   void pageChanged();
   void networkConnected();
-  void readyReadStandardOutput();
   void finished(int exitCode);
   void closeDialog();
 

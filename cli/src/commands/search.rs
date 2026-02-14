@@ -31,6 +31,8 @@ pub struct Search {
 }
 
 pub async fn run(args: Search) -> Result<(), String> {
+  println!("{:?}", args);
+
   let results = send_request::<search_books::Variables, search_books::ResponseData>(SearchBooks::build_query(
     search_books::Variables {
       query: args.query,
@@ -77,7 +79,7 @@ pub async fn run(args: Search) -> Result<(), String> {
     .collect::<Vec<_>>();
 
   println!(
-    "{}",
+    "BEGIN_JSON\n{}",
     json!({
       "results": hits,
       "page": results.get("page"),
