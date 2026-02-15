@@ -77,7 +77,7 @@ void CLI::start(QStringList arguments) {
 
 void CLI::processFinished(int exitCode) {
   QProcess *process = qobject_cast<QProcess *>(sender());
-  process->deleteLater();
+  deleteLater();
 
   QByteArray stdout = process->readAllStandardOutput();
 

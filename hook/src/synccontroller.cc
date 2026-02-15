@@ -177,6 +177,8 @@ void SyncController::success() {
   inProgress->hide();
   setLastSynced(QDateTime::currentDateTimeUtc().toString(Qt::ISODate));
 
+  if (dialog == nullptr) return;
+
   ConfirmationDialog__setText(dialog, "Success!");
   QTimer::singleShot(800, this, &SyncController::closeDialog);
 }
