@@ -84,3 +84,36 @@ query GetJournal($action_at: timestamptz!, $user_id: Int!) {
 		id
 	}
 }
+
+query GetReadingJournal(
+	$isbn: [String!]!
+	$book_id: Int!
+	$user_id: Int!
+	$limit: Int!
+	$offset: Int!
+) {
+	reading_journals(
+		where: {
+			user_id: { _eq: $user_id }
+			book: {
+				editions: {
+					_or: [
+						{ asin: { _in: $isbn } }
+						{ isbn_10: { _in: $isbn } }
+						{ isbn_13: { _in: $isbn } }
+						{ book_id: { _eq: $book_id } }
+					]
+				}
+			}
+		}
+		limit: $limit
+		offset: $offset
+		order_by: { action_at: desc }
+	) {
+		entry
+		event
+		id
+		action_at
+		metadata
+	}
+}

@@ -83,7 +83,7 @@ pub async fn run(args: GetUserBook) -> Result<(), String> {
   Ok(())
 }
 
-fn reduce_slate(data: &Value) -> String {
+pub fn reduce_slate(data: &Value) -> String {
   return match data {
     Value::Array(array) => array.iter().map(reduce_slate).collect::<Vec<String>>().join(""),
     Value::Object(map) => {

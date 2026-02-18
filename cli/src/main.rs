@@ -1,7 +1,7 @@
 use std::env;
 use std::panic;
 
-use crate::commands::{getuserbook, search, setuserbook, update};
+use crate::commands::{getuserbook, listjournal, search, setuserbook, update};
 
 mod commands;
 mod hardcover;
@@ -22,6 +22,7 @@ struct Arguments {
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand)]
 enum Commands {
+  ListJournal(listjournal::ListJournal),
   Search(search::Search),
   Update(update::Update),
   SetUserBook(setuserbook::SetUserBook),
@@ -44,6 +45,7 @@ async fn main() {
 
   let args: Arguments = argh::from_env();
   let res = match args.command {
+    Commands::ListJournal(args) => listjournal::run(args).await,
     Commands::Search(args) => search::run(args).await,
     Commands::Update(args) => update::run(args).await,
     Commands::SetUserBook(args) => setuserbook::run(args).await,
