@@ -62,7 +62,8 @@ format:
 clean:
   cd hook && make clean
   cd cli && cargo clean
-  rm KoboRoot.tgz res/icon*.png res/*star*.png
+  rm -fv KoboRoot.tgz
+  for f in res/*.png; do git ls-files --error-unmatch $f > /dev/null 2>&1 || rm -v $f; done
 
 # Run `logread` over ssh
 logs:
