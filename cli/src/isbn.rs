@@ -128,7 +128,7 @@ fn read_epub_isbn(content_id: &str) -> Result<Vec<String>, String> {
 }
 
 fn read_sqlite_isbn(content_id: &str) -> Result<String, String> {
-  let isbn = Connection::open_with_flags(&CONFIG.sqlite_path, OpenFlags::SQLITE_OPEN_READ_ONLY)
+  let maybe_isbn: Option<String> = Connection::open_with_flags(&CONFIG.sqlite_path, OpenFlags::SQLITE_OPEN_READ_ONLY)
     .map_err(|e| format!("Failed to connect to the database <i>{}</i>: {e}", &CONFIG.sqlite_path))?
     .prepare(
       "SELECT ISBN
@@ -144,6 +144,7 @@ fn read_sqlite_isbn(content_id: &str) -> Result<String, String> {
     .ok_or("Query returned no results")?
     .map_err(|e| format!("Failed to map query result: {e}"))?;
 
+  let isbn = maybe_isbn.expect("Couldn't find an ISBN in the database. Please link book manually.");
   println!("ISBN from database `{isbn}`");
 
   Ok(isbn)
