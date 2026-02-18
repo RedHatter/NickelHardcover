@@ -1,5 +1,5 @@
-#include <QProcess>
 #include <QJsonDocument>
+#include <QProcess>
 
 #include <NickelHook.h>
 
@@ -8,6 +8,12 @@
 #include "synccontroller.h"
 
 CLI::CLI(QObject *parent) : QObject(parent) {}
+
+void CLI::listJournal(int limit, int offset) {
+  QStringList arguments = {"list-journal", "--limit", QString::number(limit), "--offset", QString::number(offset)};
+  arguments.append(getIdentifier());
+  start(arguments);
+}
 
 void CLI::getUserBook() {
   QStringList arguments = {"get-user-book"};

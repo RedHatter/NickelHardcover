@@ -18,6 +18,7 @@ public Q_SLOTS:
   void toggleEnabled(bool checked);
   void linkBook(bool checked);
   void review(bool checked);
+  void openJournal(bool checked);
   void setBookStatus(bool checked);
 
   void networkConnected();

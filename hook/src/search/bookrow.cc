@@ -69,7 +69,7 @@ QLayout *buildBookText(QJsonObject json) {
     seriesString.append(seriesName.toString().toUpper());
 
     ElidedLabel *seriesLabel = new ElidedLabel(seriesString);
-    seriesLabel->setFontSize(8);
+    seriesLabel->setObjectName("series");
     textLayout->addWidget(seriesLabel, 0);
   }
 
@@ -90,7 +90,7 @@ QLayout *buildBookText(QJsonObject json) {
       authorString.chop(2);
 
       ElidedLabel *authorLabel = new ElidedLabel(authorString);
-      authorLabel->setFontSize(8);
+      authorLabel->setObjectName("author");
       textLayout->addWidget(authorLabel);
     }
   }
@@ -121,7 +121,7 @@ QLayout *buildBookText(QJsonObject json) {
   }
 
   ElidedLabel *metaLabel = new ElidedLabel(metaString);
-  metaLabel->setFontSize(8);
+  metaLabel->setObjectName("meta");
   textLayout->addWidget(metaLabel);
 
   textLayout->addStretch(1);
@@ -132,6 +132,7 @@ QLayout *buildBookText(QJsonObject json) {
 SettingContainer *buildBookRow(QJsonObject json, bool showBottomBorder) {
   SettingContainer *container = reinterpret_cast<SettingContainer *>(calloc(1, 128));
   SettingContainer__constructor(container, nullptr);
+  container->setStyleSheet("ElidedLabel#series, ElidedLabel#author, ElidedLabel#meta { font-size: 8pt; }");
 
   if (showBottomBorder) {
     SettingContainer__setShowBottomLine(container, true);

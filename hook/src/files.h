@@ -16,5 +16,17 @@ constexpr char const *right_star = "./usr/share/NickelHardcover/right-star.png";
 constexpr char const *right_star_selected = "./usr/share/NickelHardcover/right-star-selected.png";
 constexpr char const *left_star = "./usr/share/NickelHardcover/left-star.png";
 constexpr char const *left_star_selected = "./usr/share/NickelHardcover/left-star-selected.png";
+
+constexpr char const *status_want_to_read = "./usr/share/NickelHardcover/status_want_to_read.png";
+constexpr char const *status_read = "./usr/share/NickelHardcover/status_read.png";
+constexpr char const *user_book_read_started = "./usr/share/NickelHardcover/user_book_read_started.png";
+constexpr char const *user_book_read_finished = "./usr/share/NickelHardcover/user_book_read_finished.png";
+constexpr char const *status_stopped = "./usr/share/NickelHardcover/status_stopped.png";
+constexpr char const *progress_updated = "./usr/share/NickelHardcover/progress_updated.png";
+constexpr char const *rated = "./usr/share/NickelHardcover/rated.png";
+constexpr char const *note = "./usr/share/NickelHardcover/note.png";
+constexpr char const *quote = "./usr/share/NickelHardcover/quote.png";
+constexpr char const *reviewed = "./usr/share/NickelHardcover/reviewed.png";
+
 constexpr char const *share_directory = "./usr/share/NickelHardcover";
 } // namespace Files

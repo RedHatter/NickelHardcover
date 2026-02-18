@@ -6,8 +6,9 @@
 
 #include <NickelHook.h>
 
-#include "files.h"
 #include "cli.h"
+#include "files.h"
+#include "journal/journaldialog.h"
 #include "menucontroller.h"
 #include "review/reviewdialog.h"
 #include "search/searchdialog.h"
@@ -57,6 +58,11 @@ void MenuController::showMainMenu(bool checked) {
   if (extraField) {
     extraField->setPixmap(QPixmap(Files::right));
   }
+
+  menu->addSeparator();
+
+  action = addMenuItem(menu, "Open reading journal");
+  QObject::connect(action, &QAction::triggered, this, &MenuController::openJournal);
 
   menu->addSeparator();
 
@@ -119,6 +125,12 @@ void MenuController::review(bool checked) {
   ReviewDialogContent::showReviewDialog();
 }
 
+void MenuController::openJournal(bool checked) {
+  nh_log("MenuController::openJournal(%s)", checked ? "true" : "false");
+
+  JournalDialogContent::showJournalDialog();
+}
+
 void MenuController::setBookStatus(bool checked) {
   nh_log("MenuController::setBookStatus(%s)", checked ? "true" : "false");
 
@@ -136,7 +148,7 @@ void MenuController::setBookStatus(bool checked) {
 void MenuController::networkConnected() {
   nh_log("MenuController::networkConnected()");
 
-  CLI* cli = new CLI(this);
+  CLI *cli = new CLI(this);
   cli->getUserBook();
   QObject::connect(cli, &CLI::response, this, &MenuController::showStatusMenu);
 }
@@ -189,9 +201,10 @@ void MenuController::statusSelected(QAction *action) {
   int status = action->data().toInt();
   nh_log("MenuController::statusSelected(%i)", status);
 
-  if (status == 0) return;
+  if (status == 0)
+    return;
 
-  CLI* cli = new CLI(this);
+  CLI *cli = new CLI(this);
   cli->setUserBook(status);
   QObject::connect(cli, &CLI::response, this, &MenuController::showStatusMenu);
 }

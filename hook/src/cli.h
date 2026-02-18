@@ -7,6 +7,7 @@ class CLI : public QObject {
 public:
   CLI(QObject *parent = nullptr);
 
+  void listJournal(int limit, int offset);
   void getUserBook();
   void setUserBook(int status);
   void setUserBook(int rating, QString text, bool spoilers, bool sponsored);
