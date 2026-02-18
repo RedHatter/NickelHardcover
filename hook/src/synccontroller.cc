@@ -158,7 +158,7 @@ void SyncController::run() {
   }
 
   if (dialog) {
-    ConfirmationDialog__setText(dialog, "Updating book progress on Hardcover.app...");
+    ConfirmationDialog__setText(dialog, "Syncing with Hardcover.app...");
   }
 
   inProgress->show();
