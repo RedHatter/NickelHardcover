@@ -132,7 +132,8 @@ QLayout *buildBookText(QJsonObject json) {
 SettingContainer *buildBookRow(QJsonObject json, bool showBottomBorder) {
   SettingContainer *container = reinterpret_cast<SettingContainer *>(calloc(1, 128));
   SettingContainer__constructor(container, nullptr);
-  container->setStyleSheet("ElidedLabel#series, ElidedLabel#author, ElidedLabel#meta { font-size: 8pt; }");
+  container->setStyleSheet("ElidedLabel#series, ElidedLabel#author, "
+                           "ElidedLabel#meta { font-size: 8pt; }");
 
   if (showBottomBorder) {
     SettingContainer__setShowBottomLine(container, true);

@@ -1,12 +1,12 @@
-#include <stdlib.h>
 #include <NickelHook.h>
 #include <QDateTime>
 #include <QLabel>
 #include <QSettings>
 #include <QTimer>
+#include <stdlib.h>
 
-#include "files.h"
 #include "cli.h"
+#include "files.h"
 #include "synccontroller.h"
 
 SyncController *SyncController::instance;
@@ -118,7 +118,9 @@ void SyncController::prepare(bool manual) {
   int threshold = 5;
   int lastProgress = getLastProgress();
   if (!manual && (percentage != 100 || lastProgress == 100) && abs(lastProgress - percentage) < threshold) {
-    nh_log("Reading progress is %d%% with a last synced progress of %d%% and a threshold of %d%%. Skipping update", percentage, lastProgress, threshold);
+    nh_log("Reading progress is %d%% with a last synced progress of %d%% "
+           "and a threshold of %d%%. Skipping update",
+           percentage, lastProgress, threshold);
     return;
   }
 
@@ -167,7 +169,7 @@ void SyncController::run() {
     setEnabled(false);
   }
 
-  CLI* cli = new CLI(this);
+  CLI *cli = new CLI(this);
   cli->update(percentage);
   QObject::connect(cli, &CLI::success, this, &SyncController::success);
   QObject::connect(cli, &CLI::failure, this, &SyncController::closeDialog);
@@ -177,7 +179,8 @@ void SyncController::success() {
   inProgress->hide();
   setLastSynced(QDateTime::currentDateTimeUtc().toString(Qt::ISODate));
 
-  if (dialog == nullptr) return;
+  if (dialog == nullptr)
+    return;
 
   ConfirmationDialog__setText(dialog, "Success!");
   QTimer::singleShot(800, this, &SyncController::closeDialog);

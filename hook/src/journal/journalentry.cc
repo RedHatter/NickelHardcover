@@ -48,8 +48,9 @@ JournalEntry::JournalEntry(QJsonObject doc, QWidget *parent) : QFrame(parent) {
   } else if (event == "progress_updated") {
     icon->setPixmap(QPixmap(Files::progress_updated));
     QJsonObject metadata = doc.value("metadata").toObject();
-    label->setText(
-        QString("Updated progress from %1% → %2%").arg(metadata.value("progress_was").toInt()).arg(metadata.value("progress").toInt()));
+    label->setText(QString("Updated progress from %1% → %2%")
+                       .arg(metadata.value("progress_was").toInt())
+                       .arg(metadata.value("progress").toInt()));
   } else if (event == "rated") {
     icon->setPixmap(QPixmap(Files::rated));
     QJsonObject metadata = doc.value("metadata").toObject();
@@ -77,8 +78,8 @@ JournalEntry::JournalEntry(QJsonObject doc, QWidget *parent) : QFrame(parent) {
     label->setText("Unknown journal type " + event);
   }
 
-  QLabel *actionAt =
-      new QLabel(QDateTime::fromString(doc.value("action_at").toString(), Qt::ISODate).toString(Qt::SystemLocaleShortDate), this);
+  QLabel *actionAt = new QLabel(
+      QDateTime::fromString(doc.value("action_at").toString(), Qt::ISODate).toString(Qt::SystemLocaleShortDate), this);
   actionAt->setObjectName("actionAt");
   layout->addWidget(actionAt, 0, Qt::AlignRight);
   actionAt->lower();

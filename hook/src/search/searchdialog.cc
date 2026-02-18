@@ -118,7 +118,7 @@ void SearchDialogContent::search(int page) {
   loadingLabel->setStyleSheet("QLabel { font-size: 8pt; }");
   results->addWidget(loadingLabel, 1);
 
-  CLI* cli = new CLI(this);
+  CLI *cli = new CLI(this);
   cli->search(query, limit, page);
   QObject::connect(cli, &CLI::response, this, &SearchDialogContent::response);
   QObject::connect(cli, &CLI::failure, this, &SearchDialogContent::close);

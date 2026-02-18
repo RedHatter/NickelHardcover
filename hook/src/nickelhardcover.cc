@@ -1,8 +1,8 @@
 #include <QHBoxLayout>
-#include <QStackedWidget>
-#include <QString>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QStackedWidget>
+#include <QString>
 
 #include <NickelHook.h>
 
@@ -50,7 +50,8 @@ void (*MenuTextItem__registerForTapGestures)(MenuTextItem *_this);
 
 typedef QWidget ReadingMenuView;
 void (*ReadingMenuView__constructor)(ReadingMenuView *_this, QWidget *parent, bool unknown);
-void (*ReadingMenuView__constructor_2)(ReadingMenuView *_this, QWidget *, QByteArray const &unknownArray, bool unknownBool);
+void (*ReadingMenuView__constructor_2)(ReadingMenuView *_this, QWidget *, QByteArray const &unknownArray,
+                                       bool unknownBool);
 
 N3Dialog *(*N3DialogFactory__getDialog)(QWidget *content, bool idk);
 void (*N3Dialog__disableCloseButton)(N3Dialog *__this);
@@ -172,7 +173,8 @@ QStackedWidget *stackedWidget = nullptr;
 
 void handleStackedWidgetDestroyed() { stackedWidget = nullptr; }
 
-extern "C" __attribute__((visibility("default"))) void _nh_set_volume(ReadingController *_this, Volume *volume, Bookmark *bookmark) {
+extern "C" __attribute__((visibility("default"))) void _nh_set_volume(ReadingController *_this, Volume *volume,
+                                                                      Bookmark *bookmark) {
   nh_log("ReadingController::setVolume(%p, %p, %p)", _this, volume, bookmark);
 
   SyncController *syncController = SyncController::getInstance();
@@ -208,15 +210,16 @@ void injectMenuWidget(ReadingMenuView *parent) {
   }
 }
 
-extern "C" __attribute__((visibility("default"))) void _nh_reading_menu_view_constructor(ReadingMenuView *_this, QWidget *parent,
-                                                                                         bool unknown) {
+extern "C" __attribute__((visibility("default"))) void
+_nh_reading_menu_view_constructor(ReadingMenuView *_this, QWidget *parent, bool unknown) {
   nh_log("ReadingMenuView::ReadingMenuView(%p, %p, %s)", _this, parent, unknown ? "true" : "false");
   ReadingMenuView__constructor(_this, parent, unknown);
   injectMenuWidget(parent);
 }
 
 extern "C" __attribute__((visibility("default"))) void
-_nh_reading_menu_view_constructor_2(ReadingMenuView *_this, QWidget *parent, QByteArray const &unknownArray, bool unknownBool) {
+_nh_reading_menu_view_constructor_2(ReadingMenuView *_this, QWidget *parent, QByteArray const &unknownArray,
+                                    bool unknownBool) {
   nh_log("ReadingMenuView::ReadingMenuView(%p, %p, %s)", _this, parent, unknownBool ? "true" : "false");
   ReadingMenuView__constructor_2(_this, parent, unknownArray, unknownBool);
   injectMenuWidget(parent);

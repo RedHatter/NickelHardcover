@@ -27,7 +27,7 @@ void ReviewDialogContent::showReviewDialog() {
 }
 
 void ReviewDialogContent::networkConnected() {
-  CLI* cli = new CLI(this);
+  CLI *cli = new CLI(this);
   cli->getUserBook();
   QObject::connect(cli, &CLI::response, this, &ReviewDialogContent::buildContent);
 }
@@ -112,7 +112,8 @@ void ReviewDialogContent::buildContent(QJsonObject doc) {
   // Textbox
   TouchTextEdit *touchText = reinterpret_cast<TouchTextEdit *>(calloc(1, 128));
   TouchTextEdit__constructor(touchText, this);
-  TouchTextEdit__setCustomPlaceholderText(touchText, "Share you thoughts about this book with the world. Make sure to Mark any spoilers!");
+  TouchTextEdit__setCustomPlaceholderText(touchText, "Share you thoughts about this book with the world. Make "
+                                                     "sure to Mark any spoilers!");
   QTextEdit *textEdit = touchText->findChild<QTextEdit *>();
   textEdit->setText(doc.value("review_text").toString(""));
   layout->addWidget(touchText);
@@ -145,7 +146,7 @@ void ReviewDialogContent::commit() {
 
   QTextEdit *textEdit = findChild<QTextEdit *>();
 
-  CLI* cli = new CLI(this);
+  CLI *cli = new CLI(this);
   cli->setUserBook(rating, textEdit->toPlainText(), spoilers, sponsored);
   QObject::connect(cli, &CLI::success, this, &ReviewDialogContent::close);
   QObject::connect(cli, &CLI::failure, this, &ReviewDialogContent::close);

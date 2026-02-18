@@ -1,6 +1,6 @@
+#include <QJsonObject>
 #include <QVBoxLayout>
 #include <QWidget>
-#include <QJsonObject>
 
 #include "../nickelhardcover.h"
 
@@ -13,7 +13,6 @@ public:
 public Q_SLOTS:
   void networkConnected();
   void commit();
-  void buildDialog();
   void buildContent(QJsonObject doc);
 
   void setRating(float value);
@@ -25,6 +24,8 @@ Q_SIGNALS:
 
 private:
   ReviewDialogContent(QWidget *parent = nullptr);
+
+  void buildDialog();
 
   float rating = 0;
   bool spoilers = false;
