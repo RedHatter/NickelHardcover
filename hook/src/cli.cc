@@ -27,7 +27,7 @@ void CLI::setUserBook(int status) {
   start(arguments);
 }
 
-void CLI::setUserBook(int rating, QString text, bool spoilers, bool sponsored) {
+void CLI::setUserBook(float rating, QString text, bool spoilers, bool sponsored) {
   QStringList arguments = {"set-user-book", "--rating", QString::number(rating), "--text", text};
 
   arguments.append(getIdentifier());

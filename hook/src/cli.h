@@ -10,7 +10,7 @@ public:
   void listJournal(int limit, int offset);
   void getUserBook();
   void setUserBook(int status);
-  void setUserBook(int rating, QString text, bool spoilers, bool sponsored);
+  void setUserBook(float rating, QString text, bool spoilers, bool sponsored);
   void search(QString query, int limit, int page);
   void update(int percentage);
 
