@@ -79,7 +79,11 @@ pub static CONFIG: LazyLock<Config> = LazyLock::new(|| {
   };
 
   Config {
-    authorization: config.authorization,
+    authorization: if config.authorization.starts_with("Bearer") {
+      config.authorization
+    } else {
+      "Bearer ".to_string() + &config.authorization
+    },
     auto_sync_default: config.auto_sync_default,
     sqlite_path: exe_dir
       .join(config.sqlite_path)
