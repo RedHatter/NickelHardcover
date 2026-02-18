@@ -67,7 +67,7 @@ mutation UpdateRead(
 	}
 }
 
-mutation InsertJournal(
+mutation InsertReadingJournal(
 	$book_id: Int!
 	$edition_id: Int!
 	$event: String!

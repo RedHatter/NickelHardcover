@@ -25,7 +25,7 @@ struct UpdateRead;
   response_derives = "Serialize,Debug",
   variables_derives = "Deserialize"
 )]
-struct InsertJournal;
+struct InsertReadingJournal;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -145,7 +145,7 @@ pub async fn run(args: Update) -> Result<(), String> {
     };
 
     insert_or_update_journal(
-      insert_journal::Variables {
+      insert_reading_journal::Variables {
         book_id: result.book_id,
         edition_id: result.edition_id,
         event: "quote".into(),
@@ -161,7 +161,7 @@ pub async fn run(args: Update) -> Result<(), String> {
 
     if !bookmark.annotation.is_empty() {
       insert_or_update_journal(
-        insert_journal::Variables {
+        insert_reading_journal::Variables {
           book_id: result.book_id,
           edition_id: result.edition_id,
           event: "note".into(),
@@ -181,7 +181,7 @@ pub async fn run(args: Update) -> Result<(), String> {
 }
 
 pub async fn insert_or_update_journal(
-  object: insert_journal::Variables,
+  object: insert_reading_journal::Variables,
   reading_journals: &Vec<get_journal::GetJournalReadingJournals>,
 ) -> Result<(), String> {
   if let Some(journal) = reading_journals
@@ -217,9 +217,10 @@ pub async fn insert_or_update_journal(
       object.event, object.book_id, object.edition_id,
     );
 
-    let res =
-      send_request::<insert_journal::Variables, insert_journal::ResponseData>(InsertJournal::build_query(object))
-        .await?;
+    let res = send_request::<insert_reading_journal::Variables, insert_reading_journal::ResponseData>(
+      InsertReadingJournal::build_query(object),
+    )
+    .await?;
 
     if let Some(errors) = res.insert_reading_journal.and_then(|res| res.errors) {
       return Err(
