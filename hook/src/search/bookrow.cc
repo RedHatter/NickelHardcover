@@ -7,8 +7,8 @@
 
 #include "../files.h"
 #include "../synccontroller.h"
+#include "../widgets/elidedlabel.h"
 #include "bookrow.h"
-#include "elidedlabel.h"
 
 BookCover::BookCover(QJsonObject json, QWidget *parent) : QLabel(parent) {
   setContentsMargins(26, 26, 26, 26);

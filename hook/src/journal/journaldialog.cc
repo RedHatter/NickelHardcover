@@ -7,49 +7,20 @@
 #include <QTimer>
 
 #include <NickelHook.h>
-#include <sys/types.h>
 
 #include "../cli.h"
-#include "../files.h"
 #include "../insertjournal/insertjournaldialog.h"
-#include "../synccontroller.h"
-#include "../utils.h"
 #include "journaldialog.h"
 #include "journalentry.h"
 
-void JournalDialogContent::showJournalDialog() {
-  JournalDialogContent *content = new JournalDialogContent();
-
-  N3Dialog *dialog = N3DialogFactory__getDialog(content, true);
-  N3Dialog__setTitle(dialog, "Reading Journal");
-
-  QScreen *screen = QApplication::primaryScreen();
-  QRect screenGeometry = screen->geometry();
-  dialog->setFixedSize(screenGeometry.width(), screenGeometry.height());
-
-  QObject::connect(SyncController::getInstance(), &SyncController::currentViewChanged, dialog, [dialog](QString name) {
-    if (name != "ReadingView") {
-      dialog->deleteLater();
-    }
-  });
-
-  QObject::connect(dialog, SIGNAL(closeTapped()), dialog, SLOT(deleteLater()));
-  QObject::connect(content, &JournalDialogContent::close, dialog, &QDialog::deleteLater);
-
-  dialog->show();
-
-  WirelessWorkflowManager *wfm = WirelessWorkflowManager__sharedInstance();
-
-  if (WirelessWorkflowManager__isInternetAccessible(wfm)) {
-    content->networkConnected();
-  } else {
-    WirelessWorkflowManager__connectWireless(wfm, false, false);
-    WirelessManager *wm = WirelessManager__sharedInstance();
-    QObject::connect(wm, SIGNAL(networkConnected()), content, SLOT(networkConnected()));
-  }
+void JournalDialog::show() {
+  JournalDialog *content = new JournalDialog();
+  content->connectNetwork();
 }
 
-JournalDialogContent::JournalDialogContent(QWidget *parent) : QWidget(parent) {
+JournalDialog::JournalDialog(QWidget *parent) : Dialog("Reading Journal", parent) {}
+
+void JournalDialog::build() {
   QVBoxLayout *layout = new QVBoxLayout(this);
 
   N3ButtonLabel *button = reinterpret_cast<N3ButtonLabel *>(calloc(1, 512));
@@ -68,19 +39,20 @@ JournalDialogContent::JournalDialogContent(QWidget *parent) : QWidget(parent) {
   PagingFooter__constructor(footer, this);
   layout->addWidget(footer);
   QObject::connect(footer, SIGNAL(goToPage(int)), this, SLOT(goToPage(int)));
+
+  dialog->show();
+  goToPage(1);
 }
 
-void JournalDialogContent::networkConnected() { goToPage(1); }
+void JournalDialog::newEntry() {
+  nh_log("JournalDialog::newEntry()");
 
-void JournalDialogContent::newEntry() {
-  nh_log("JournalDialogContent::newEntry()");
-
-  InsertJournalContent::showInsertJournalDialog();
-  close();
+  InsertJournalDialog::show();
+  dialog->deleteLater();
 }
 
-void JournalDialogContent::goToPage(int page) {
-  nh_log("JournalDialogContent::goToPage(%d)", page);
+void JournalDialog::goToPage(int page) {
+  nh_log("JournalDialog::goToPage(%d)", page);
 
   if (page > currentPage + 1) {
     currentPage++;
@@ -99,11 +71,11 @@ void JournalDialogContent::goToPage(int page) {
 
   CLI *cli = new CLI(this);
   cli->listJournal(15, offset);
-  QObject::connect(cli, &CLI::response, this, &JournalDialogContent::buildContent);
-  QObject::connect(cli, &CLI::failure, this, &JournalDialogContent::close);
+  QObject::connect(cli, &CLI::response, this, &JournalDialog::response);
+  QObject::connect(cli, &CLI::failure, dialog, &QDialog::deleteLater);
 }
 
-void JournalDialogContent::buildContent(QJsonObject doc) {
+void JournalDialog::response(QJsonObject doc) {
   int availableHeight = rows->geometry().height();
 
   while (QLayoutItem *item = rows->takeAt(0)) {

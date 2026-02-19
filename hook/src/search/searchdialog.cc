@@ -17,45 +17,12 @@
 #include "bookrow.h"
 #include "searchdialog.h"
 
-void SearchDialogContent::showSearchDialog(QString query) {
-  SearchDialogContent *content = new SearchDialogContent(query);
-
-  WirelessWorkflowManager *wfm = WirelessWorkflowManager__sharedInstance();
-
-  if (WirelessWorkflowManager__isInternetAccessible(wfm)) {
-    content->networkConnected();
-  } else {
-    WirelessWorkflowManager__connectWireless(wfm, false, false);
-    WirelessManager *wm = WirelessManager__sharedInstance();
-    QObject::connect(wm, SIGNAL(networkConnected()), content, SLOT(networkConnected()));
-  }
+void SearchDialog::show(QString query) {
+  SearchDialog *dialog = new SearchDialog(query);
+  dialog->connectNetwork();
 }
 
-void SearchDialogContent::networkConnected() {
-  N3Dialog *dlg = N3DialogFactory__getDialog(this, true);
-  N3Dialog__disableCloseButton(dlg);
-  N3Dialog__enableBackButton(dlg, true);
-  N3Dialog__setTitle(dlg, "Search");
-
-  QScreen *screen = QApplication::primaryScreen();
-  QRect screenGeometry = screen->geometry();
-  dlg->setFixedSize(screenGeometry.width(), screenGeometry.height());
-
-  QObject::connect(SyncController::getInstance(), &SyncController::currentViewChanged, dlg, [dlg](QString name) {
-    if (name != "ReadingView") {
-      dlg->deleteLater();
-    }
-  });
-  QObject::connect(dlg, SIGNAL(backTapped()), dlg, SLOT(deleteLater()));
-  QObject::connect(this, &SearchDialogContent::close, dlg, &QDialog::deleteLater);
-
-  setKeyboardFrame(N3Dialog__keyboardFrame(dlg));
-
-  dlg->show();
-  commit();
-}
-
-SearchDialogContent::SearchDialogContent(QString query, QWidget *parent) : QWidget(parent) {
+SearchDialog::SearchDialog(QString query, QWidget *parent) : Dialog("Search", parent) {
   QVBoxLayout *contentLayout = new QVBoxLayout(this);
 
   lineEdit = reinterpret_cast<TouchLineEdit *>(calloc(1, 128));
@@ -77,25 +44,17 @@ SearchDialogContent::SearchDialogContent(QString query, QWidget *parent) : QWidg
   footer->hide();
 }
 
-void SearchDialogContent::setKeyboardFrame(KeyboardFrame *keyboardFrame) {
-  keyboard = keyboardFrame;
-
-  KeyboardReceiver *receiver = reinterpret_cast<KeyboardReceiver *>(calloc(1, 128));
-  KeyboardReceiver__constructor(receiver, lineEdit, false);
-
-  SearchKeyboardController *ctl = KeyboardFrame__createKeyboard(keyboard, 0, QLocale::English);
-  SearchKeyboardController__setReceiver(ctl, receiver, false);
-
-  QObject::connect(lineEdit, SIGNAL(tapped()), keyboard, SLOT(show()));
-  QObject::connect(ctl, SIGNAL(commitRequested()), this, SLOT(commit()));
+void SearchDialog::build() {
+  buildKeyboardFrame(lineEdit, "Search");
+  commit();
+  dialog->show();
 }
 
-void SearchDialogContent::commit() {
-  keyboard->hide();
+void SearchDialog::commit() {
   QTimer::singleShot(100, this, [this] { search(1); });
 }
 
-void SearchDialogContent::clear() {
+void SearchDialog::clear() {
   while (QLayoutItem *item = results->takeAt(0)) {
     if (QWidget *widget = item->widget()) {
       widget->deleteLater();
@@ -105,7 +64,7 @@ void SearchDialogContent::clear() {
   }
 }
 
-void SearchDialogContent::search(int page) {
+void SearchDialog::search(int page) {
   QString query = lineEdit->text();
 
   int limit = results->geometry().height() / 270;
@@ -120,11 +79,11 @@ void SearchDialogContent::search(int page) {
 
   CLI *cli = new CLI(this);
   cli->search(query, limit, page);
-  QObject::connect(cli, &CLI::response, this, &SearchDialogContent::response);
-  QObject::connect(cli, &CLI::failure, this, &SearchDialogContent::close);
+  QObject::connect(cli, &CLI::response, this, &SearchDialog::response);
+  QObject::connect(cli, &CLI::failure, dialog, &QDialog::deleteLater);
 }
 
-void SearchDialogContent::response(QJsonObject doc) {
+void SearchDialog::response(QJsonObject doc) {
   clear();
 
   double total = doc.value("total").toDouble(1);
@@ -161,8 +120,8 @@ void SearchDialogContent::response(QJsonObject doc) {
   results->addStretch(1);
 }
 
-void SearchDialogContent::tapped(QString id) {
-  nh_log("SearchDialogContent::tapped(%s)", qPrintable(id));
+void SearchDialog::tapped(QString id) {
+  nh_log("SearchDialog::tapped(%s)", qPrintable(id));
   SyncController::getInstance()->setLinkedBook(id);
-  close();
+  dialog->deleteLater();
 }

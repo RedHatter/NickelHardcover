@@ -38,8 +38,7 @@ extern void (*ComboButton__renameItem)(ComboButton *_this, int index, QString co
 
 typedef QWidget KeyboardReceiver;
 extern void (*KeyboardReceiver__constructor)(KeyboardReceiver *__this, QLineEdit *parent, bool idk);
-extern void (*KeyboardReceiver__TextEdit_constructor)(KeyboardReceiver *__this, QTextEdit *parent,
-                                                                   bool idk);
+extern void (*KeyboardReceiver__TextEdit_constructor)(KeyboardReceiver *__this, QTextEdit *parent, bool idk);
 
 typedef QWidget KeyboardFrame;
 typedef QObject SearchKeyboardController;

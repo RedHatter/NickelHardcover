@@ -2,33 +2,31 @@
 #include <QWidget>
 
 #include "../nickelhardcover.h"
+#include "../widgets/dialog.h"
 
-class SearchDialogContent : public QWidget {
+class SearchDialog : public Dialog {
   Q_OBJECT
 
 public:
-  static void showSearchDialog(QString query);
+  static void show(QString query);
 
-  void setKeyboardFrame(KeyboardFrame *frame);
+  void commit() override;
 
 public Q_SLOTS:
-  void networkConnected();
-  void commit();
   void search(int page);
   void response(QJsonObject doc);
   void tapped(QString id);
 
-Q_SIGNALS:
-  void close();
-
 private:
-  SearchDialogContent(QString query, QWidget *parent = nullptr);
+  SearchDialog(QString query, QWidget *parent = nullptr);
 
   QVBoxLayout *results;
   PagingFooter *footer;
 
   TouchLineEdit *lineEdit;
-  KeyboardFrame *keyboard;
 
   void clear();
+
+protected:
+  void build() override;
 };

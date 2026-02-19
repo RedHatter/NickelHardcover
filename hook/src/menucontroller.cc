@@ -113,7 +113,7 @@ void MenuController::linkBook(bool checked) {
   SyncController *ctl = SyncController::getInstance();
 
   if (ctl->getLinkedBook().isEmpty()) {
-    SearchDialogContent::showSearchDialog(ctl->title + " " + ctl->author);
+    SearchDialog::show(ctl->title + " " + ctl->author);
   } else {
     ctl->setLinkedBook("");
   }
@@ -122,13 +122,13 @@ void MenuController::linkBook(bool checked) {
 void MenuController::review(bool checked) {
   nh_log("MenuController::review(%s)", checked ? "true" : "false");
 
-  ReviewDialogContent::showReviewDialog();
+  ReviewDialog::show();
 }
 
 void MenuController::openJournal(bool checked) {
   nh_log("MenuController::openJournal(%s)", checked ? "true" : "false");
 
-  JournalDialogContent::showJournalDialog();
+  JournalDialog::show();
 }
 
 void MenuController::setBookStatus(bool checked) {

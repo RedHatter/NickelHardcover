@@ -2,23 +2,20 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
-#include "../nickelhardcover.h"
+#include "../widgets/dialog.h"
 
-class InsertJournalContent : public QWidget {
+class InsertJournalDialog : public Dialog {
   Q_OBJECT
 
 public:
-  static void showInsertJournalDialog();
+  static void show();
 
-public Q_SLOTS:
-  void networkConnected();
-  void commit();
-
-Q_SIGNALS:
-  void close();
+public:
+  void commit() override;
 
 private:
-  InsertJournalContent(QWidget *parent = nullptr);
+  InsertJournalDialog(QWidget *parent = nullptr);
 
-  void buildDialog();
+protected:
+  void build() override;
 };

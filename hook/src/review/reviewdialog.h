@@ -2,32 +2,30 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
-#include "../nickelhardcover.h"
+#include "../widgets/dialog.h"
 
-class ReviewDialogContent : public QWidget {
+class ReviewDialog : public Dialog {
   Q_OBJECT
 
 public:
-  static void showReviewDialog();
+  static void show();
+
+  void commit() override;
 
 public Q_SLOTS:
-  void networkConnected();
-  void commit();
-  void buildContent(QJsonObject doc);
+  void response(QJsonObject doc);
 
   void setRating(float value);
   void setSpoilers(int state);
   void setSponsored(int state);
 
-Q_SIGNALS:
-  void close();
-
 private:
-  ReviewDialogContent(QWidget *parent = nullptr);
-
-  void buildDialog();
+  ReviewDialog(QWidget *parent = nullptr);
 
   float rating = 0;
   bool spoilers = false;
   bool sponsored = false;
+
+protected:
+  void build() override;
 };

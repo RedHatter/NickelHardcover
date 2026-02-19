@@ -5,7 +5,7 @@
 #include <NickelHook.h>
 
 #include "../files.h"
-#include "../search/elidedlabel.h"
+#include "../widgets/elidedlabel.h"
 #include "journalentry.h"
 
 JournalEntry::JournalEntry(QJsonObject doc, QWidget *parent) : QFrame(parent) {

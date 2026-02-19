@@ -9,62 +9,23 @@
 #include "../cli.h"
 #include "../files.h"
 #include "../synccontroller.h"
-#include "rating.h"
+#include "../widgets/rating.h"
 #include "reviewdialog.h"
 
-void ReviewDialogContent::showReviewDialog() {
-  ReviewDialogContent *content = new ReviewDialogContent();
-
-  WirelessWorkflowManager *wfm = WirelessWorkflowManager__sharedInstance();
-
-  if (WirelessWorkflowManager__isInternetAccessible(wfm)) {
-    content->networkConnected();
-  } else {
-    WirelessWorkflowManager__connectWireless(wfm, false, false);
-    WirelessManager *wm = WirelessManager__sharedInstance();
-    QObject::connect(wm, SIGNAL(networkConnected()), content, SLOT(networkConnected()));
-  }
+void ReviewDialog::show() {
+  ReviewDialog *dialog = new ReviewDialog();
+  dialog->connectNetwork();
 }
 
-void ReviewDialogContent::networkConnected() {
+ReviewDialog::ReviewDialog(QWidget *parent) : Dialog("Write your review", parent) {}
+
+void ReviewDialog::build() {
   CLI *cli = new CLI(this);
   cli->getUserBook();
-  QObject::connect(cli, &CLI::response, this, &ReviewDialogContent::buildContent);
+  QObject::connect(cli, &CLI::response, this, &ReviewDialog::response);
 }
 
-void ReviewDialogContent::buildDialog() {
-  N3Dialog *dialog = N3DialogFactory__getDialog(this, true);
-  N3Dialog__setTitle(dialog, "Write your review");
-
-  QScreen *screen = QApplication::primaryScreen();
-  QRect screenGeometry = screen->geometry();
-  dialog->setFixedSize(screenGeometry.width(), screenGeometry.height());
-
-  QObject::connect(SyncController::getInstance(), &SyncController::currentViewChanged, dialog, [dialog](QString name) {
-    if (name != "ReadingView") {
-      dialog->deleteLater();
-    }
-  });
-  QObject::connect(dialog, SIGNAL(closeTapped()), dialog, SLOT(deleteLater()));
-  QObject::connect(this, &ReviewDialogContent::close, dialog, &QDialog::deleteLater);
-
-  KeyboardFrame *keyboard = N3Dialog__keyboardFrame(dialog);
-  QTextEdit *textEdit = findChild<QTextEdit *>();
-
-  KeyboardReceiver *receiver = reinterpret_cast<KeyboardReceiver *>(calloc(1, 128));
-  KeyboardReceiver__TextEdit_constructor(receiver, textEdit, false);
-
-  SearchKeyboardController *ctl = KeyboardFrame__createKeyboard(keyboard, 0, QLocale::English);
-  SearchKeyboardController__setReceiver(ctl, receiver, false);
-  SearchKeyboardController__setGoText(ctl, "Submit");
-
-  QObject::connect(ctl, SIGNAL(commitRequested()), this, SLOT(commit()));
-
-  keyboard->show();
-  dialog->show();
-}
-
-void ReviewDialogContent::buildContent(QJsonObject doc) {
+void ReviewDialog::response(QJsonObject doc) {
   rating = doc.value("rating").toDouble(0);
   spoilers = doc.value("review_has_spoilers").toBool(false);
   sponsored = doc.value("sponsored_review").toBool(false);
@@ -89,7 +50,7 @@ void ReviewDialogContent::buildContent(QJsonObject doc) {
   // Rating
   Rating *ratingWidget = new Rating(rating, this);
   layout->addWidget(ratingWidget);
-  QObject::connect(ratingWidget, &Rating::tapped, this, &ReviewDialogContent::setRating);
+  QObject::connect(ratingWidget, &Rating::tapped, this, &ReviewDialog::setRating);
 
   // Has spoilers
   TouchCheckBox *checkbox = reinterpret_cast<TouchCheckBox *>(calloc(1, 128));
@@ -97,7 +58,7 @@ void ReviewDialogContent::buildContent(QJsonObject doc) {
   checkbox->setCheckState(spoilers ? Qt::Checked : Qt::Unchecked);
   checkbox->setText("This review contains spoilers");
   layout->addWidget(checkbox);
-  QObject::connect(checkbox, &QCheckBox::stateChanged, this, &ReviewDialogContent::setSpoilers);
+  QObject::connect(checkbox, &QCheckBox::stateChanged, this, &ReviewDialog::setSpoilers);
 
   // Is sponsored
   checkbox = reinterpret_cast<TouchCheckBox *>(calloc(1, 128));
@@ -105,7 +66,7 @@ void ReviewDialogContent::buildContent(QJsonObject doc) {
   checkbox->setCheckState(sponsored ? Qt::Checked : Qt::Unchecked);
   checkbox->setText("Sponsored or ARC Review");
   layout->addWidget(checkbox);
-  QObject::connect(checkbox, &QCheckBox::stateChanged, this, &ReviewDialogContent::setSponsored);
+  QObject::connect(checkbox, &QCheckBox::stateChanged, this, &ReviewDialog::setSponsored);
 
   layout->addSpacing(16);
 
@@ -118,36 +79,35 @@ void ReviewDialogContent::buildContent(QJsonObject doc) {
   textEdit->setText(doc.value("review_text").toString(""));
   layout->addWidget(touchText);
 
-  buildDialog();
+  buildKeyboardFrame(textEdit, "Submit")->show();
+  dialog->show();
 };
 
-ReviewDialogContent::ReviewDialogContent(QWidget *parent) : QWidget(parent) {}
-
-void ReviewDialogContent::setRating(float value) {
-  nh_log("ReviewDialogContent::setRating(%f)", value);
+void ReviewDialog::setRating(float value) {
+  nh_log("ReviewDialog::setRating(%f)", value);
 
   rating = value;
 }
 
-void ReviewDialogContent::setSpoilers(int state) {
-  nh_log("ReviewDialogContent::setSpoilers(%i)", state);
+void ReviewDialog::setSpoilers(int state) {
+  nh_log("ReviewDialog::setSpoilers(%i)", state);
 
   spoilers = state == Qt::Checked;
 }
 
-void ReviewDialogContent::setSponsored(int state) {
-  nh_log("ReviewDialogContent::setSponsored(%i)", state);
+void ReviewDialog::setSponsored(int state) {
+  nh_log("ReviewDialog::setSponsored(%i)", state);
 
   sponsored = state == Qt::Checked;
 }
 
-void ReviewDialogContent::commit() {
-  nh_log("ReviewDialogContent::commit()");
+void ReviewDialog::commit() {
+  nh_log("ReviewDialog::commit()");
 
   QTextEdit *textEdit = findChild<QTextEdit *>();
 
   CLI *cli = new CLI(this);
   cli->setUserBook(rating, textEdit->toPlainText(), spoilers, sponsored);
-  QObject::connect(cli, &CLI::success, this, &ReviewDialogContent::close);
-  QObject::connect(cli, &CLI::failure, this, &ReviewDialogContent::close);
+  QObject::connect(cli, &CLI::success, this, &ReviewDialog::close);
+  QObject::connect(cli, &CLI::failure, this, &ReviewDialog::close);
 }
