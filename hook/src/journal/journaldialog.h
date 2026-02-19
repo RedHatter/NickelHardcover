@@ -12,6 +12,7 @@ public:
 
 public Q_SLOTS:
   void networkConnected();
+  void newEntry();
   void buildContent(QJsonObject doc);
   void goToPage(int page);
 

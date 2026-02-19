@@ -37,8 +37,8 @@ extern void (*ComboButton__addItem)(ComboButton *_this, QString const &label, QV
 extern void (*ComboButton__renameItem)(ComboButton *_this, int index, QString const &label);
 
 typedef QWidget KeyboardReceiver;
-extern KeyboardReceiver *(*KeyboardReceiver__constructor)(KeyboardReceiver *__this, QLineEdit *parent, bool idk);
-extern KeyboardReceiver *(*KeyboardReceiver__TextEdit_constructor)(KeyboardReceiver *__this, QTextEdit *parent,
+extern void (*KeyboardReceiver__constructor)(KeyboardReceiver *__this, QLineEdit *parent, bool idk);
+extern void (*KeyboardReceiver__TextEdit_constructor)(KeyboardReceiver *__this, QTextEdit *parent,
                                                                    bool idk);
 
 typedef QWidget KeyboardFrame;
@@ -56,20 +56,24 @@ extern void (*N3Dialog__setTitle)(N3Dialog *__this, QString const &);
 extern KeyboardFrame *(*N3Dialog__keyboardFrame)(N3Dialog *__this);
 
 typedef QWidget PagingFooter;
-extern PagingFooter *(*PagingFooter__constructor)(PagingFooter *__this, QWidget *parent);
+extern void (*PagingFooter__constructor)(PagingFooter *__this, QWidget *parent);
 extern void (*PagingFooter__setTotalPages)(PagingFooter *__this, int current);
 extern void (*PagingFooter__setCurrentPage)(PagingFooter *__this, int current);
 
 typedef QLineEdit TouchLineEdit;
-extern TouchLineEdit *(*TouchLineEdit__constructor)(TouchLineEdit *__this, QWidget *parent);
+extern void (*TouchLineEdit__constructor)(TouchLineEdit *__this, QWidget *parent);
 
 typedef QWidget SettingContainer;
-extern SettingContainer *(*SettingContainer__constructor)(SettingContainer *__this, QWidget *parent);
+extern void (*SettingContainer__constructor)(SettingContainer *__this, QWidget *parent);
 extern void (*SettingContainer__setShowBottomLine)(SettingContainer *__this, bool enabled);
 
 typedef QLabel TouchLabel;
 extern void (*TouchLabel__constructor)(TouchLabel *_this, QWidget *parent, QFlags<Qt::WindowType>);
 extern void (*TouchLabel__setHitStateEnabled)(TouchLabel *_this, bool enabled);
+
+typedef TouchLabel N3ButtonLabel;
+extern void (*N3ButtonLabel__constructor)(N3ButtonLabel *_this, QWidget *parent);
+extern void (*N3ButtonLabel__setPrimaryButton)(N3ButtonLabel *_this, bool enabled);
 
 typedef QCheckBox TouchCheckBox;
 extern void (*TouchCheckBox__constructor)(TouchCheckBox *_this, QWidget *parent);

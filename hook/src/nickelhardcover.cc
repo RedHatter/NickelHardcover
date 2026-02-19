@@ -38,6 +38,9 @@ bool (*WirelessWorkflowManager__isInternetAccessible)(WirelessWorkflowManager *_
 void (*TouchLabel__constructor)(TouchLabel *_this, QWidget *parent, QFlags<Qt::WindowType>);
 void (*TouchLabel__setHitStateEnabled)(TouchLabel *_this, bool enabled);
 
+void (*N3ButtonLabel__constructor)(N3ButtonLabel *_this, QWidget *parent);
+void (*N3ButtonLabel__setPrimaryButton)(N3ButtonLabel *_this, bool enabled);
+
 void (*TouchCheckBox__constructor)(TouchCheckBox *_this, QWidget *parent);
 
 void (*NickelTouchMenu__constructor)(NickelTouchMenu *_this, QWidget *parent, int pos);
@@ -59,18 +62,18 @@ void (*N3Dialog__enableBackButton)(N3Dialog *__this, bool enable);
 void (*N3Dialog__setTitle)(N3Dialog *__this, QString const &);
 KeyboardFrame *(*N3Dialog__keyboardFrame)(N3Dialog *__this);
 
-PagingFooter *(*PagingFooter__constructor)(PagingFooter *__this, QWidget *parent);
+void (*PagingFooter__constructor)(PagingFooter *__this, QWidget *parent);
 void (*PagingFooter__setTotalPages)(PagingFooter *__this, int current);
 void (*PagingFooter__setCurrentPage)(PagingFooter *__this, int current);
 
-KeyboardReceiver *(*KeyboardReceiver__constructor)(KeyboardReceiver *__this, QLineEdit *parent, bool idk);
-KeyboardReceiver *(*KeyboardReceiver__TextEdit_constructor)(KeyboardReceiver *__this, QTextEdit *parent, bool idk);
+void (*KeyboardReceiver__constructor)(KeyboardReceiver *__this, QLineEdit *parent, bool idk);
+void (*KeyboardReceiver__TextEdit_constructor)(KeyboardReceiver *__this, QTextEdit *parent, bool idk);
 SearchKeyboardController *(*KeyboardFrame__createKeyboard)(KeyboardFrame *__this, int keyboardScript, QLocale locale);
 void (*SearchKeyboardController__setReceiver)(SearchKeyboardController *__this, KeyboardReceiver *receiver, bool idk);
 void (*SearchKeyboardController__setGoText)(SearchKeyboardController *__this, QString const &text);
-TouchLineEdit *(*TouchLineEdit__constructor)(TouchLineEdit *__this, QWidget *parent);
+void (*TouchLineEdit__constructor)(TouchLineEdit *__this, QWidget *parent);
 
-SettingContainer *(*SettingContainer__constructor)(SettingContainer *__this, QWidget *parent);
+void (*SettingContainer__constructor)(SettingContainer *__this, QWidget *parent);
 void (*SettingContainer__setShowBottomLine)(SettingContainer *__this, bool enabled);
 
 void (*TouchTextEdit__constructor)(TouchTextEdit *__this, QWidget *parent);
@@ -112,6 +115,9 @@ static struct nh_dlsym NickelHardcoverDlsym[] = {
 
   { .name = "_ZN10TouchLabelC1EP7QWidget6QFlagsIN2Qt10WindowTypeEE",           .out = nh_symoutptr(TouchLabel__constructor) },
   { .name = "_ZN10TouchLabel18setHitStateEnabledEb",                           .out = nh_symoutptr(TouchLabel__setHitStateEnabled) },
+
+  { .name = "_ZN13N3ButtonLabelC1EP7QWidget",                                  .out = nh_symoutptr(N3ButtonLabel__constructor) },
+  { .name = "_ZN13N3ButtonLabel16setPrimaryButtonEb",                          .out = nh_symoutptr(N3ButtonLabel__setPrimaryButton) },
 
   { .name = "_ZN13TouchCheckBoxC1EP7QWidget",                                  .out = nh_symoutptr(TouchCheckBox__constructor) },
 

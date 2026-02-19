@@ -11,6 +11,7 @@
 
 #include "../cli.h"
 #include "../files.h"
+#include "../insertjournal/insertjournaldialog.h"
 #include "../synccontroller.h"
 #include "../utils.h"
 #include "journaldialog.h"
@@ -50,10 +51,18 @@ void JournalDialogContent::showJournalDialog() {
 
 JournalDialogContent::JournalDialogContent(QWidget *parent) : QWidget(parent) {
   QVBoxLayout *layout = new QVBoxLayout(this);
+
+  N3ButtonLabel *button = reinterpret_cast<N3ButtonLabel *>(calloc(1, 512));
+  N3ButtonLabel__constructor(button, this);
+  N3ButtonLabel__setPrimaryButton(button, true);
+  button->setText("+ New entry");
+  layout->addWidget(button, 0, Qt::AlignRight);
+  QObject::connect(button, SIGNAL(tapped(bool)), this, SLOT(newEntry()));
+
   rows = new QVBoxLayout();
   rows->setSpacing(0);
-  layout->addLayout(rows, 1);
   rows->addStretch(1);
+  layout->addLayout(rows, 1);
 
   footer = reinterpret_cast<PagingFooter *>(calloc(1, 128));
   PagingFooter__constructor(footer, this);
@@ -62,6 +71,13 @@ JournalDialogContent::JournalDialogContent(QWidget *parent) : QWidget(parent) {
 }
 
 void JournalDialogContent::networkConnected() { goToPage(1); }
+
+void JournalDialogContent::newEntry() {
+  nh_log("JournalDialogContent::newEntry()");
+
+  InsertJournalContent::showInsertJournalDialog();
+  close();
+}
 
 void JournalDialogContent::goToPage(int page) {
   nh_log("JournalDialogContent::goToPage(%d)", page);
@@ -82,7 +98,7 @@ void JournalDialogContent::goToPage(int page) {
   }
 
   CLI *cli = new CLI(this);
-  cli->listJournal(20, offset);
+  cli->listJournal(15, offset);
   QObject::connect(cli, &CLI::response, this, &JournalDialogContent::buildContent);
   QObject::connect(cli, &CLI::failure, this, &JournalDialogContent::close);
 }

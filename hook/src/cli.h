@@ -8,6 +8,7 @@ public:
   CLI(QObject *parent = nullptr);
 
   void listJournal(int limit, int offset);
+  void insertJournal(QString text, int percentage);
   void getUserBook();
   void setUserBook(int status);
   void setUserBook(float rating, QString text, bool spoilers, bool sponsored);
