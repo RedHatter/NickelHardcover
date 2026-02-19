@@ -116,8 +116,8 @@ pub async fn run(args: Update) -> Result<(), String> {
   }
 
   let after = match CONFIG.sync_bookmarks {
-    SyncBookmarks::Finished => args.after.as_ref(),
-    _ => None,
+    SyncBookmarks::Finished => None,
+    _ => args.after.as_ref(),
   };
   let bookmarks = get_bookmarks(args.content_id, after)?;
 
@@ -159,13 +159,15 @@ pub async fn run(args: Update) -> Result<(), String> {
     )
     .await?;
 
-    if !bookmark.annotation.is_empty() {
+    if let Some(entry) = bookmark.annotation.clone()
+      && !entry.is_empty()
+    {
       insert_or_update_journal(
         insert_reading_journal::Variables {
           book_id: result.book_id,
           edition_id: result.edition_id,
           event: "note".into(),
-          entry: bookmark.annotation.clone(),
+          entry,
           action_at: action_at.clone(),
           page,
           possible: result.pages,

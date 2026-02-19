@@ -6,7 +6,7 @@ use crate::config::CONFIG;
 #[derive(Debug)]
 pub struct Bookmark {
   pub text: String,
-  pub annotation: String,
+  pub annotation: Option<String>,
   pub date_created: String,
   pub location: f64,
 }
