@@ -61,6 +61,9 @@ void (*N3Dialog__disableCloseButton)(N3Dialog *__this);
 void (*N3Dialog__enableBackButton)(N3Dialog *__this, bool enable);
 void (*N3Dialog__setTitle)(N3Dialog *__this, QString const &);
 KeyboardFrame *(*N3Dialog__keyboardFrame)(N3Dialog *__this);
+void (*N3Dialog__enableFullViewMode)(N3Dialog *__this);
+void (*N3Dialog__showKeyboard)(N3Dialog *__this);
+void (*N3Dialog__hideKeyboard)(N3Dialog *__this);
 
 void (*PagingFooter__constructor)(PagingFooter *__this, QWidget *parent);
 void (*PagingFooter__setTotalPages)(PagingFooter *__this, int current);
@@ -133,6 +136,9 @@ static struct nh_dlsym NickelHardcoverDlsym[] = {
   { .name = "_ZN8N3Dialog16enableBackButtonEb",                                .out = nh_symoutptr(N3Dialog__enableBackButton) },
   { .name = "_ZN8N3Dialog8setTitleERK7QString",                                .out = nh_symoutptr(N3Dialog__setTitle) },
   { .name = "_ZN8N3Dialog13keyboardFrameEv",                                   .out = nh_symoutptr(N3Dialog__keyboardFrame) },
+  { .name = "_ZN8N3Dialog18enableFullViewModeEv",                              .out = nh_symoutptr(N3Dialog__enableFullViewMode) },
+  { .name = "_ZN8N3Dialog12hideKeyboardEv",                                    .out = nh_symoutptr(N3Dialog__hideKeyboard) },
+  { .name = "_ZN8N3Dialog12showKeyboardEv",                                    .out = nh_symoutptr(N3Dialog__showKeyboard) },
 
   { .name = "_ZN12PagingFooterC1EP7QWidget",                                   .out = nh_symoutptr(PagingFooter__constructor) },
   { .name = "_ZN12PagingFooter13setTotalPagesEi",                              .out = nh_symoutptr(PagingFooter__setTotalPages) },

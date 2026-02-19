@@ -21,6 +21,8 @@ void JournalDialog::show() {
 JournalDialog::JournalDialog(QWidget *parent) : Dialog("Reading Journal", parent) {}
 
 void JournalDialog::build() {
+  N3Dialog__enableFullViewMode(dialog);
+
   QVBoxLayout *layout = new QVBoxLayout(this);
 
   N3ButtonLabel *button = reinterpret_cast<N3ButtonLabel *>(calloc(1, 512));

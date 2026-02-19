@@ -22,7 +22,7 @@ void SearchDialog::show(QString query) {
   dialog->connectNetwork();
 }
 
-SearchDialog::SearchDialog(QString query, QWidget *parent) : Dialog("Search", parent) {
+SearchDialog::SearchDialog(QString query, QWidget *parent) : Dialog("Manually link book", parent) {
   QVBoxLayout *contentLayout = new QVBoxLayout(this);
 
   lineEdit = reinterpret_cast<TouchLineEdit *>(calloc(1, 128));

@@ -28,7 +28,9 @@ void InsertJournalDialog::build() {
   layout->addWidget(touchText);
 
   QTextEdit *textEdit = touchText->findChild<QTextEdit *>();
-  buildKeyboardFrame(textEdit, "Submit")->show();
+  buildKeyboardFrame(textEdit, "Submit");
+  showKeyboard();
+
   dialog->show();
 }
 

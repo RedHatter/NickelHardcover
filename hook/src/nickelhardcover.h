@@ -53,6 +53,9 @@ extern void (*N3Dialog__disableCloseButton)(N3Dialog *__this);
 extern void (*N3Dialog__enableBackButton)(N3Dialog *__this, bool enable);
 extern void (*N3Dialog__setTitle)(N3Dialog *__this, QString const &);
 extern KeyboardFrame *(*N3Dialog__keyboardFrame)(N3Dialog *__this);
+extern void (*N3Dialog__enableFullViewMode)(N3Dialog *__this);
+extern void (*N3Dialog__showKeyboard)(N3Dialog *__this);
+extern void (*N3Dialog__hideKeyboard)(N3Dialog *__this);
 
 typedef QWidget PagingFooter;
 extern void (*PagingFooter__constructor)(PagingFooter *__this, QWidget *parent);

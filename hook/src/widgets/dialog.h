@@ -10,6 +10,8 @@ class Dialog : public QWidget {
 public Q_SLOTS:
   void networkConnected();
   void currentViewChanged(QString name);
+  void showKeyboard();
+  void hideKeyboard();
 
   virtual void commit() {}
 

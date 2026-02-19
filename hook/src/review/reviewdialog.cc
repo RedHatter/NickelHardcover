@@ -79,7 +79,8 @@ void ReviewDialog::response(QJsonObject doc) {
   textEdit->setText(doc.value("review_text").toString(""));
   layout->addWidget(touchText);
 
-  buildKeyboardFrame(textEdit, "Submit")->show();
+  buildKeyboardFrame(textEdit, "Submit");
+  showKeyboard();
   dialog->show();
 };
 
