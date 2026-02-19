@@ -51,6 +51,8 @@ private:
   QLabel *inProgress;
   ConfirmationDialog *dialog = nullptr;
 
+  QString lastViewName = QString("");
+
   QString contentId = nullptr;
   QString key = nullptr;
   int percentage = 0;

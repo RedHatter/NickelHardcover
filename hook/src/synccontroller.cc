@@ -22,7 +22,7 @@ SyncController *SyncController::getInstance() {
 SyncController::SyncController(QObject *parent) : QObject(parent) {
   QSettings config(Files::config, QSettings::IniFormat);
   enabledDefault = config.value("auto_sync_default", false).toBool();
-  threshold = config.value("threshold", 5).toInt();
+  threshold = config.value("threshold", 100).toInt();
   if (threshold < 1) {
     threshold = 1;
   } else if (threshold > 100) {
@@ -42,6 +42,8 @@ SyncController::SyncController(QObject *parent) : QObject(parent) {
 };
 
 void SyncController::setContentId(QString value) {
+  nh_log("SyncController::setContentId(%s)", qPrintable(value));
+
   contentId = value;
   key = value.replace('/', '-').replace('\\', '-');
 }
@@ -77,50 +79,50 @@ void SyncController::currentViewIndexChanged(int index) {
   MainWindowController *mwc = MainWindowController__sharedInstance();
   QWidget *cv = MainWindowController__currentView(mwc);
   QString name = cv->objectName();
-  nh_log("Current view changed to %s", qPrintable(name));
+  nh_log("Current view changed to %s last view was %s", qPrintable(name), qPrintable(lastViewName));
 
   currentViewChanged(name);
 
   if (name == "ReadingView") {
     QObject::connect(cv, SIGNAL(pageChanged(int)), this, SLOT(pageChanged()), Qt::UniqueConnection);
   }
+
+  if (isEnabled() && lastViewName == "ReadingView" && name != "N3Dialog" && percentage != getLastProgress()) {
+    prepare(false);
+  }
+
+  lastViewName = name;
 }
 
 void SyncController::pageChanged() {
+  nh_log("SyncController::pageChanged()");
+
   if (!isEnabled())
     return;
 
-  prepare(false);
-}
-
-void SyncController::prepare(bool manual) {
   MainWindowController *mwc = MainWindowController__sharedInstance();
   QWidget *cv = MainWindowController__currentView(mwc);
-  QString name = cv->objectName();
-
-  if (name != "ReadingView") {
-    nh_log("Error: attempted to sync while current view is %s", qPrintable(name));
-    ConfirmationDialogFactory__showErrorDialog("Hardcover.app", "Can only update book progress while a book is open");
-    return;
-  }
-
-  if (manual) {
-    dialog = ConfirmationDialogFactory__getConfirmationDialog(nullptr);
-    ConfirmationDialog__showCloseButton(dialog, false);
-    dialog->open();
-  }
-
   percentage = ReadingView__getCalculatedReadProgress(cv);
   if (percentage == 0) {
     percentage = 1;
   }
 
   int lastProgress = getLastProgress();
-  if (!manual && (percentage != 100 || lastProgress == 100) && abs(lastProgress - percentage) < threshold) {
+  if ((percentage != 100 || lastProgress == 100) && abs(lastProgress - percentage) < threshold) {
     nh_log("Reading progress is %d%% with a last synced progress of %d%% "
            "and a threshold of %d%%. Skipping update",
            percentage, lastProgress, threshold);
     return;
+  }
+
+  prepare(false);
+}
+
+void SyncController::prepare(bool manual) {
+  if (manual) {
+    dialog = ConfirmationDialogFactory__getConfirmationDialog(nullptr);
+    ConfirmationDialog__showCloseButton(dialog, false);
+    dialog->open();
   }
 
   WirelessWorkflowManager *wfm = WirelessWorkflowManager__sharedInstance();
