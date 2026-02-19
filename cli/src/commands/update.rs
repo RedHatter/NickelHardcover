@@ -100,7 +100,7 @@ pub async fn run(args: Update) -> Result<(), String> {
       id: user_read_id,
       progress_pages,
       edition_id: result.edition_id,
-      started_at: Local::now().format("%Y-%m-%d").to_string(),
+      started_at: result.started_at.unwrap_or(Local::now().format("%Y-%m-%d").to_string()),
     },
   ))
   .await?;

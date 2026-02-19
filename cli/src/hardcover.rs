@@ -96,6 +96,7 @@ pub struct UserBookResult {
   pub pages: i64,
   pub user_id: i64,
   pub user_read_id: Option<i64>,
+  pub started_at: Option<String>,
 }
 
 pub async fn update_or_insert_user_book(
@@ -156,7 +157,7 @@ pub async fn update_or_insert_user_book(
         book.id)
       );
 
-  let user_read_id = if let Some(user_book) = book.user_books.first() {
+  let (user_read_id, started_at) = if let Some(user_book) = book.user_books.first() {
     if object.review_slate.is_some()
       || object
         .status_id
@@ -176,15 +177,16 @@ pub async fn update_or_insert_user_book(
         return Err(error);
       }
 
-      res
+      let user_book = res
         .update_user_book
         .and_then(|update| update.user_book)
-        .ok_or(format!("Failed to find updated user book <i>{}</i>", user_book.id))?
-        .user_book_reads
-        .first()
-        .map(|read| read.id)
+        .ok_or(format!("Failed to find updated user book <i>{}</i>", user_book.id))?;
+      let read = user_book.user_book_reads.first();
+
+      (read.map(|read| read.id), read.and_then(|read| read.started_at.clone()))
     } else {
-      user_book.user_book_reads.first().map(|user_read| user_read.id)
+      let read = user_book.user_book_reads.first();
+      (read.map(|read| read.id), read.and_then(|read| read.started_at.clone()))
     }
   } else {
     // Insert new user book
@@ -211,10 +213,13 @@ pub async fn update_or_insert_user_book(
       return Err(error);
     }
 
-    res
+    let user_book = res
       .insert_user_book
-      .and_then(|insert| insert.user_book)
-      .and_then(|user_book| user_book.user_book_reads.first().map(|read| read.id))
+      .and_then(|update| update.user_book)
+      .ok_or("Failed to find inserted user book")?;
+    let read = user_book.user_book_reads.first();
+
+    (read.map(|read| read.id), read.and_then(|read| read.started_at.clone()))
   };
 
   if let Some(id) = user_read_id {
@@ -227,5 +232,6 @@ pub async fn update_or_insert_user_book(
     pages,
     user_id,
     user_read_id,
+    started_at,
   })
 }
