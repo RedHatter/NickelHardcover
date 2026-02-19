@@ -34,16 +34,18 @@ void CLI::setUserBook(int status) {
 }
 
 void CLI::setUserBook(float rating, QString text, bool spoilers, bool sponsored) {
-  QStringList arguments = {"set-user-book", "--rating", QString::number(rating), "--text", text};
+  QStringList arguments = {"set-user-book"};
 
   arguments.append(getIdentifier());
 
-  if (spoilers) {
-    arguments.append("--spoilers");
+  if (rating > 0.0) {
+    arguments.append({"--rating", QString::number(rating)});
   }
 
-  if (sponsored) {
-    arguments.append("--sponsored");
+  if (!text.trimmed().isEmpty()) {
+    arguments.append({"--spoilers", spoilers ? "true" : "false"});
+    arguments.append({"--sponsored", sponsored ? "true" : "false"});
+    arguments.append({"--text", text});
   }
 
   start(arguments);

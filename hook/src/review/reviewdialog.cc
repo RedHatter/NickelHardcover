@@ -23,6 +23,7 @@ void ReviewDialog::build() {
   CLI *cli = new CLI(this);
   cli->getUserBook();
   QObject::connect(cli, &CLI::response, this, &ReviewDialog::response);
+  QObject::connect(cli, &CLI::failure, dialog, &QDialog::deleteLater);
 }
 
 void ReviewDialog::response(QJsonObject doc) {
@@ -109,6 +110,6 @@ void ReviewDialog::commit() {
 
   CLI *cli = new CLI(this);
   cli->setUserBook(rating, textEdit->toPlainText(), spoilers, sponsored);
-  QObject::connect(cli, &CLI::success, this, &ReviewDialog::close);
-  QObject::connect(cli, &CLI::failure, this, &ReviewDialog::close);
+  QObject::connect(cli, &CLI::success, dialog, &QDialog::deleteLater);
+  QObject::connect(cli, &CLI::failure, dialog, &QDialog::deleteLater);
 }

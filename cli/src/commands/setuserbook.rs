@@ -33,11 +33,11 @@ pub struct SetUserBook {
   text: Option<String>,
 
   /// sponsored or ARC Review
-  #[argh(switch)]
+  #[argh(option)]
   sponsored: Option<bool>,
 
   /// review contains spoilers
-  #[argh(switch)]
+  #[argh(option)]
   spoilers: Option<bool>,
 }
 
@@ -48,10 +48,6 @@ pub async fn run(args: SetUserBook) -> Result<(), String> {
     panic!("One of --content-id or --book-id is required");
   }
 
-  if args.status.is_none() && args.text.is_none() {
-    panic!("At least one of --status or --text is required");
-  }
-
   update_or_insert_user_book(
     args.content_id.map(|id| get_isbn(&id)).unwrap_or(Vec::new()),
     args.book_id.unwrap_or(0),
@@ -59,9 +55,7 @@ pub async fn run(args: SetUserBook) -> Result<(), String> {
       status_id: args.status,
       review_has_spoilers: args.spoilers,
       sponsored_review: args.sponsored,
-      rating: args
-        .rating
-        .and_then(|rating| if rating == 0.0 { None } else { Some(rating) }),
+      rating: args.rating,
       reviewed_at: if args.text.is_some() {
         Some(Local::now().format("%Y-%m-%d").to_string())
       } else {

@@ -44,13 +44,9 @@ void Dialog::currentViewChanged(QString name) {
   }
 }
 
-void Dialog::showKeyboard() {
-  N3Dialog__showKeyboard(dialog);
-}
+void Dialog::showKeyboard() { N3Dialog__showKeyboard(dialog); }
 
-void Dialog::hideKeyboard() {
-  N3Dialog__hideKeyboard(dialog);
-}
+void Dialog::hideKeyboard() { N3Dialog__hideKeyboard(dialog); }
 
 KeyboardFrame *Dialog::buildKeyboardFrame(TouchLineEdit *lineEdit, QString goText) {
   KeyboardReceiver *receiver = reinterpret_cast<KeyboardReceiver *>(calloc(1, 128));

@@ -159,6 +159,13 @@ pub async fn update_or_insert_user_book(
 
   let (user_read_id, started_at) = if let Some(user_book) = book.user_books.first() {
     if object.review_slate.is_some()
+      || (object.rating.is_some() && object.rating != user_book.rating)
+      || object
+        .review_has_spoilers
+        .is_some_and(|review_has_spoilers| review_has_spoilers != user_book.review_has_spoilers)
+      || object
+        .sponsored_review
+        .is_some_and(|sponsored_review| sponsored_review != user_book.sponsored_review)
       || object
         .status_id
         .is_some_and(|status_id| status_id != user_book.status_id)
