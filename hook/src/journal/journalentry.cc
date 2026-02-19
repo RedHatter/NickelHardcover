@@ -78,9 +78,11 @@ JournalEntry::JournalEntry(QJsonObject doc, QWidget *parent) : QFrame(parent) {
     label->setText("Unknown journal type " + event);
   }
 
-  QLabel *actionAt = new QLabel(
-      QDateTime::fromString(doc.value("action_at").toString(), Qt::ISODate).toString(Qt::SystemLocaleShortDate), this);
-  actionAt->setObjectName("actionAt");
-  layout->addWidget(actionAt, 0, Qt::AlignRight);
-  actionAt->lower();
+  QString actionAt = QDateTime::fromString(doc.value("action_at").toString(), Qt::ISODate)
+                         .toLocalTime()
+                         .toString(Qt::SystemLocaleShortDate);
+  QLabel *actionAtLabel = new QLabel(actionAt, this);
+  actionAtLabel->setObjectName("actionAt");
+  layout->addWidget(actionAtLabel, 0, Qt::AlignRight);
+  actionAtLabel->lower();
 }
