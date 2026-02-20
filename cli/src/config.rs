@@ -20,7 +20,33 @@ impl<'de> Deserialize<'de> for SyncBookmarks {
       s if s.eq_ignore_ascii_case("Always") => Ok(SyncBookmarks::Always),
       s if s.eq_ignore_ascii_case("Never") => Ok(SyncBookmarks::Never),
       s if s.eq_ignore_ascii_case("Finished") => Ok(SyncBookmarks::Finished),
-      s => Err(de::Error::custom(format!("{s} is not a valid value"))),
+      s => Err(de::Error::custom(format!("{s} is not a valid sync_bookmarks value"))),
+    }
+  }
+}
+
+#[derive(Serialize, PartialEq, Debug)]
+pub enum SyncOnClose {
+  Always,
+  Never,
+  Number(u8),
+}
+
+impl<'de> Deserialize<'de> for SyncOnClose {
+  fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+  where
+    D: Deserializer<'de>,
+  {
+    let s = String::deserialize(deserializer)?;
+
+    if s.eq_ignore_ascii_case("Always") {
+      Ok(SyncOnClose::Always)
+    } else if s.eq_ignore_ascii_case("Never") {
+      Ok(SyncOnClose::Never)
+    } else if let Ok(n) = s.parse::<u8>() {
+      Ok(SyncOnClose::Number(n))
+    } else {
+      Err(de::Error::custom(format!("{s} is not a valid sync_on_close value")))
     }
   }
 }
@@ -32,8 +58,8 @@ pub struct Config {
   pub auto_sync_default: bool,
   pub sqlite_path: String,
   pub sync_bookmarks: SyncBookmarks,
-  pub sync_on_close: bool,
-  pub threshold: i32,
+  pub sync_on_close: SyncOnClose,
+  pub threshold: u8,
 }
 
 impl Default for Config {
@@ -43,8 +69,8 @@ impl Default for Config {
       auto_sync_default: false,
       sqlite_path: "/mnt/onboard/.kobo/KoboReader.sqlite".into(),
       sync_bookmarks: SyncBookmarks::Always,
-      sync_on_close: true,
-      threshold: 100,
+      sync_on_close: SyncOnClose::Always,
+      threshold: 20,
     }
   }
 }

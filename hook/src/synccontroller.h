@@ -58,6 +58,8 @@ private:
   int percentage = 0;
 
   bool enabledDefault;
+  bool enableOnClose;
+  int onCloseThreshold;
   int threshold;
 
   void run();

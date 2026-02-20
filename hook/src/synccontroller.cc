@@ -22,6 +22,19 @@ SyncController *SyncController::getInstance() {
 SyncController::SyncController(QObject *parent) : QObject(parent) {
   QSettings config(Files::config, QSettings::IniFormat);
   enabledDefault = config.value("auto_sync_default", false).toBool();
+
+  QVariant syncOnClose = config.value("sync_on_close", "always");
+  onCloseThreshold = syncOnClose.toInt();
+
+  if (onCloseThreshold > 0 && onCloseThreshold < 100) {
+    syncOnClose = true;
+  } else if (syncOnClose.toString() == "always") {
+    syncOnClose = true;
+    onCloseThreshold = 1;
+  } else {
+    syncOnClose = false;
+  }
+
   threshold = config.value("threshold", 100).toInt();
   if (threshold < 1) {
     threshold = 1;
@@ -87,8 +100,15 @@ void SyncController::currentViewIndexChanged(int index) {
     QObject::connect(cv, SIGNAL(pageChanged(int)), this, SLOT(pageChanged()), Qt::UniqueConnection);
   }
 
-  if (isEnabled() && lastViewName == "ReadingView" && name != "N3Dialog" && percentage != getLastProgress()) {
-    prepare(false);
+  if (enableOnClose && lastViewName == "ReadingView" && name != "N3Dialog" && isEnabled()) {
+    int lastProgress = getLastProgress();
+    if (abs(lastProgress - percentage) < onCloseThreshold) {
+      nh_log("Reading progress is %d%% with a last synced progress of %d%% and a on close threshold of %d%%. Skipping "
+             "update",
+             percentage, lastProgress, onCloseThreshold);
+    } else {
+      prepare(false);
+    }
   }
 
   lastViewName = name;
@@ -109,8 +129,7 @@ void SyncController::pageChanged() {
 
   int lastProgress = getLastProgress();
   if ((percentage != 100 || lastProgress == 100) && abs(lastProgress - percentage) < threshold) {
-    nh_log("Reading progress is %d%% with a last synced progress of %d%% "
-           "and a threshold of %d%%. Skipping update",
+    nh_log("Reading progress is %d%% with a last synced progress of %d%% and a threshold of %d%%. Skipping update",
            percentage, lastProgress, threshold);
     return;
   }
