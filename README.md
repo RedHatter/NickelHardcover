@@ -3,12 +3,13 @@ Hardcover.app integration for Kobo eReaders [Hardcover.app](https://hardcover.ap
 
 **Warning: Firmware version 5.x is not supported yet.**
 
-<img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/syncing.png?raw=true" alt="Syncing with hardcover tooltip" width="274"><img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/review.png?raw=true" alt="Review dialog" width="274"><img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/journal.png?raw=true" alt="Reading journal dialog" width="274"><img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/menu.png?raw=true" alt="NickelHardcover menu" width="274"><img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/status.png?raw=true" alt="Reading status menu" width="274"><img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/linking.png?raw=true" alt="Manually linking dialog" width="274">
+<img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/syncing.png?raw=true" alt="Syncing with hardcover tooltip" width="33%"> <img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/review.png?raw=true" alt="Review dialog" width="33%"> <img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/journal.png?raw=true" alt="Reading journal dialog" width="33%">
+<img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/menu.png?raw=true" alt="NickelHardcover menu" width="33%"> <img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/status.png?raw=true" alt="Reading status menu" width="33%"> <img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/linking.png?raw=true" alt="Manually linking dialog" width="33%">
 
 ## Features
 
-* Automatically update reading progress on Hardcover.app
-* Syncing Kobo highlights and annotations with Hardcover reading journal
+* Automatically update reading progress on Hardcover
+* Automatically add Kobo highlights and annotations as Hardcover reading journal entries
 * Review and rate books
 * View reading journal and add new entries
 * Update book status
@@ -16,7 +17,7 @@ Hardcover.app integration for Kobo eReaders [Hardcover.app](https://hardcover.ap
 ## Installation
 
 1. Download the latest release from the [releases page](https://github.com/RedHatter/NickelHardcover/releases)
-2. Copy the KoboRoot.tgz file to the `.kobo` directory on your Kobo
+2. Copy the *KoboRoot.tgz* file to the `.kobo` directory on your Kobo
 3. Eject/disconnect your Kobo, and it should automatically reboot
 
 ## Configuration
@@ -34,7 +35,7 @@ To function, NickelHardcover needs to be configured with an authorization token 
 
 Once the above steps are complete, you should have a file named `config.ini` with contents similar to the following.
 
-```
+```ini
 ; Your Hardcover.app authorization token copied from https://hardcover.app/account/api.
 authorization = Bearer MrDIPsXoT02KrqumxgFsZ.dDxWNFxqotRGJcFvNm68mergYHi2uWSEobGa4S2P5PUMr6Gj8P4SV9hUq4dl2PDJJoggxFuSFf1MQEm8BM1a7mb6IcCokea4x1V9POQqD6bpBH0pJ5nHQVRpKLfqVOzKWpAcLS4OOpZZSlwPJIBisZMaVsJOYe6ujxgzIX5V1sDTWRtq1r4IapP0r9q7oVrq5rZjz9GrGT1rl87nnh91Plncr7u2zLMsfxK1PHGkArbPt1PZ7VL7jiTM2JsrhuV7kHawAxCZHfxONQw4wCVdRssDUhL4JDnljDk2qvMURPfkY4sctYyWturhAKjdwmuvQmfOqoXeT1sxi8qoUDsnQaJ9VexX199cYHcM2wxQn2LOYSa3OtKQ6SKCP4YR1WKKrGn4UBwebnkbZKVmDy8YFLu9h7WwfQgl8QvDT7d4LKXYCRC4ZhHoFlF27VQrLpqaglSQdDInkyUy0Z8MnDh7mxzpKy4O9WQftm2NkqxZEW4z2wmRTeVbdVyo2DdLT82K7
 
@@ -62,12 +63,12 @@ threshold = 20
 
 ## Usage
 
-When a book is open, you should find a new menu on the top right where all the functions can be accessed.
+While a book is open, you should find a new menu on the top right where all the functions can be accessed.
 
 ### Linking a Hardcover book
 
 NickelHardcover attempts to determine which book to update on Hardcover using the ISBN of the open book. If that fails, or you would like more control, the “Manually link book” menu option allows you to manually select which book to update. The edition of the active read can be changed on the Hardcover book page under the description.
-Changing edtion
+![Changing edition](https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/edition.png?raw=true)
 
 ### Syncing
 
@@ -75,4 +76,4 @@ There are a few ways to sync reading progress and highlights/annotations with Ha
 
 ## Uninstall
 
-To uninstall NickelHardcover, simply create a file called nickelhardcover_uninstall on the root of your device and manually restart your Kobo.
+To uninstall NickelHardcover, simply create a file called `nickelhardcover_uninstall` on the root of your device and manually restart your Kobo.
