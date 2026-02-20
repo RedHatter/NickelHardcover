@@ -35,7 +35,7 @@ SyncController::SyncController(QObject *parent) : QObject(parent) {
     syncOnClose = false;
   }
 
-  threshold = config.value("threshold", 100).toInt();
+  threshold = config.value("threshold", 20).toInt();
   if (threshold < 1) {
     threshold = 1;
   } else if (threshold > 100) {
