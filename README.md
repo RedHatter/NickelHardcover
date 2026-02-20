@@ -68,7 +68,8 @@ While a book is open, you should find a new menu on the top right where all the 
 ### Linking a Hardcover book
 
 NickelHardcover attempts to determine which book to update on Hardcover using the ISBN of the open book. If that fails, or you would like more control, the “Manually link book” menu option allows you to manually select which book to update. The edition of the active read can be changed on the Hardcover book page under the description.
-![Changing edition](https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/edition.png?raw=true)
+
+<img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/edition.png?raw=true" alt="Changing edition" width="400">
 
 ### Syncing
 
