@@ -927,7 +927,7 @@ dependencies = [
 
 [[package]]
 name = "nickel-hardcover-cli"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "argh",
  "chrono",
