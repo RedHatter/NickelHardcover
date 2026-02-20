@@ -3,8 +3,8 @@ Hardcover.app integration for Kobo eReaders [Hardcover.app](https://hardcover.ap
 
 **Warning: Firmware version 5.x is not supported yet.**
 
-<img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/syncing.png?raw=true" alt="Syncing with hardcover tooltip" width="33%"> <img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/review.png?raw=true" alt="Review dialog" width="33%"> <img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/journal.png?raw=true" alt="Reading journal dialog" width="33%">
-<img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/menu.png?raw=true" alt="NickelHardcover menu" width="33%"> <img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/status.png?raw=true" alt="Reading status menu" width="33%"> <img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/linking.png?raw=true" alt="Manually linking dialog" width="33%">
+<img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/syncing.png?raw=true" alt="Syncing with hardcover tooltip" width="32%"> <img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/review.png?raw=true" alt="Review dialog" width="32%"> <img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/journal.png?raw=true" alt="Reading journal dialog" width="32%">
+<img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/menu.png?raw=true" alt="NickelHardcover menu" width="32%"> <img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/status.png?raw=true" alt="Reading status menu" width="32%"> <img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/linking.png?raw=true" alt="Manually linking dialog" width="32%">
 
 ## Features
 
