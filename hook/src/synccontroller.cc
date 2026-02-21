@@ -96,10 +96,6 @@ void SyncController::currentViewIndexChanged(int index) {
 
   currentViewChanged(name);
 
-  if (name == "ReadingView") {
-    QObject::connect(cv, SIGNAL(pageChanged(int)), this, SLOT(pageChanged()), Qt::UniqueConnection);
-  }
-
   if (enableOnClose && lastViewName == "ReadingView" && name != "N3Dialog" && isEnabled()) {
     int lastProgress = getLastProgress();
     if (abs(lastProgress - percentage) < onCloseThreshold) {
@@ -111,21 +107,33 @@ void SyncController::currentViewIndexChanged(int index) {
     }
   }
 
+  if (name == "ReadingView") {
+    percentage = ReadingView__getCalculatedReadProgress(cv);
+    if (percentage == 0) {
+      percentage = 1;
+    }
+
+    QObject::connect(cv, SIGNAL(pageChanged(int)), this, SLOT(pageChanged()), Qt::UniqueConnection);
+  }
+
   lastViewName = name;
 }
 
 void SyncController::pageChanged() {
   nh_log("SyncController::pageChanged()");
 
-  if (!isEnabled())
-    return;
-
   MainWindowController *mwc = MainWindowController__sharedInstance();
   QWidget *cv = MainWindowController__currentView(mwc);
-  percentage = ReadingView__getCalculatedReadProgress(cv);
-  if (percentage == 0) {
-    percentage = 1;
+  QString name = cv->objectName();
+  if (name == "ReadingView") {
+    percentage = ReadingView__getCalculatedReadProgress(cv);
+    if (percentage == 0) {
+      percentage = 1;
+    }
   }
+
+  if (!isEnabled())
+    return;
 
   int lastProgress = getLastProgress();
   if ((percentage != 100 || lastProgress == 100) && abs(lastProgress - percentage) < threshold) {
