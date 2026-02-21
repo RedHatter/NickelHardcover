@@ -1,5 +1,8 @@
 #![allow(non_camel_case_types)]
 
+use std::{num::NonZeroU32, sync::LazyLock};
+
+use governor::{DefaultDirectRateLimiter, Quota, RateLimiter};
 use graphql_client::{GraphQLQuery, QueryBody, Response};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
@@ -13,7 +16,15 @@ pub type bigint = i64;
 pub type timestamp = String;
 pub type timestamptz = String;
 
-static USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"),);
+static CLIENT: LazyLock<Result<Client, String>> = LazyLock::new(|| {
+  Client::builder()
+    .user_agent(concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION")))
+    .build()
+    .map_err(report("Failed to construct http client"))
+});
+
+static LIMITER: LazyLock<DefaultDirectRateLimiter> =
+  LazyLock::new(|| RateLimiter::direct(Quota::per_minute(NonZeroU32::new(55).expect("55 is non-zero"))));
 
 pub async fn send_request<T: Serialize + std::fmt::Debug, R: for<'a> Deserialize<'a> + std::fmt::Debug>(
   request_body: QueryBody<T>,
@@ -28,47 +39,60 @@ pub async fn send_request<T: Serialize + std::fmt::Debug, R: for<'a> Deserialize
     request_body.operation_name, request_body.variables
   ))?;
 
-  let client = Client::builder()
-    .user_agent(USER_AGENT)
-    .build()
-    .map_err(report(&format!(
-      "Failed to construct http client for {}",
-      request_body.operation_name
-    )))?;
-  let res: Response<R> = client
-    .post("https://api.hardcover.app/v1/graphq")
-    .header("authorization", &CONFIG.authorization)
-    .json(&request_body)
-    .send()
-    .await
-    .map_err(report(&format!(
-      "Failed to send request {}",
-      request_body.operation_name
-    )))?
-    .json()
-    .await
-    .map_err(report(&format!(
-      "Failed to parse {} response",
-      request_body.operation_name
-    )))?;
+  let mut n = 0;
 
-  debug_log(&format!("{:?}", res))?;
+  let res = loop {
+    n += 1;
 
-  if let Some(errors) = res.errors {
+    LIMITER.until_ready().await;
+
+    let res = CLIENT
+      .as_ref()?
+      .post("https://api.hardcover.app/v1/graphql")
+      .header("authorization", &CONFIG.authorization)
+      .json(&request_body)
+      .send()
+      .await
+      .map_err(report(&format!(
+        "Failed to send request {}",
+        request_body.operation_name
+      )))
+      .and_then(|res| {
+        res
+          .error_for_status()
+          .map_err(report(&format!("{} request failed", request_body.operation_name)))
+      });
+
+    match res {
+      Err(e) if n < 3 => {
+        log(format!("Attempt {n} failed: {e}"))?;
+      }
+      _ => break res,
+    }
+  }?;
+
+  let obj: Response<R> = res.json().await.map_err(report(&format!(
+    "Failed to parse {} response",
+    request_body.operation_name
+  )))?;
+
+  debug_log(&format!("{:?}", obj))?;
+
+  if let Some(errors) = obj.errors {
     return Err(format!(
-      "{} request failed:<br>{}",
+      "{} has errors<br>{}",
       request_body.operation_name,
       errors
         .iter()
         .map(|err| err.message.as_ref())
         .collect::<Vec<&str>>()
-        .join("<br>")
+        .join("<br>>")
     ));
   }
 
-  match res.data {
+  match obj.data {
     Some(data) => Ok(data),
-    None => Err(format!("Empty response for {}: {:?}", request_body.operation_name, res)),
+    None => Err(format!("Empty response for {}: {:?}", request_body.operation_name, obj)),
   }
 }
 

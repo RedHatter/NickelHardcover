@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 argh = "0.1.13"
 chrono = "0.4.41"
+governor = "0.10.4"
 graphql_client = "0.14.0"
 quick-xml = "0.38.0"
 rusqlite = { version = "0.34.0", features = ["bundled"] }
