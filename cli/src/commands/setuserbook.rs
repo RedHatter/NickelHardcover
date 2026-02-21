@@ -3,6 +3,7 @@ use std::panic;
 use chrono::Local;
 use serde_json::Value;
 
+use crate::config::log;
 use crate::hardcover::{update_or_insert_user_book, update_user_book::UserBookUpdateInput};
 use crate::isbn::get_isbn;
 
@@ -42,7 +43,7 @@ pub struct SetUserBook {
 }
 
 pub async fn run(args: SetUserBook) -> Result<(), String> {
-  println!("{:?}", args);
+  log(format!("{:?}", args))?;
 
   if args.content_id.is_none() && args.book_id.is_none() {
     panic!("One of --content-id or --book-id is required");

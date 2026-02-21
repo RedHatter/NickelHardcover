@@ -2,6 +2,7 @@ use std::env;
 use std::panic;
 
 use crate::commands::{getuserbook, insertjournal, listjournal, search, setuserbook, update};
+use crate::config::debug_log;
 
 mod commands;
 mod hardcover;
@@ -36,10 +37,13 @@ async fn main() {
     panic::set_hook(Box::new(|info| {
       if let Some(s) = info.payload().downcast_ref::<&str>() {
         eprintln!("{}", s);
+        debug_log(s).unwrap();
       } else if let Some(s) = info.payload().downcast_ref::<String>() {
         eprintln!("{}", s);
+        debug_log(s).unwrap();
       } else {
         eprintln!("An unknown error occurred");
+        debug_log("An unknown error occurred").unwrap();
       }
     }));
   }

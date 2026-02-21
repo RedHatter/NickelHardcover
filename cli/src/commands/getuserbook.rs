@@ -2,6 +2,7 @@ use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 use serde_json::{Value, json};
 
+use crate::config::log;
 use crate::hardcover::{GetEdition, GetUserId, get_edition, get_user_id, send_request};
 use crate::isbn::get_isbn;
 
@@ -19,7 +20,7 @@ pub struct GetUserBook {
 }
 
 pub async fn run(args: GetUserBook) -> Result<(), String> {
-  println!("{:?}", args);
+  log(format!("{:?}", args))?;
 
   if args.content_id.is_none() && args.book_id.is_none() {
     panic!("One of --content-id or --book-id is required");
@@ -37,7 +38,7 @@ pub async fn run(args: GetUserBook) -> Result<(), String> {
   .ok_or("Failed to find Hardcover.app user")?
   .id;
 
-  println!("user {user_id}");
+  log(format!("user {user_id}"))?;
 
   let all_isbns = isbn.join(", ");
 
@@ -78,7 +79,7 @@ pub async fn run(args: GetUserBook) -> Result<(), String> {
     })
     .unwrap_or(json!({}));
 
-  println!("BEGIN_JSON\n{user_book}");
+  log(format!("BEGIN_JSON\n{user_book}"))?;
 
   Ok(())
 }

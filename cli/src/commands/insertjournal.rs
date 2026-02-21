@@ -1,6 +1,7 @@
 use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 
+use crate::config::log;
 use crate::hardcover::{GetEdition, GetUserId, date, get_edition, get_user_id, send_request};
 use crate::isbn::get_isbn;
 
@@ -9,7 +10,7 @@ use crate::isbn::get_isbn;
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/mutation.graphql",
   response_derives = "Serialize,Debug",
-  variables_derives = "Deserialize"
+  variables_derives = "Deserialize,Debug"
 )]
 struct InsertReadingJournal;
 
@@ -35,7 +36,7 @@ pub struct InsertJournal {
 }
 
 pub async fn run(args: InsertJournal) -> Result<(), String> {
-  println!("{:?}", args);
+  log(format!("{:?}", args))?;
 
   if args.content_id.is_none() && args.book_id.is_none() {
     panic!("One of --content-id or --book-id is required");
@@ -53,7 +54,7 @@ pub async fn run(args: InsertJournal) -> Result<(), String> {
   .ok_or("Failed to find Hardcover.app user")?
   .id;
 
-  println!("user {user_id}");
+  log(format!("user {user_id}"))?;
 
   let all_isbns = isbn.join(", ");
 

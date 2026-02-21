@@ -3,6 +3,7 @@ use graphql_client::GraphQLQuery;
 use serde_json::json;
 
 use crate::commands::getuserbook::reduce_slate;
+use crate::config::log;
 use crate::hardcover::{GetUserId, bigint, get_user_id, jsonb, send_request, timestamptz};
 use crate::isbn::get_isbn;
 
@@ -11,7 +12,7 @@ use crate::isbn::get_isbn;
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/query.graphql",
   response_derives = "Serialize,Debug",
-  variables_derives = "Deserialize"
+  variables_derives = "Deserialize,Debug"
 )]
 struct GetReadingJournal;
 
@@ -37,7 +38,7 @@ pub struct ListJournal {
 }
 
 pub async fn run(args: ListJournal) -> Result<(), String> {
-  println!("{:?}", args);
+  log(format!("{:?}", args))?;
 
   if args.content_id.is_none() && args.book_id.is_none() {
     panic!("One of --content-id or --book-id is required");
@@ -55,7 +56,7 @@ pub async fn run(args: ListJournal) -> Result<(), String> {
   .ok_or("Failed to find Hardcover.app user")?
   .id;
 
-  println!("user {user_id}");
+  log(format!("user {user_id}"))?;
 
   let journals = send_request::<get_reading_journal::Variables, get_reading_journal::ResponseData>(
     GetReadingJournal::build_query(get_reading_journal::Variables {
@@ -83,9 +84,9 @@ pub async fn run(args: ListJournal) -> Result<(), String> {
   })
   .collect::<Vec<_>>();
 
-  println!("Found {}", journals.len());
+  log(format!("Found {}", journals.len()))?;
 
-  println!("BEGIN_JSON\n{}", json!({ "reading_journals": journals}));
+  log(format!("BEGIN_JSON\n{}", json!({ "reading_journals": journals})))?;
 
   Ok(())
 }

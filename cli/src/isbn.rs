@@ -8,7 +8,7 @@ use quick_xml::name::QName;
 use rusqlite::{Connection, OpenFlags};
 use zip::ZipArchive;
 
-use crate::config::CONFIG;
+use crate::config::{CONFIG, log, report};
 
 fn get_oebps_path(manifest: &str) -> Result<String, String> {
   let mut reader = Reader::from_str(manifest);
@@ -32,13 +32,13 @@ fn get_oebps_path(manifest: &str) -> Result<String, String> {
 
           if attrs[&QName(b"media-type")]
             .as_ref()
-            .map_err(|e| format!("Failed to decode `media-type` attribute value: {e}"))?
+            .map_err(report("Failed to decode `media-type` attribute value"))?
             == "application/oebps-package+xml"
           {
             return Ok(
               attrs[&QName(b"full-path")]
                 .as_ref()
-                .map_err(|e| format!("Failed to decode `full-path` attribute value: {e}"))?
+                .map_err(report("Failed to decode `full-path` attribute value"))?
                 .to_string(),
             );
           }
@@ -98,23 +98,23 @@ fn get_identifiers(oebps: &str) -> Result<Vec<String>, String> {
 }
 
 fn read_epub_isbn(content_id: &str) -> Result<Vec<String>, String> {
-  let file = File::open(Path::new(&content_id[7..])).map_err(|e| format!("Failed to open file: {e}"))?;
-  let mut archive = ZipArchive::new(file).map_err(|e| format!("Failed to parse file as archive: {e}"))?;
+  let file = File::open(Path::new(&content_id[7..])).map_err(report("Failed to open file"))?;
+  let mut archive = ZipArchive::new(file).map_err(report("Failed to parse file as archive"))?;
 
   let mut manifest = String::new();
   archive
     .by_name("META-INF/container.xml")
-    .map_err(|e| format!("Failed to open container manifest: {e}"))?
+    .map_err(report("Failed to open container manifest"))?
     .read_to_string(&mut manifest)
-    .map_err(|e| format!("Failed to read container manifest: {e}"))?;
+    .map_err(report("Failed to read container manifest"))?;
   let oebps_path = get_oebps_path(&manifest)?;
 
   let mut oebps = String::new();
   archive
     .by_name(&oebps_path)
-    .map_err(|e| (format!("Failed to open oebps root file <i>{oebps_path}</i>: {e}")))?
+    .map_err(report("Failed to open oebps root file <i>{oebps_path}</i>"))?
     .read_to_string(&mut oebps)
-    .map_err(|e| format!("Failed to read oebps root file: {e}"))?;
+    .map_err(report("Failed to read oebps root file"))?;
 
   let isbn = get_identifiers(&oebps)?;
 
@@ -122,14 +122,17 @@ fn read_epub_isbn(content_id: &str) -> Result<Vec<String>, String> {
     panic!("Couldn't find an ISBN in the epub metadata. Please link book manually.");
   }
 
-  println!("ISBN from epub `{}`", isbn.join(", "));
+  log(format!("ISBN from epub `{}`", isbn.join(", ")))?;
 
   Ok(isbn)
 }
 
 fn read_sqlite_isbn(content_id: &str) -> Result<String, String> {
   let maybe_isbn: Option<String> = Connection::open_with_flags(&CONFIG.sqlite_path, OpenFlags::SQLITE_OPEN_READ_ONLY)
-    .map_err(|e| format!("Failed to connect to the database <i>{}</i>: {e}", &CONFIG.sqlite_path))?
+    .map_err(report(&format!(
+      "Failed to connect to the database <i>{}</i>",
+      &CONFIG.sqlite_path
+    )))?
     .prepare(
       "SELECT ISBN
       FROM content
@@ -137,15 +140,15 @@ fn read_sqlite_isbn(content_id: &str) -> Result<String, String> {
       AND ContentId is (?1)
       LIMIT 1;",
     )
-    .map_err(|e| format!("Failed to parpare query: {e}"))?
+    .map_err(report("Failed to parpare query"))?
     .query_map([&content_id], |row| row.get(0))
-    .map_err(|e| format!("Failed to run query: {e}"))?
+    .map_err(report("Failed to run query"))?
     .next()
     .ok_or("Query returned no results")?
-    .map_err(|e| format!("Failed to map query result: {e}"))?;
+    .map_err(report("Failed to map query result"))?;
 
   let isbn = maybe_isbn.expect("Couldn't find an ISBN in the database. Please link book manually.");
-  println!("ISBN from database `{isbn}`");
+  log(format!("ISBN from database `{isbn}`"))?;
 
   Ok(isbn)
 }

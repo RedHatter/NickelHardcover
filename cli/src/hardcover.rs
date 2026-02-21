@@ -4,7 +4,7 @@ use graphql_client::{GraphQLQuery, QueryBody, Response};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
-use crate::config::CONFIG;
+use crate::config::{CONFIG, debug_log, log, report};
 
 pub type date = String;
 pub type jsonb = serde_json::Map<String, serde_json::Value>;
@@ -15,7 +15,7 @@ pub type timestamptz = String;
 
 static USER_AGENT: &str = concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION"),);
 
-pub async fn send_request<T: Serialize, R: for<'a> Deserialize<'a> + std::fmt::Debug>(
+pub async fn send_request<T: Serialize + std::fmt::Debug, R: for<'a> Deserialize<'a> + std::fmt::Debug>(
   request_body: QueryBody<T>,
 ) -> Result<R, String> {
   assert!(
@@ -23,24 +23,41 @@ pub async fn send_request<T: Serialize, R: for<'a> Deserialize<'a> + std::fmt::D
     "Please set the Hardcover.app authorization token in `.adds/nickelpagesync/config.ini`"
   );
 
+  debug_log(&format!(
+    "{}, {:?}",
+    request_body.operation_name, request_body.variables
+  ))?;
+
   let client = Client::builder()
     .user_agent(USER_AGENT)
     .build()
-    .map_err(|e| format!("Failed to construct http client: {e}"))?;
+    .map_err(report(&format!(
+      "Failed to construct http client for {}",
+      request_body.operation_name
+    )))?;
   let res: Response<R> = client
-    .post("https://api.hardcover.app/v1/graphql")
+    .post("https://api.hardcover.app/v1/graphq")
     .header("authorization", &CONFIG.authorization)
     .json(&request_body)
     .send()
     .await
-    .map_err(|e| format!("Failed to send Hardcover.app request: {e}"))?
+    .map_err(report(&format!(
+      "Failed to send request {}",
+      request_body.operation_name
+    )))?
     .json()
     .await
-    .map_err(|e| format!("Failed to parse Hardcover.app response: {e}"))?;
+    .map_err(report(&format!(
+      "Failed to parse {} response",
+      request_body.operation_name
+    )))?;
+
+  debug_log(&format!("{:?}", res))?;
 
   if let Some(errors) = res.errors {
     return Err(format!(
-      "Hardcover.app request failed:<br>{}",
+      "{} request failed:<br>{}",
+      request_body.operation_name,
       errors
         .iter()
         .map(|err| err.message.as_ref())
@@ -49,7 +66,10 @@ pub async fn send_request<T: Serialize, R: for<'a> Deserialize<'a> + std::fmt::D
     ));
   }
 
-  res.data.ok_or("Missing field `data` on Hardcover.app response".into())
+  match res.data {
+    Some(data) => Ok(data),
+    None => Err(format!("Empty response for {}: {:?}", request_body.operation_name, res)),
+  }
 }
 
 #[derive(GraphQLQuery)]
@@ -57,7 +77,7 @@ pub async fn send_request<T: Serialize, R: for<'a> Deserialize<'a> + std::fmt::D
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/query.graphql",
   response_derives = "Serialize,Debug,Clone",
-  variables_derives = "Deserialize"
+  variables_derives = "Deserialize,Debug"
 )]
 pub struct GetUserId;
 
@@ -66,7 +86,7 @@ pub struct GetUserId;
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/query.graphql",
   response_derives = "Serialize,Debug",
-  variables_derives = "Deserialize"
+  variables_derives = "Deserialize,Debug"
 )]
 pub struct GetEdition;
 
@@ -85,7 +105,7 @@ pub struct UpdateUserBook;
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/mutation.graphql",
   response_derives = "Serialize,Debug",
-  variables_derives = "Deserialize,Default",
+  variables_derives = "Deserialize,Default,Debug",
   skip_serializing_none
 )]
 pub struct InsertUserBook;
@@ -113,7 +133,7 @@ pub async fn update_or_insert_user_book(
   .ok_or("Failed to find Hardcover.app user")?
   .id;
 
-  println!("user {user_id}");
+  log(format!("user {user_id}"))?;
 
   let all_isbns = isbn.join(", ");
 
@@ -170,7 +190,7 @@ pub async fn update_or_insert_user_book(
         .status_id
         .is_some_and(|status_id| status_id != user_book.status_id)
     {
-      println!("Update user book `{}`", user_book.id);
+      log(format!("Update user book `{}`", user_book.id))?;
 
       let res = send_request::<update_user_book::Variables, update_user_book::ResponseData>(
         UpdateUserBook::build_query(update_user_book::Variables {
@@ -197,7 +217,9 @@ pub async fn update_or_insert_user_book(
     }
   } else {
     // Insert new user book
-    println!("Insert user book for book `{book_id}` and edition `{edition_id}`",);
+    log(format!(
+      "Insert user book for book `{book_id}` and edition `{edition_id}`",
+    ))?;
 
     let res = send_request::<insert_user_book::Variables, insert_user_book::ResponseData>(InsertUserBook::build_query(
       insert_user_book::Variables {
@@ -230,7 +252,7 @@ pub async fn update_or_insert_user_book(
   };
 
   if let Some(id) = user_read_id {
-    println!("user read `{id}`");
+    log(format!("user read `{id}`"))?;
   }
 
   Ok(UserBookResult {

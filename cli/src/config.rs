@@ -1,6 +1,10 @@
-use std::fs;
+use std::error::Error;
+use std::fmt::Write as _;
+use std::fs::{self, File, OpenOptions};
+use std::io::Write as _;
 use std::sync::LazyLock;
 
+use chrono::Local;
 use serde::Serialize;
 use serde::{Deserialize, Deserializer, de};
 
@@ -56,6 +60,7 @@ impl<'de> Deserialize<'de> for SyncOnClose {
 pub struct Config {
   pub authorization: String,
   pub auto_sync_default: bool,
+  pub debug: bool,
   pub sqlite_path: String,
   pub sync_bookmarks: SyncBookmarks,
   pub sync_on_close: SyncOnClose,
@@ -67,6 +72,7 @@ impl Default for Config {
     Self {
       authorization: "".into(),
       auto_sync_default: false,
+      debug: false,
       sqlite_path: "/mnt/onboard/.kobo/KoboReader.sqlite".into(),
       sync_bookmarks: SyncBookmarks::Always,
       sync_on_close: SyncOnClose::Always,
@@ -77,7 +83,7 @@ impl Default for Config {
 
 pub static CONFIG: LazyLock<Config> = LazyLock::new(|| {
   let current_exe = std::env::current_exe()
-    .map_err(|e| panic!("Failed to get current exe path: {e}"))
+    .map_err(|e| panic!("{}", report("Failed to get current exe path")(e)))
     .unwrap();
   let exe_dir = current_exe
     .as_path()
@@ -87,20 +93,20 @@ pub static CONFIG: LazyLock<Config> = LazyLock::new(|| {
 
   let config = if config_path.exists() {
     let content = fs::read_to_string(config_path)
-      .map_err(|e| panic!("Failed to read config file: {e}"))
+      .map_err(|e| panic!("{}", report("Failed to read config file")(e)))
       .unwrap();
     let config: Config = serini::from_str(&content)
-      .map_err(|e| panic!("Failed to parse config file: {e}"))
+      .map_err(|e| panic!("{}", report("Failed to parse config file")(e)))
       .unwrap();
 
     config
   } else {
     let config = Config::default();
     let ini = serini::to_string(&config)
-      .map_err(|e| panic!("Failed to parse default config: {e}"))
+      .map_err(|e| panic!("{}", report("Failed to parse default config")(e)))
       .unwrap();
     fs::write(config_path, ini)
-      .map_err(|e| panic!("Failed to write default config: {e}"))
+      .map_err(|e| panic!("{}", report("Failed to write default config")(e)))
       .unwrap();
 
     config
@@ -113,6 +119,7 @@ pub static CONFIG: LazyLock<Config> = LazyLock::new(|| {
       "Bearer ".to_string() + &config.authorization
     },
     auto_sync_default: config.auto_sync_default,
+    debug: config.debug,
     sqlite_path: exe_dir
       .join(config.sqlite_path)
       .to_str()
@@ -123,3 +130,56 @@ pub static CONFIG: LazyLock<Config> = LazyLock::new(|| {
     threshold: config.threshold,
   }
 });
+
+static LOG: LazyLock<Option<File>> = LazyLock::new(|| {
+  if CONFIG.debug {
+    let current_exe = std::env::current_exe()
+      .map_err(|e| panic!("{}", report("Failed to get current exe path")(e)))
+      .unwrap();
+    let exe_dir = current_exe
+      .as_path()
+      .parent()
+      .expect("Failed to get current exe directory");
+
+    Some(
+      OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(exe_dir.join("nickelhardcover.log"))
+        .map_err(|e| panic!("{}", report("Failed to open log")(e)))
+        .unwrap(),
+    )
+  } else {
+    None
+  }
+});
+
+pub fn debug_log(msg: &str) -> Result<(), String> {
+  if let Some(mut file) = LOG.as_ref() {
+    writeln!(file, "{} {}", Local::now().format("%b %e %k:%M:%S"), msg).map_err(report("Failed to write to log"))?;
+  }
+
+  Ok(())
+}
+
+pub fn log(msg: String) -> Result<(), String> {
+  if let Some(mut file) = LOG.as_ref() {
+    writeln!(file, "{} {}", Local::now().format("%b %e %k:%M:%S"), msg).map_err(report("Failed to write to log"))?;
+  }
+
+  println!("{}", msg);
+
+  Ok(())
+}
+
+pub fn report<E: Error>(msg: &str) -> impl FnOnce(E) -> String {
+  move |e| {
+    let mut err: &(dyn Error) = &e;
+    let mut s = format!("{msg}<br>> {err}");
+    while let Some(src) = err.source() {
+      write!(s, "<br>> {src}").unwrap();
+      err = src;
+    }
+    s
+  }
+}

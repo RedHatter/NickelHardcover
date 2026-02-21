@@ -1,7 +1,7 @@
 use chrono::NaiveDate;
 use rusqlite::{Connection, OpenFlags};
 
-use crate::config::CONFIG;
+use crate::config::{CONFIG, report};
 
 #[derive(Debug)]
 pub struct Bookmark {
@@ -12,8 +12,11 @@ pub struct Bookmark {
 }
 
 pub fn get_bookmarks(content_id: String, after_datetime: Option<&String>) -> Result<Vec<Bookmark>, String> {
-  let connection = Connection::open_with_flags(&CONFIG.sqlite_path, OpenFlags::SQLITE_OPEN_READ_ONLY)
-    .map_err(|e| format!("Failed to connect to the database <i>{}</i>: {e}", &CONFIG.sqlite_path))?;
+  let connection =
+    Connection::open_with_flags(&CONFIG.sqlite_path, OpenFlags::SQLITE_OPEN_READ_ONLY).map_err(report(&format!(
+      "Failed to connect to the database <i>{}</i>",
+      &CONFIG.sqlite_path
+    )))?;
 
   let total_word_count: f64 = connection
     .prepare(
@@ -21,12 +24,12 @@ pub fn get_bookmarks(content_id: String, after_datetime: Option<&String>) -> Res
       FROM content
       WHERE BookId = (?1)",
     )
-    .map_err(|e| format!("Failed to parpare total word count query: {e}"))?
+    .map_err(report("Failed to parpare total word count query"))?
     .query_map([&content_id], |row| row.get(0))
-    .map_err(|e| format!("Failed to run total word count query: {e}"))?
+    .map_err(report("Failed to run total word count query"))?
     .next()
     .ok_or("Total word count query returned no results")?
-    .map_err(|e| format!("Failed to map total word count query result: {e}"))?;
+    .map_err(report("Failed to map total word count query result"))?;
 
   connection
     .prepare(
@@ -55,7 +58,7 @@ pub fn get_bookmarks(content_id: String, after_datetime: Option<&String>) -> Res
       )
       GROUP BY Bookmark.BookmarkID;",
     )
-    .map_err(|e| format!("Failed to parpare bookmark query: {e}"))?
+    .map_err(report("Failed to parpare bookmark query"))?
     .query_map(
       [
         &content_id,
@@ -80,7 +83,7 @@ pub fn get_bookmarks(content_id: String, after_datetime: Option<&String>) -> Res
         })
       },
     )
-    .map_err(|e| format!("Failed to run bookmark query: {e}"))?
-    .map(|row| row.map_err(|e| format!("Failed to map bookmark query result: {e}")))
+    .map_err(report("Failed to run bookmark query"))?
+    .map(|row| row.map_err(report("Failed to map bookmark query result")))
     .collect()
 }

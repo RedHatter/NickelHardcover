@@ -2,14 +2,17 @@ use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 use serde_json::{Value, json};
 
-use crate::hardcover::{jsonb, send_request};
+use crate::{
+  config::log,
+  hardcover::{jsonb, send_request},
+};
 
 #[derive(GraphQLQuery)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/query.graphql",
   response_derives = "Serialize,Debug",
-  variables_derives = "Deserialize"
+  variables_derives = "Deserialize,Debug"
 )]
 struct SearchBooks;
 
@@ -31,7 +34,7 @@ pub struct Search {
 }
 
 pub async fn run(args: Search) -> Result<(), String> {
-  println!("{:?}", args);
+  log(format!("{:?}", args))?;
 
   let results = send_request::<search_books::Variables, search_books::ResponseData>(SearchBooks::build_query(
     search_books::Variables {
@@ -78,7 +81,7 @@ pub async fn run(args: Search) -> Result<(), String> {
     })
     .collect::<Vec<_>>();
 
-  println!(
+  log(format!(
     "BEGIN_JSON\n{}",
     json!({
       "results": hits,
@@ -86,7 +89,7 @@ pub async fn run(args: Search) -> Result<(), String> {
       "total": results.get("found").and_then(Value::as_i64).unwrap_or(args.limit) / args.limit
     })
     .to_string()
-  );
+  ))?;
 
   Ok(())
 }
