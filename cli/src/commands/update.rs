@@ -119,7 +119,16 @@ pub async fn run(args: Update) -> Result<(), String> {
     SyncBookmarks::Finished => None,
     _ => args.after.as_ref(),
   };
-  let bookmarks = get_bookmarks(args.content_id, after)?;
+  let mut bookmarks = get_bookmarks(args.content_id, after)?;
+
+  match CONFIG.sync_bookmarks {
+    SyncBookmarks::Finished => {
+      bookmarks.sort_by(|a, b| a.location.total_cmp(&b.location));
+    }
+    _ => {
+      bookmarks.sort_by(|a, b| a.date_created.cmp(&b.date_created));
+    }
+  }
 
   log(format!("{} bookmarks", bookmarks.len()))?;
 
@@ -140,7 +149,7 @@ pub async fn run(args: Update) -> Result<(), String> {
     let page = (result.pages as f64 * bookmark.location).round() as i64;
     let percent = bookmark.location * 100.0;
     let action_at = match CONFIG.sync_bookmarks {
-      SyncBookmarks::Finished => None,
+      SyncBookmarks::Finished => Some(Local::now().format("%+").to_string()),
       _ => Some(bookmark.date_created.clone()),
     };
 
