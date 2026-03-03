@@ -77,7 +77,16 @@ NickelHardcover attempts to determine which book to update on Hardcover using th
 
 ### Syncing
 
-There are a few ways to sync reading progress and highlights/annotations with Hardcover. You can trigger a manual sync at any time using the “Sync now” menu option. Additionally, if auto-sync is enabled for the open book NickelHardcover will, one, automatically sync whenever the book is closed, or the Kobo is put to sleep (based on the `sync_on_close` setting), and two, sync whenever the difference in reading percentage is more than the `threshold` setting.
+There are a few ways to sync reading progress and highlights/annotations with Hardcover. You can trigger a manual sync at any time using the “Sync now” menu option. Additionally, auto-sync can be enabled for the open book using the "Enable auto-sync" menu option. When auto-sync will run depends on the following config options.
+
+* `sync_daily`  
+  Once per day at the specified hour even if the Kobo is asleep.
+* `threshold`  
+  Whenever the difference between the last synced read percentage and the current read percentage is above this threshold.
+* `sync_on_close`   
+  Immediately after closing a book or the Kobo is put to sleep. Can also be set to a number 1-100 to only run when the read percentage difference is above that threshold.
+
+NickelHardcover will, one, automatically sync whenever the book is closed, or the Kobo is put to sleep (based on the `sync_on_close` setting), and two, sync whenever the difference in reading percentage is more than the `threshold` setting.
 
 ## Uninstall
 
