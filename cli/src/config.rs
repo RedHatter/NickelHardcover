@@ -47,7 +47,10 @@ impl<'de> Deserialize<'de> for SyncOnClose {
       Ok(SyncOnClose::Always)
     } else if s.eq_ignore_ascii_case("Never") {
       Ok(SyncOnClose::Never)
-    } else if let Ok(n) = s.parse::<u8>() {
+    } else if let Ok(n) = s.parse::<u8>()
+      && n > 1
+      && n <= 100
+    {
       Ok(SyncOnClose::Number(n))
     } else {
       Err(de::Error::custom(format!("{s} is not a valid sync_on_close value")))
@@ -63,6 +66,7 @@ pub struct Config {
   pub debug: bool,
   pub sqlite_path: String,
   pub sync_bookmarks: SyncBookmarks,
+  pub sync_daily: u8,
   pub sync_on_close: SyncOnClose,
   pub threshold: u8,
 }
@@ -75,6 +79,7 @@ impl Default for Config {
       debug: false,
       sqlite_path: "/mnt/onboard/.kobo/KoboReader.sqlite".into(),
       sync_bookmarks: SyncBookmarks::Always,
+      sync_daily: 0,
       sync_on_close: SyncOnClose::Always,
       threshold: 20,
     }
@@ -126,6 +131,7 @@ pub static CONFIG: LazyLock<Config> = LazyLock::new(|| {
       .expect("Failed to get SQLite path")
       .to_string(),
     sync_bookmarks: config.sync_bookmarks,
+    sync_daily: config.sync_daily,
     sync_on_close: config.sync_on_close,
     threshold: config.threshold,
   }

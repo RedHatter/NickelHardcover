@@ -93,3 +93,8 @@ extern void (*MenuTextItem__registerForTapGestures)(MenuTextItem *_this);
 typedef QFrame TouchTextEdit;
 extern void (*TouchTextEdit__constructor)(TouchTextEdit *__this, QWidget *parent);
 extern void (*TouchTextEdit__setCustomPlaceholderText)(TouchTextEdit *__this, QString const &text);
+
+typedef QObject PowerTimer;
+extern void (*PowerTimer__constructor)(PowerTimer *__this, QString const &name, QObject *parent);
+extern void (*PowerTimer__fireAt)(PowerTimer *__this, QDateTime const &datatime);
+extern bool (*PowerTimer__isActive)(PowerTimer *__this);

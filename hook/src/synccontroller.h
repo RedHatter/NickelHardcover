@@ -35,6 +35,8 @@ public:
 public Q_SLOTS:
   void currentViewIndexChanged(int index);
   void pageChanged();
+  void alarm();
+  void next();
   void networkConnected();
   void success();
   void closeDialog();
@@ -42,25 +44,26 @@ public Q_SLOTS:
 Q_SIGNALS:
   void currentViewChanged(QString name);
 
+  void finished();
+
 private:
   SyncController(QObject *parent = nullptr);
 
   static SyncController *instance;
 
+  QSettings *config = nullptr;
   QSettings *settings = nullptr;
   QLabel *inProgress;
   ConfirmationDialog *dialog = nullptr;
+  PowerTimer *timer = nullptr;
 
   QString lastViewName = QString("");
 
   QString contentId = nullptr;
   QString key = nullptr;
-  int percentage = 0;
+  QHash<QString, int> queue;
 
-  bool enabledDefault;
-  bool enableOnClose;
-  int onCloseThreshold;
-  int threshold;
+  int lastSyncDaily = 0;
 
   void run();
   void logLines(QByteArray msg);

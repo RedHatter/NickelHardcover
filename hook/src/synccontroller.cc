@@ -3,6 +3,7 @@
 #include <QLabel>
 #include <QSettings>
 #include <QTimer>
+
 #include <stdlib.h>
 
 #include "cli.h"
@@ -20,28 +21,7 @@ SyncController *SyncController::getInstance() {
 };
 
 SyncController::SyncController(QObject *parent) : QObject(parent) {
-  QSettings config(Files::config, QSettings::IniFormat);
-  enabledDefault = config.value("auto_sync_default", false).toBool();
-
-  QVariant syncOnClose = config.value("sync_on_close", "always");
-  onCloseThreshold = syncOnClose.toInt();
-
-  if (onCloseThreshold > 0 && onCloseThreshold < 100) {
-    syncOnClose = true;
-  } else if (syncOnClose.toString() == "always") {
-    syncOnClose = true;
-    onCloseThreshold = 1;
-  } else {
-    syncOnClose = false;
-  }
-
-  threshold = config.value("threshold", 20).toInt();
-  if (threshold < 1) {
-    threshold = 1;
-  } else if (threshold > 100) {
-    threshold = 100;
-  }
-
+  config = new QSettings(Files::config, QSettings::IniFormat);
   settings = new QSettings(Files::settings, QSettings::IniFormat);
   network = new QNetworkAccessManager();
 
@@ -63,7 +43,9 @@ void SyncController::setContentId(QString value) {
 
 QString SyncController::getContentId() { return contentId; }
 
-bool SyncController::isEnabled() { return settings->value(key + "/enabled", enabledDefault).toBool(); }
+bool SyncController::isEnabled() {
+  return settings->value(key + "/enabled", config->value("auto_sync_default", false).toBool()).toBool();
+}
 
 void SyncController::setEnabled(bool value) { settings->setValue(key + "/enabled", value); }
 
@@ -96,21 +78,37 @@ void SyncController::currentViewIndexChanged(int index) {
 
   currentViewChanged(name);
 
-  if (enableOnClose && lastViewName == "ReadingView" && name != "N3Dialog" && isEnabled()) {
+  if (name == "ReadingView" && lastViewName != "ReadingView") {
+    config->sync();
+    settings->sync();
+  }
+
+  if (lastViewName == "ReadingView" && name != "N3Dialog" && isEnabled()) {
+    QVariant syncOnClose = config->value("sync_on_close", "always");
+    int onCloseThreshold = syncOnClose.toInt();
+    bool enableOnClose = false;
+
+    if (onCloseThreshold > 0 && onCloseThreshold < 100) {
+      enableOnClose = true;
+    } else if (syncOnClose.toString() == "always") {
+      enableOnClose = true;
+      onCloseThreshold = 1;
+    }
+
     int lastProgress = getLastProgress();
-    if (abs(lastProgress - percentage) < onCloseThreshold) {
+    if (enableOnClose && abs(lastProgress - queue[contentId]) >= onCloseThreshold) {
+      prepare(false);
+    } else {
       nh_log("Reading progress is %d%% with a last synced progress of %d%% and a on close threshold of %d%%. Skipping "
              "update",
-             percentage, lastProgress, onCloseThreshold);
-    } else {
-      prepare(false);
+             queue[contentId], lastProgress, onCloseThreshold);
     }
   }
 
   if (name == "ReadingView") {
-    percentage = ReadingView__getCalculatedReadProgress(cv);
-    if (percentage == 0) {
-      percentage = 1;
+    queue[contentId] = ReadingView__getCalculatedReadProgress(cv);
+    if (queue[contentId] == 0) {
+      queue[contentId] = 1;
     }
 
     QObject::connect(cv, SIGNAL(pageChanged(int)), this, SLOT(pageChanged()), Qt::UniqueConnection);
@@ -126,9 +124,9 @@ void SyncController::pageChanged() {
   QWidget *cv = MainWindowController__currentView(mwc);
   QString name = cv->objectName();
   if (name == "ReadingView") {
-    percentage = ReadingView__getCalculatedReadProgress(cv);
-    if (percentage == 0) {
-      percentage = 1;
+    queue[contentId] = ReadingView__getCalculatedReadProgress(cv);
+    if (queue[contentId] == 0) {
+      queue[contentId] = 1;
     }
   }
 
@@ -136,13 +134,75 @@ void SyncController::pageChanged() {
     return;
 
   int lastProgress = getLastProgress();
-  if ((percentage != 100 || lastProgress == 100) && abs(lastProgress - percentage) < threshold) {
+
+  int syncDaily = config->value("sync_daily").toInt();
+  if (syncDaily > 24) {
+    syncDaily = 24;
+  }
+
+  if (timer != nullptr && (!PowerTimer__isActive(timer) || syncDaily != lastSyncDaily)) {
+    timer->deleteLater();
+    timer = nullptr;
+  }
+
+  lastSyncDaily = syncDaily;
+
+  if (timer == nullptr && syncDaily > 0 && queue[contentId] != lastProgress) {
+    timer = reinterpret_cast<PowerTimer *>(calloc(1, 128));
+    PowerTimer__constructor(timer, "NickelHardcover-alarm", this);
+
+    QDateTime time = QDateTime::currentDateTime();
+    if (time.time().hour() >= syncDaily) {
+      time = time.addDays(1);
+    }
+    time.setTime(QTime(syncDaily, 0));
+    nh_log("Setting alarm for %s %d %d", qPrintable(time.toString()), syncDaily, time.time().hour());
+
+    PowerTimer__fireAt(timer, time);
+    QObject::connect(timer, SIGNAL(timeout()), this, SLOT(alarm()));
+  }
+
+  int threshold = config->value("threshold", 20).toInt();
+  if (threshold < 1) {
+    threshold = 1;
+  } else if (threshold > 100) {
+    threshold = 100;
+  }
+
+  if (!((queue[contentId] == 100 && lastProgress != 100) || abs(lastProgress - queue[contentId]) >= threshold)) {
     nh_log("Reading progress is %d%% with a last synced progress of %d%% and a threshold of %d%%. Skipping update",
-           percentage, lastProgress, threshold);
+           queue[contentId], lastProgress, threshold);
     return;
   }
 
   prepare(false);
+}
+
+void SyncController::alarm() {
+  nh_log("SyncController::alarm()");
+
+  timer->deleteLater();
+  QObject::connect(this, &SyncController::finished, this, &SyncController::next, Qt::UniqueConnection);
+
+  QHashIterator<QString, int> i(queue);
+  if (i.hasNext()) {
+    i.next();
+    setContentId(i.key());
+    prepare(false);
+  }
+}
+
+void SyncController::next() {
+  queue.remove(contentId);
+
+  QHashIterator<QString, int> i(queue);
+  if (i.hasNext()) {
+    i.next();
+    setContentId(i.key());
+    prepare(false);
+  } else {
+    QObject::disconnect(this, &SyncController::finished, this, &SyncController::next);
+  }
 }
 
 void SyncController::prepare(bool manual) {
@@ -191,21 +251,23 @@ void SyncController::run() {
 
   inProgress->show();
 
-  setLastProgress(percentage);
+  setLastProgress(queue[contentId]);
 
-  if (percentage == 100) {
+  if (queue[contentId] == 100) {
     setEnabled(false);
   }
 
   CLI *cli = new CLI(this);
-  cli->update(percentage);
+  cli->update(queue[contentId]);
   QObject::connect(cli, &CLI::success, this, &SyncController::success);
   QObject::connect(cli, &CLI::failure, this, &SyncController::closeDialog);
+  QObject::connect(cli, &CLI::failure, this, &SyncController::finished);
 }
 
 void SyncController::success() {
   inProgress->hide();
   setLastSynced(QDateTime::currentDateTimeUtc().toString(Qt::ISODate));
+  finished();
 
   if (dialog == nullptr)
     return;

@@ -82,6 +82,10 @@ void (*SettingContainer__setShowBottomLine)(SettingContainer *__this, bool enabl
 void (*TouchTextEdit__constructor)(TouchTextEdit *__this, QWidget *parent);
 void (*TouchTextEdit__setCustomPlaceholderText)(TouchTextEdit *__this, QString const &text);
 
+void (*PowerTimer__constructor)(PowerTimer *__this, QString const &name, QObject *parent);
+void (*PowerTimer__fireAt)(PowerTimer *__this, QDateTime const &datatime);
+bool (*PowerTimer__isActive)(PowerTimer *__this);
+
 static struct nh_info NickelHardcover = (struct nh_info){.name = "NickelHardcover",
                                                          .desc = "Updates reading progress on Hardcover.app",
                                                          .uninstall_flag = "/mnt/onboard/nickelhardcover_uninstall",
@@ -156,6 +160,10 @@ static struct nh_dlsym NickelHardcoverDlsym[] = {
 
   { .name = "_ZN13TouchTextEditC1EP7QWidget",                                  .out = nh_symoutptr(TouchTextEdit__constructor) },
   { .name = "_ZN13TouchTextEdit24setCustomPlaceholderTextERK7QString",         .out = nh_symoutptr(TouchTextEdit__setCustomPlaceholderText) },
+
+  { .name = "_ZN10PowerTimerC1ERK7QStringP7QObject",                           .out = nh_symoutptr(PowerTimer__constructor) },
+  { .name = "_ZN10PowerTimer6fireAtERK9QDateTime",                             .out = nh_symoutptr(PowerTimer__fireAt) },
+  { .name = "_ZNK10PowerTimer8isActiveEv",                                     .out = nh_symoutptr(PowerTimer__isActive) },
 
   {0},
 };
