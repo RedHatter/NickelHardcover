@@ -276,13 +276,14 @@ pub async fn update_or_insert_user_book(
   } else {
     // Insert new user book
     log(format!(
-      "Insert user book for book `{book_id}` and edition `{edition_id}`",
+      "Insert user book for book `{}` and edition `{edition_id}`",
+      book.id
     ))?;
 
     let res = send_request::<insert_user_book::Variables, insert_user_book::ResponseData>(InsertUserBook::build_query(
       insert_user_book::Variables {
         object: insert_user_book::UserBookCreateInput {
-          book_id,
+          book_id: book.id,
           edition_id: Some(edition_id),
           status_id: object.status_id,
           rating: object.rating,
