@@ -192,20 +192,31 @@ pub async fn get_book(
     .clone();
 
   let edition_id = book
-    .user_books
+    .editions
     .first()
-    .and_then(|user_book| user_book.edition.as_ref().filter(filter_edition))
-    .or(book.editions.first().filter(filter_edition)) // ISBN edition
+    .filter(filter_edition) // ISBN edition
+    .or(
+      book
+        .user_books
+        .first()
+        .and_then(|user_book| user_book.edition.as_ref())
+        .filter(filter_edition),
+    )
     .or(book.default_ebook_edition.as_ref().filter(filter_edition))
     .or(book.default_cover_edition.as_ref().filter(filter_edition))
     .ok_or(format!("Failed to select edition for book <i>{}</i>", book.id))?
     .id;
 
   let pages = book
-    .user_books
+    .editions
     .first()
-    .and_then(|user_book| user_book.edition.as_ref().and_then(map_pages))
-    .or(book.editions.first().and_then(map_pages)) // ISBN edition
+    .and_then(map_pages) // ISBN edition
+    .or(
+      book
+        .user_books
+        .first()
+        .and_then(|user_book| user_book.edition.as_ref()).and_then(map_pages),
+    )
     .or(book.default_ebook_edition.as_ref().and_then(map_pages))
     .or(book.default_cover_edition.as_ref().and_then(map_pages))
     .or(book.pages)
