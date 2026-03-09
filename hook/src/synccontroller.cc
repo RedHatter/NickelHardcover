@@ -34,8 +34,12 @@ SyncController::SyncController(QObject *parent) : QObject(parent) {
   inProgress->move(window->width() - 144, window->height() - 144);
 };
 
-void SyncController::setContentId(QString value) {
+void SyncController::setContentId(QString value, bool temp) {
   nh_log("SyncController::setContentId(%s)", qPrintable(value));
+
+  if (!temp) {
+    bkContentId = value;
+  }
 
   contentId = value;
   key = value.replace('/', '-').replace('\\', '-');
@@ -81,6 +85,10 @@ void SyncController::currentViewIndexChanged(int index) {
   if (name == "ReadingView" && lastViewName != "ReadingView") {
     config->sync();
     settings->sync();
+  }
+
+  if (contentId != bkContentId) {
+    setContentId(bkContentId);
   }
 
   if (lastViewName == "ReadingView" && name != "N3Dialog" && isEnabled()) {

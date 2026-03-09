@@ -14,7 +14,7 @@ public:
   void prepare(bool silent);
 
   QString getContentId();
-  void setContentId(QString value);
+  void setContentId(QString value, bool temp = false);
 
   bool isEnabled();
   void setEnabled(bool value);
@@ -59,6 +59,7 @@ private:
 
   QString lastViewName = QString("");
 
+  QString bkContentId = nullptr;
   QString contentId = nullptr;
   QString key = nullptr;
   QHash<QString, int> queue;
