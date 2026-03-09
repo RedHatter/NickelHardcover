@@ -1,119 +1,120 @@
 query GetUserId {
-	me {
-		id
-	}
+  me {
+    id
+  }
 }
 
 query SearchBooks($query: String!, $limit: Int!, $page: Int!) {
-	search(query: $query, query_type: "Book", per_page: $limit, page: $page) {
-		results
-	}
+  search(query: $query, query_type: "Book", per_page: $limit, page: $page) {
+    results
+  }
+}
+
+fragment Edition on editions {
+  id
+  pages
+  reading_format_id
 }
 
 query GetEdition($isbn: [String!]!, $book_id: Int!, $user_id: Int!) {
-	editions(
-		where: {
-			_or: [
-				{ asin: { _in: $isbn } }
-				{ isbn_10: { _in: $isbn } }
-				{ isbn_13: { _in: $isbn } }
-				{ book_id: { _eq: $book_id } }
-			]
-		}
-		limit: 1
-	) {
-		book {
-			id
-			pages
-			default_ebook_edition {
-				id
-				pages
-			}
-			default_cover_edition {
-				id
-				pages
-			}
-			editions(
-				where: {
-					_or: [
-						{ asin: { _in: $isbn } }
-						{ isbn_10: { _in: $isbn } }
-						{ isbn_13: { _in: $isbn } }
-					]
-				}
-				limit: 1
-			) {
-				id
-				pages
-			}
-			user_books(where: { user_id: { _eq: $user_id } }) {
-				id
-				status_id
-				rating
-				review_has_spoilers
-				review_slate
-				reviewed_at
-				sponsored_review
-				edition {
-					pages
-					id
-				}
-				user_book_reads(
-					where: { finished_at: { _is_null: true } }
-					order_by: { started_at: desc }
-					limit: 1
-				) {
-					id
-					started_at
-					edition {
-						id
-						pages
-					}
-				}
-			}
-		}
-	}
+  editions(
+    where: {
+      _or: [
+        { asin: { _in: $isbn } }
+        { isbn_10: { _in: $isbn } }
+        { isbn_13: { _in: $isbn } }
+        { book_id: { _eq: $book_id } }
+      ]
+    }
+    limit: 1
+  ) {
+    book {
+      id
+      pages
+      default_ebook_edition {
+        ...Edition
+      }
+      default_cover_edition {
+        ...Edition
+      }
+      editions(
+        where: {
+          _or: [
+            { asin: { _in: $isbn } }
+            { isbn_10: { _in: $isbn } }
+            { isbn_13: { _in: $isbn } }
+          ]
+        }
+        limit: 1
+      ) {
+        ...Edition
+      }
+      user_books(where: { user_id: { _eq: $user_id } }) {
+        id
+        status_id
+        rating
+        review_has_spoilers
+        review_slate
+        reviewed_at
+        sponsored_review
+        edition {
+          ...Edition
+        }
+        user_book_reads(
+          where: { finished_at: { _is_null: true } }
+          order_by: { started_at: desc }
+          limit: 1
+        ) {
+          id
+          started_at
+          edition {
+            ...Edition
+          }
+        }
+      }
+    }
+  }
 }
 
 query GetJournal($action_at: timestamptz!, $user_id: Int!) {
-	reading_journals(
-		where: { user_id: { _eq: $user_id }, action_at: { _eq: $action_at } }
-	) {
-		entry
-		event
-		id
-	}
+  reading_journals(
+    where: { user_id: { _eq: $user_id }, action_at: { _eq: $action_at } }
+  ) {
+    entry
+    event
+    id
+  }
 }
 
 query GetReadingJournal(
-	$isbn: [String!]!
-	$book_id: Int!
-	$user_id: Int!
-	$limit: Int!
-	$offset: Int!
+  $isbn: [String!]!
+  $book_id: Int!
+  $user_id: Int!
+  $limit: Int!
+  $offset: Int!
 ) {
-	reading_journals(
-		where: {
-			user_id: { _eq: $user_id }
-			book: {
-				editions: {
-					_or: [
-						{ asin: { _in: $isbn } }
-						{ isbn_10: { _in: $isbn } }
-						{ isbn_13: { _in: $isbn } }
-						{ book_id: { _eq: $book_id } }
-					]
-				}
-			}
-		}
-		limit: $limit
-		offset: $offset
-		order_by: { action_at: desc }
-	) {
-		entry
-		event
-		id
-		action_at
-		metadata
-	}
+  reading_journals(
+    where: {
+      user_id: { _eq: $user_id }
+      book: {
+        editions: {
+          _or: [
+            { asin: { _in: $isbn } }
+            { isbn_10: { _in: $isbn } }
+            { isbn_13: { _in: $isbn } }
+            { book_id: { _eq: $book_id } }
+          ]
+        }
+      }
+    }
+    limit: $limit
+    offset: $offset
+    order_by: { action_at: desc }
+  ) {
+    entry
+    event
+    id
+    action_at
+    metadata
+  }
 }

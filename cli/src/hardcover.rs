@@ -109,7 +109,7 @@ pub struct GetUserId;
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/query.graphql",
-  response_derives = "Serialize,Debug",
+  response_derives = "Serialize,Debug,Clone",
   variables_derives = "Deserialize,Debug"
 )]
 pub struct GetEdition;
@@ -132,7 +132,7 @@ pub struct UpdateUserBook;
   variables_derives = "Deserialize,Default,Debug",
   skip_serializing_none
 )]
-pub struct InsertUserBook;
+struct InsertUserBook;
 
 pub struct UserBookResult {
   pub book_id: i64,
@@ -143,11 +143,22 @@ pub struct UserBookResult {
   pub started_at: Option<String>,
 }
 
-pub async fn update_or_insert_user_book(
+fn filter_edition(edition: &&get_edition::Edition) -> bool {
+  edition.reading_format_id != 2
+}
+
+fn map_pages(edition: &get_edition::Edition) -> Option<i64> {
+  if edition.reading_format_id == 2 {
+    None
+  } else {
+    edition.pages
+  }
+}
+
+pub async fn get_book(
   isbn: Vec<String>,
   book_id: i64,
-  object: update_user_book::UserBookUpdateInput,
-) -> Result<UserBookResult, String> {
+) -> Result<(get_edition::GetEditionEditionsBook, i64, i64, i64), String> {
   let user_id = send_request::<get_user_id::Variables, get_user_id::ResponseData>(GetUserId::build_query(
     get_user_id::Variables {},
   ))
@@ -167,7 +178,7 @@ pub async fn update_or_insert_user_book(
   ))
   .await?;
 
-  let book = &res
+  let book = res
     .editions
     .first()
     .expect(&if book_id != 0 {
@@ -177,29 +188,41 @@ pub async fn update_or_insert_user_book(
         "Unable to find a book edition on Hardcover.app with ISBN/ASIN <i>{all_isbns}</i>. Please manually link book."
       )
     })
-    .book;
+    .book
+    .clone();
 
   let edition_id = book
     .user_books
     .first()
-    .and_then(|user_book| user_book.edition.as_ref().map(|edition| edition.id))
-    .or(book.editions.first().map(|edition| edition.id)) // ISBN edition
-    .or(book.default_ebook_edition.as_ref().map(|edition| edition.id))
-    .or(book.default_cover_edition.as_ref().map(|edition| edition.id))
-    .ok_or(format!("Failed to select edition for book <i>{}</i>", book.id))?;
+    .and_then(|user_book| user_book.edition.as_ref().filter(filter_edition))
+    .or(book.editions.first().filter(filter_edition)) // ISBN edition
+    .or(book.default_ebook_edition.as_ref().filter(filter_edition))
+    .or(book.default_cover_edition.as_ref().filter(filter_edition))
+    .ok_or(format!("Failed to select edition for book <i>{}</i>", book.id))?
+    .id;
 
   let pages = book
     .user_books
     .first()
-    .and_then(|user_book| user_book.edition.as_ref().and_then(|edition| edition.pages))
-    .or(book.editions.first().and_then(|edition| edition.pages)) // ISBN edition
-    .or(book.default_ebook_edition.as_ref().and_then(|edition| edition.pages))
-    .or(book.default_cover_edition.as_ref().and_then(|edition| edition.pages))
+    .and_then(|user_book| user_book.edition.as_ref().and_then(map_pages))
+    .or(book.editions.first().and_then(map_pages)) // ISBN edition
+    .or(book.default_ebook_edition.as_ref().and_then(map_pages))
+    .or(book.default_cover_edition.as_ref().and_then(map_pages))
     .or(book.pages)
     .expect(&format!(
         "Unable to find the total page count for book <i>{}</i>. Please update the book on Hardcover.app with the correct page count.",
         book.id)
       );
+
+  Ok((book, edition_id, pages, user_id))
+}
+
+pub async fn update_or_insert_user_book(
+  isbn: Vec<String>,
+  book_id: i64,
+  object: update_user_book::UserBookUpdateInput,
+) -> Result<UserBookResult, String> {
+  let (book, edition_id, pages, user_id) = get_book(isbn, book_id).await?;
 
   let (user_read_id, started_at) = if let Some(user_book) = book.user_books.first() {
     if object.review_slate.is_some()
