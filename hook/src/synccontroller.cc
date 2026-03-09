@@ -188,7 +188,12 @@ void SyncController::alarm() {
   if (i.hasNext()) {
     i.next();
     setContentId(i.key());
-    prepare(false);
+
+    if (isEnabled()) {
+      prepare(false);
+    } else {
+      next();
+    }
   }
 }
 
@@ -199,7 +204,12 @@ void SyncController::next() {
   if (i.hasNext()) {
     i.next();
     setContentId(i.key());
-    prepare(false);
+
+    if (isEnabled()) {
+      prepare(false);
+    } else {
+      next();
+    }
   } else {
     QObject::disconnect(this, &SyncController::finished, this, &SyncController::next);
   }
