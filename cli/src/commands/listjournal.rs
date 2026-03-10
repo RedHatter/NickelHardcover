@@ -3,7 +3,7 @@ use graphql_client::GraphQLQuery;
 use serde_json::json;
 
 use crate::commands::getuserbook::reduce_slate;
-use crate::config::log;
+use crate::config::{VERSION, log};
 use crate::hardcover::{GetUserId, bigint, get_user_id, jsonb, send_request, timestamptz};
 use crate::isbn::get_isbn;
 
@@ -38,7 +38,7 @@ pub struct ListJournal {
 }
 
 pub async fn run(args: ListJournal) -> Result<(), String> {
-  log(format!("{:?}", args))?;
+  log(format!("{} {:?}", &*VERSION, args))?;
 
   if args.content_id.is_none() && args.book_id.is_none() {
     panic!("One of --content-id or --book-id is required");

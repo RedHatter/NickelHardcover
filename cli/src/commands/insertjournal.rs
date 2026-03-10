@@ -1,7 +1,7 @@
 use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 
-use crate::config::log;
+use crate::config::{VERSION, log};
 use crate::hardcover::{date, get_book, send_request};
 use crate::isbn::get_isbn;
 
@@ -36,7 +36,7 @@ pub struct InsertJournal {
 }
 
 pub async fn run(args: InsertJournal) -> Result<(), String> {
-  log(format!("{:?}", args))?;
+  log(format!("{} {:?}", &*VERSION, args))?;
 
   if args.content_id.is_none() && args.book_id.is_none() {
     panic!("One of --content-id or --book-id is required");

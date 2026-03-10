@@ -3,7 +3,7 @@ use chrono::Local;
 use graphql_client::GraphQLQuery;
 
 use crate::bookmarks::get_bookmarks;
-use crate::config::{CONFIG, SyncBookmarks, log};
+use crate::config::{CONFIG, SyncBookmarks, VERSION, log};
 use crate::hardcover::{
   bigint, date, send_request, timestamptz, update_or_insert_user_book, update_user_book::UserBookUpdateInput,
 };
@@ -67,7 +67,7 @@ pub struct Update {
 }
 
 pub async fn run(args: Update) -> Result<(), String> {
-  log(format!("{:?}", args))?;
+  log(format!("{} {:?}", &*VERSION, args))?;
 
   let isbn = if args.book_id.is_none() {
     get_isbn(&args.content_id)

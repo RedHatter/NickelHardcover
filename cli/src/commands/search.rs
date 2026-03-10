@@ -3,7 +3,7 @@ use graphql_client::GraphQLQuery;
 use serde_json::{Value, json};
 
 use crate::{
-  config::log,
+  config::{VERSION, log},
   hardcover::{jsonb, send_request},
 };
 
@@ -34,7 +34,7 @@ pub struct Search {
 }
 
 pub async fn run(args: Search) -> Result<(), String> {
-  log(format!("{:?}", args))?;
+  log(format!("{} {:?}", &*VERSION, args))?;
 
   let results = send_request::<search_books::Variables, search_books::ResponseData>(SearchBooks::build_query(
     search_books::Variables {
