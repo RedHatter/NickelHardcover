@@ -2,6 +2,7 @@ use std::env;
 use std::panic;
 
 use crate::commands::{getuserbook, insertjournal, listjournal, search, setuserbook, update};
+use crate::config::VERSION;
 use crate::config::debug_log;
 
 mod commands;
@@ -17,7 +18,11 @@ use argh::FromArgs;
 #[derive(FromArgs, PartialEq, Debug)]
 struct Arguments {
   #[argh(subcommand)]
-  command: Commands,
+  command: Option<Commands>,
+
+  /// print version number
+  #[argh(switch)]
+  version: bool,
 }
 
 #[derive(FromArgs, PartialEq, Debug)]
@@ -49,7 +54,16 @@ async fn main() {
   }
 
   let args: Arguments = argh::from_env();
-  let res = match args.command {
+
+  if args.version {
+    println!("{}", &*VERSION);
+    return;
+  }
+
+  let res = match args
+    .command
+    .expect("A subcommands must be present. Run with --help for more information.")
+  {
     Commands::ListJournal(args) => listjournal::run(args).await,
     Commands::InsertJournal(args) => insertjournal::run(args).await,
     Commands::Search(args) => search::run(args).await,
