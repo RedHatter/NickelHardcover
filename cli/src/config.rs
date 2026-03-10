@@ -86,6 +86,8 @@ impl Default for Config {
   }
 }
 
+pub static VERSION: LazyLock<&str> = LazyLock::new(|| option_env!("VERSION").unwrap_or(env!("CARGO_PKG_VERSION")));
+
 pub static CONFIG: LazyLock<Config> = LazyLock::new(|| {
   let current_exe = std::env::current_exe()
     .map_err(|e| panic!("{}", report("Failed to get current exe path")(e)))

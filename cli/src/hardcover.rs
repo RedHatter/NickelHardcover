@@ -7,7 +7,7 @@ use graphql_client::{GraphQLQuery, QueryBody, Response};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
-use crate::config::{CONFIG, debug_log, log, report};
+use crate::config::{CONFIG, VERSION, debug_log, log, report};
 
 pub type date = String;
 pub type jsonb = serde_json::Map<String, serde_json::Value>;
@@ -18,7 +18,7 @@ pub type timestamptz = String;
 
 static CLIENT: LazyLock<Result<Client, String>> = LazyLock::new(|| {
   Client::builder()
-    .user_agent(concat!(env!("CARGO_PKG_NAME"), "/", env!("CARGO_PKG_VERSION")))
+    .user_agent(format!("{}/{}", env!("CARGO_PKG_NAME"), &*VERSION))
     .build()
     .map_err(report("Failed to construct http client"))
 });
