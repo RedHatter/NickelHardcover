@@ -37,7 +37,7 @@ query GetEdition($isbn: [String!]!, $book_id: Int!, $user_id: Int!) {
       default_cover_edition {
         ...Edition
       }
-      editions(
+      isbn_edition: editions(
         where: {
           _or: [
             { asin: { _in: $isbn } }
@@ -45,6 +45,20 @@ query GetEdition($isbn: [String!]!, $book_id: Int!, $user_id: Int!) {
             { isbn_13: { _in: $isbn } }
           ]
         }
+        limit: 1
+      ) {
+        ...Edition
+      }
+      ebook_edition: editions(
+        where: { reading_format_id: { _eq: 4 } }
+        order_by: { users_count: desc }
+        limit: 1
+      ) {
+        ...Edition
+      }
+      paper_edition: editions(
+        where: { reading_format_id: { _eq: 1 } }
+        order_by: { users_count: desc }
         limit: 1
       ) {
         ...Edition

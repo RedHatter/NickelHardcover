@@ -192,9 +192,9 @@ pub async fn get_book(
     .clone();
 
   let edition_id = book
-    .editions
+    .isbn_edition
     .first()
-    .filter(filter_edition) // ISBN edition
+    .filter(filter_edition)
     .or(
       book
         .user_books
@@ -204,13 +204,18 @@ pub async fn get_book(
     )
     .or(book.default_ebook_edition.as_ref().filter(filter_edition))
     .or(book.default_cover_edition.as_ref().filter(filter_edition))
-    .ok_or(format!("Failed to select edition for book <i>{}</i>", book.id))?
+    .or(book.ebook_edition.first().filter(filter_edition))
+    .or(book.paper_edition.first().filter(filter_edition))
+    .expect(&format!(
+      "Unable to find an edition for book <i>{}</i>. Does the book have any non-audiobook editions?",
+      book.id
+    ))
     .id;
 
   let pages = book
-    .editions
+    .isbn_edition
     .first()
-    .and_then(map_pages) // ISBN edition
+    .and_then(map_pages)
     .or(
       book
         .user_books
@@ -219,6 +224,8 @@ pub async fn get_book(
     )
     .or(book.default_ebook_edition.as_ref().and_then(map_pages))
     .or(book.default_cover_edition.as_ref().and_then(map_pages))
+    .or(book.ebook_edition.first().and_then(map_pages))
+    .or(book.paper_edition.first().and_then(map_pages))
     .or(book.pages)
     .expect(&format!(
         "Unable to find the total page count for book <i>{}</i>. Please update the book on Hardcover.app with the correct page count.",
