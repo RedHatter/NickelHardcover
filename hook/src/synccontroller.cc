@@ -138,6 +138,10 @@ void SyncController::pageChanged() {
     }
   }
 
+  if (contentId != bkContentId) {
+    setContentId(bkContentId);
+  }
+
   if (!isEnabled())
     return;
 
