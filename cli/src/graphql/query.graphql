@@ -75,7 +75,10 @@ query GetEdition($isbn: [String!]!, $book_id: Int!, $user_id: Int!) {
           ...Edition
         }
         user_book_reads(
-          where: { finished_at: { _is_null: true } }
+          where: {
+            finished_at: { _is_null: true }
+            edition: { reading_format_id: { _neq: 2 } }
+          }
           order_by: { started_at: desc }
           limit: 1
         ) {

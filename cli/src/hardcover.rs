@@ -139,6 +139,7 @@ pub struct UserBookResult {
   pub edition_id: i64,
   pub pages: i64,
   pub user_id: i64,
+  pub user_book_id: i64,
   pub user_read_id: Option<i64>,
   pub started_at: Option<String>,
 }
@@ -192,9 +193,12 @@ pub async fn get_book(
     .clone();
 
   let edition_id = book
-    .isbn_edition
+    .user_books
     .first()
+    .and_then(|user_book| user_book.user_book_reads.first())
+    .and_then(|read| read.edition.as_ref())
     .filter(filter_edition)
+    .or(book.isbn_edition.first().filter(filter_edition))
     .or(
       book
         .user_books
@@ -213,9 +217,12 @@ pub async fn get_book(
     .id;
 
   let pages = book
-    .isbn_edition
+    .user_books
     .first()
+    .and_then(|user_book| user_book.user_book_reads.first())
+    .and_then(|read| read.edition.as_ref())
     .and_then(map_pages)
+    .or(book.isbn_edition.first().and_then(map_pages))
     .or(
       book
         .user_books
@@ -242,7 +249,7 @@ pub async fn update_or_insert_user_book(
 ) -> Result<UserBookResult, String> {
   let (book, edition_id, pages, user_id) = get_book(isbn, book_id).await?;
 
-  let (user_read_id, started_at) = if let Some(user_book) = book.user_books.first() {
+  let (user_book_id, user_read_id, started_at) = if let Some(user_book) = book.user_books.first() {
     if object.review_slate.is_some()
       || (object.rating.is_some() && object.rating != user_book.rating)
       || object
@@ -269,16 +276,24 @@ pub async fn update_or_insert_user_book(
         return Err(error);
       }
 
-      let user_book = res
+      let updated_user_book = res
         .update_user_book
         .and_then(|update| update.user_book)
         .ok_or(format!("Failed to find updated user book <i>{}</i>", user_book.id))?;
-      let read = user_book.user_book_reads.first();
+      let read = updated_user_book.user_book_reads.first();
 
-      (read.map(|read| read.id), read.and_then(|read| read.started_at.clone()))
+      (
+        user_book.id,
+        read.map(|read| read.id),
+        read.and_then(|read| read.started_at.clone()),
+      )
     } else {
       let read = user_book.user_book_reads.first();
-      (read.map(|read| read.id), read.and_then(|read| read.started_at.clone()))
+      (
+        user_book.id,
+        read.map(|read| read.id),
+        read.and_then(|read| read.started_at.clone()),
+      )
     }
   } else {
     // Insert new user book
@@ -314,7 +329,11 @@ pub async fn update_or_insert_user_book(
       .ok_or("Failed to find inserted user book")?;
     let read = user_book.user_book_reads.first();
 
-    (read.map(|read| read.id), read.and_then(|read| read.started_at.clone()))
+    (
+      user_book.id,
+      read.map(|read| read.id),
+      read.and_then(|read| read.started_at.clone()),
+    )
   };
 
   if let Some(id) = user_read_id {
@@ -326,6 +345,7 @@ pub async fn update_or_insert_user_book(
     edition_id,
     pages,
     user_id,
+    user_book_id,
     user_read_id,
     started_at,
   })

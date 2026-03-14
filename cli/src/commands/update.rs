@@ -25,6 +25,15 @@ struct UpdateRead;
   response_derives = "Serialize,Debug",
   variables_derives = "Deserialize,Debug"
 )]
+struct InsertRead;
+
+#[derive(GraphQLQuery)]
+#[graphql(
+  schema_path = "src/graphql/schema.graphql",
+  query_path = "src/graphql/mutation.graphql",
+  response_derives = "Serialize,Debug",
+  variables_derives = "Deserialize,Debug"
+)]
 struct InsertReadingJournal;
 
 #[derive(GraphQLQuery)]
@@ -85,28 +94,46 @@ pub async fn run(args: Update) -> Result<(), String> {
   )
   .await?;
 
-  let user_read_id = result
-    .user_read_id
-    .ok_or("Failed to find user read after updating or inserting user book")?;
   let progress_pages = (result.pages * args.value) / 100;
 
-  log(format!(
-    "Update read `{user_read_id}` for edition `{}` to page `{progress_pages}`",
-    result.edition_id
-  ))?;
+  if let Some(user_read_id) = result.user_read_id {
+    log(format!(
+      "Update read `{user_read_id}` for edition `{}` to page `{progress_pages}`",
+      result.edition_id
+    ))?;
 
-  let res = send_request::<update_read::Variables, update_read::ResponseData>(UpdateRead::build_query(
-    update_read::Variables {
-      id: user_read_id,
-      progress_pages,
-      edition_id: result.edition_id,
-      started_at: result.started_at.unwrap_or(Local::now().format("%Y-%m-%d").to_string()),
-    },
-  ))
-  .await?;
+    let res = send_request::<update_read::Variables, update_read::ResponseData>(UpdateRead::build_query(
+      update_read::Variables {
+        id: user_read_id,
+        progress_pages,
+        edition_id: result.edition_id,
+        started_at: result.started_at.unwrap_or(Local::now().format("%Y-%m-%d").to_string()),
+      },
+    ))
+    .await?;
 
-  if let Some(error) = res.update_user_book_read.and_then(|res| res.error) {
-    return Err(error);
+    if let Some(error) = res.update_user_book_read.and_then(|res| res.error) {
+      return Err(error);
+    }
+  } else {
+    log(format!(
+      "Insert new read for edition `{}` at page `{progress_pages}`",
+      result.edition_id
+    ))?;
+
+    let res = send_request::<insert_read::Variables, insert_read::ResponseData>(InsertRead::build_query(
+      insert_read::Variables {
+        user_book_id: result.user_book_id,
+        progress_pages,
+        edition_id: result.edition_id,
+        started_at: result.started_at.unwrap_or(Local::now().format("%Y-%m-%d").to_string()),
+      },
+    ))
+    .await?;
+
+    if let Some(error) = res.insert_user_book_read.and_then(|res| res.error) {
+      return Err(error);
+    }
   }
 
   if CONFIG.sync_bookmarks == SyncBookmarks::Never
