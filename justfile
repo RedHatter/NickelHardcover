@@ -9,7 +9,7 @@ default:
 [working-directory: 'cli']
 build-cli:
   docker pull ewpratten/kobo-cross-armhf:latest || podman pull ewpratten/kobo-cross-armhf:latest
-  VERSION=$(git describe --tags --long) cross build --release --target arm-unknown-linux-musleabihf
+  CROSS_CONTAINER_OPTS="--env VERSION=$(git describe --tags --long)" cross build --release --target arm-unknown-linux-musleabihf
 
 # Cross compile nickel hook for Kobo
 [group('build')]
