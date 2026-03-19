@@ -36,7 +36,7 @@ public Q_SLOTS:
   void currentViewIndexChanged(int index);
   void pageChanged();
   void alarm();
-  void next();
+  void queuedFinished();
   void networkConnected();
   void success();
   void closeDialog();
@@ -66,6 +66,7 @@ private:
 
   int lastSyncDaily = 0;
 
+  void nextQueued();
   void run();
   void logLines(QByteArray msg);
 };

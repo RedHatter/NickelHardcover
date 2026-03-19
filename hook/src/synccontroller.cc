@@ -194,8 +194,13 @@ void SyncController::alarm() {
   nh_log("SyncController::alarm()");
 
   timer->deleteLater();
-  QObject::connect(this, &SyncController::finished, this, &SyncController::next, Qt::UniqueConnection);
+  timer = nullptr;
+  QObject::connect(this, &SyncController::finished, this, &SyncController::queuedFinished, Qt::UniqueConnection);
 
+  nextQueued();
+}
+
+void SyncController::nextQueued() {
   QHashIterator<QString, int> i(queue);
   if (i.hasNext()) {
     i.next();
@@ -204,27 +209,16 @@ void SyncController::alarm() {
     if (isEnabled()) {
       prepare(false);
     } else {
-      next();
+      queuedFinished();
     }
+  } else {
+    QObject::disconnect(this, &SyncController::finished, this, &SyncController::queuedFinished);
   }
 }
 
-void SyncController::next() {
+void SyncController::queuedFinished() {
   queue.remove(contentId);
-
-  QHashIterator<QString, int> i(queue);
-  if (i.hasNext()) {
-    i.next();
-    setContentId(i.key());
-
-    if (isEnabled()) {
-      prepare(false);
-    } else {
-      next();
-    }
-  } else {
-    QObject::disconnect(this, &SyncController::finished, this, &SyncController::next);
-  }
+  nextQueued();
 }
 
 void SyncController::prepare(bool manual) {
