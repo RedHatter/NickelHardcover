@@ -1,5 +1,7 @@
 # NickelHardcover
-Hardcover.app integration for Kobo eReaders [Hardcover.app](https://hardcover.app/).
+[Hardcover.app](https://hardcover.app/) integration for Kobo eReaders.
+
+Thanks to **pgaskin** for the [NickelHook](https://github.com/pgaskin/NickelHook) library and [NickelTC](https://github.com/pgaskin/NickelTC) toolchain without which this project would not be possible.
 
 **Warning: Firmware version 5.x is not supported yet.**
 
