@@ -5,6 +5,7 @@
 
 #include "cli.h"
 #include "files.h"
+#include "settings.h"
 #include "synccontroller.h"
 
 CLI::CLI(QObject *parent) : QObject(parent) {}
@@ -55,17 +56,15 @@ void CLI::search(QString query, int limit, int page) {
   start({"search", "--limit", QString::number(limit), "--page", QString::number(page), "--query", query});
 }
 
-void CLI::update(int percentage) {
-  SyncController *ctl = SyncController::getInstance();
+void CLI::update(QString contentId, int percentage) {
+  QStringList arguments = {"update", "--content-id", contentId, "--value", QString::number(percentage)};
 
-  QStringList arguments = {"update", "--content-id", ctl->getContentId(), "--value", QString::number(percentage)};
-
-  QString linkedBook = ctl->getLinkedBook();
+  QString linkedBook = Settings::getInstance()->getLinkedBook(contentId);
   if (!linkedBook.isEmpty()) {
     arguments.append({"--book-id", linkedBook});
   }
 
-  QString lastSynced = ctl->getLastSynced();
+  QString lastSynced = Settings::getInstance()->getLastSynced(contentId);
   if (!lastSynced.isEmpty()) {
     arguments.append({"--after", lastSynced});
   }
@@ -75,9 +74,9 @@ void CLI::update(int percentage) {
 
 QStringList CLI::getIdentifier() {
   SyncController *ctl = SyncController::getInstance();
-  QString linkedBook = ctl->getLinkedBook();
+  QString linkedBook = Settings::getInstance()->getLinkedBook(ctl->contentId);
   if (linkedBook.isEmpty()) {
-    return {"--content-id", ctl->getContentId()};
+    return {"--content-id", ctl->contentId};
   } else {
     return {"--book-id", linkedBook};
   }

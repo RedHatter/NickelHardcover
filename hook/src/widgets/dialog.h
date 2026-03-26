@@ -23,7 +23,7 @@ private:
 protected:
   Dialog(QString title, QWidget *parent = nullptr);
 
-  N3Dialog *dialog;
+  N3Dialog *dialog = nullptr;
 
   void connectNetwork();
 

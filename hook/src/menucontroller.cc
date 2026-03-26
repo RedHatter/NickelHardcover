@@ -12,6 +12,7 @@
 #include "menucontroller.h"
 #include "review/reviewdialog.h"
 #include "search/searchdialog.h"
+#include "settings.h"
 #include "synccontroller.h"
 
 MenuController::MenuController(QWidget *parent) : QWidget(parent) {
@@ -39,14 +40,15 @@ void MenuController::showMainMenu(bool checked) {
 
   menu->addSeparator();
 
-  SyncController *ctl = SyncController::getInstance();
+  QString contentId = SyncController::getInstance()->contentId;
 
-  action = addMenuItem(menu, ctl->isEnabled() ? "Disable auto-sync" : "Enable auto-sync");
+  action = addMenuItem(menu, Settings::getInstance()->isEnabled(contentId) ? "Disable auto-sync" : "Enable auto-sync");
   QObject::connect(action, &QAction::triggered, this, &MenuController::toggleEnabled);
 
   menu->addSeparator();
 
-  action = addMenuItem(menu, ctl->getLinkedBook().isEmpty() ? "Manually link book" : "Unlink book");
+  action = addMenuItem(menu, Settings::getInstance()->getLinkedBook(contentId).isEmpty() ? "Manually link book"
+                                                                                         : "Unlink book");
   QObject::connect(action, &QAction::triggered, this, &MenuController::linkBook);
 
   menu->addSeparator();
@@ -97,14 +99,14 @@ QWidgetAction *MenuController::addMenuItem(NickelTouchMenu *menu, QString label,
 void MenuController::syncNow(bool checked) {
   nh_log("MenuController::syncNow(%s)", checked ? "true" : "false");
 
-  SyncController::getInstance()->prepare(true);
+  SyncController::getInstance()->manualSync();
 }
 
 void MenuController::toggleEnabled(bool checked) {
   nh_log("MenuController::toggleEnabled(%s)", checked ? "true" : "false");
 
-  SyncController *ctl = SyncController::getInstance();
-  ctl->setEnabled(!ctl->isEnabled());
+  QString contentId = SyncController::getInstance()->contentId;
+  Settings::getInstance()->setEnabled(contentId, !Settings::getInstance()->isEnabled(contentId));
 }
 
 void MenuController::linkBook(bool checked) {
@@ -112,10 +114,10 @@ void MenuController::linkBook(bool checked) {
 
   SyncController *ctl = SyncController::getInstance();
 
-  if (ctl->getLinkedBook().isEmpty()) {
+  if (Settings::getInstance()->getLinkedBook(ctl->contentId).isEmpty()) {
     SearchDialog::show(ctl->title + " " + ctl->author);
   } else {
-    ctl->setLinkedBook("");
+    Settings::getInstance()->setLinkedBook(ctl->contentId, "");
   }
 }
 

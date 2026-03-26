@@ -12,7 +12,7 @@
 #include <NickelHook.h>
 
 #include "../cli.h"
-#include "../files.h"
+#include "../settings.h"
 #include "../synccontroller.h"
 #include "bookrow.h"
 #include "searchdialog.h"
@@ -122,6 +122,6 @@ void SearchDialog::response(QJsonObject doc) {
 
 void SearchDialog::tapped(QString id) {
   nh_log("SearchDialog::tapped(%s)", qPrintable(id));
-  SyncController::getInstance()->setLinkedBook(id);
+  Settings::getInstance()->setLinkedBook(SyncController::getInstance()->contentId, id);
   dialog->deleteLater();
 }

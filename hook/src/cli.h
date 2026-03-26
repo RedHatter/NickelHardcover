@@ -13,7 +13,7 @@ public:
   void setUserBook(int status);
   void setUserBook(float rating, QString text, bool spoilers, bool sponsored);
   void search(QString query, int limit, int page);
-  void update(int percentage);
+  void update(QString contentId, int percentage);
 
 public Q_SLOTS:
   void processFinished(int exitCode);

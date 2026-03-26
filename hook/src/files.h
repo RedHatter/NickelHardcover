@@ -1,3 +1,5 @@
+#pragma once
+
 namespace Files {
 constexpr char const *config = "/mnt/onboard/.adds/NickelHardcover/config.ini";
 constexpr char const *settings = "/mnt/onboard/.adds/NickelHardcover/settings.ini";

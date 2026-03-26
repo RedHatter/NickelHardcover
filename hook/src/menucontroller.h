@@ -9,7 +9,7 @@ class MenuController : public QWidget {
 
 public:
   MenuController(QWidget *parent = nullptr);
-  TouchLabel *icon;
+  TouchLabel *icon = nullptr;
 
 public Q_SLOTS:
   void showMainMenu(bool checked);

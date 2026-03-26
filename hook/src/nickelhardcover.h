@@ -97,4 +97,4 @@ extern void (*TouchTextEdit__setCustomPlaceholderText)(TouchTextEdit *__this, QS
 typedef QObject PowerTimer;
 extern void (*PowerTimer__constructor)(PowerTimer *__this, QString const &name, QObject *parent);
 extern void (*PowerTimer__fireAt)(PowerTimer *__this, QDateTime const &datatime);
-extern bool (*PowerTimer__isActive)(PowerTimer *__this);
+extern int (*PowerTimer__timeRemaining)(PowerTimer *__this);

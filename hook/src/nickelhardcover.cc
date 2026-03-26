@@ -84,7 +84,7 @@ void (*TouchTextEdit__setCustomPlaceholderText)(TouchTextEdit *__this, QString c
 
 void (*PowerTimer__constructor)(PowerTimer *__this, QString const &name, QObject *parent);
 void (*PowerTimer__fireAt)(PowerTimer *__this, QDateTime const &datatime);
-bool (*PowerTimer__isActive)(PowerTimer *__this);
+int (*PowerTimer__timeRemaining)(PowerTimer *__this);
 
 static struct nh_info NickelHardcover = (struct nh_info){.name = "NickelHardcover",
                                                          .desc = "Updates reading progress on Hardcover.app",
@@ -163,7 +163,7 @@ static struct nh_dlsym NickelHardcoverDlsym[] = {
 
   { .name = "_ZN10PowerTimerC1ERK7QStringP7QObject",                           .out = nh_symoutptr(PowerTimer__constructor) },
   { .name = "_ZN10PowerTimer6fireAtERK9QDateTime",                             .out = nh_symoutptr(PowerTimer__fireAt) },
-  { .name = "_ZNK10PowerTimer8isActiveEv",                                     .out = nh_symoutptr(PowerTimer__isActive) },
+  { .name = "_ZNK10PowerTimer13timeRemainingEv",                               .out = nh_symoutptr(PowerTimer__timeRemaining) },
 
   {0},
 };
@@ -198,7 +198,7 @@ extern "C" __attribute__((visibility("default"))) void _nh_set_volume(ReadingCon
   nh_log("ReadingController::setVolume(%p, %p, %p)", _this, volume, bookmark);
 
   SyncController *syncController = SyncController::getInstance();
-  syncController->setContentId(Content__getId(volume));
+  syncController->contentId = Content__getId(volume);
   syncController->title = Content__getTitle(volume);
   syncController->author = Content__getAttribution(volume);
 

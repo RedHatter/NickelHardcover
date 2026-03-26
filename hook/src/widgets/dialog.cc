@@ -9,7 +9,7 @@
 #include "../synccontroller.h"
 #include "dialog.h"
 
-Dialog::Dialog(QString title, QWidget *parent) : QWidget(parent) { this->title = title; }
+Dialog::Dialog(QString title, QWidget *parent) : QWidget(parent), title(title) {}
 
 void Dialog::connectNetwork() {
   WirelessWorkflowManager *wfm = WirelessWorkflowManager__sharedInstance();
