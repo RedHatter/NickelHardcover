@@ -27,7 +27,7 @@ MenuController::MenuController(QWidget *parent) : QWidget(parent) {
 void MenuController::showMainMenu(bool checked) {
   nh_log("MenuController::showMainMenu(%s)", checked ? "true" : "false");
 
-  icon->setPixmap(QPixmap(Files::icon_selected));
+  icon->setPixmap(QPixmap(Files::icon_hit));
 
   NickelTouchMenu *menu = reinterpret_cast<NickelTouchMenu *>(calloc(1, 512));
   NickelTouchMenu__constructor(menu, icon, 0);
@@ -58,7 +58,7 @@ void MenuController::showMainMenu(bool checked) {
 
   QLabel *extraField = action->defaultWidget()->findChild<QLabel *>("extraField");
   if (extraField) {
-    extraField->setPixmap(QPixmap(Files::right));
+    extraField->setPixmap(QPixmap(Files::arrow_right));
   }
 
   menu->addSeparator();
@@ -158,7 +158,7 @@ void MenuController::networkConnected() {
 void MenuController::showStatusMenu(QJsonObject doc) {
   nh_log("MenuController::showStatusMenu()");
 
-  icon->setPixmap(QPixmap(Files::icon_selected));
+  icon->setPixmap(QPixmap(Files::icon_hit));
 
   NickelTouchMenu *menu = reinterpret_cast<NickelTouchMenu *>(calloc(1, 512));
   NickelTouchMenu__constructor(menu, icon, 0);
@@ -173,7 +173,7 @@ void MenuController::showStatusMenu(QJsonObject doc) {
 
   QLabel *check = action->defaultWidget()->findChild<QLabel *>("check");
   if (check) {
-    check->setPixmap(QPixmap(Files::left));
+    check->setPixmap(QPixmap(Files::arrow_left));
   }
 
   menu->addSeparator();

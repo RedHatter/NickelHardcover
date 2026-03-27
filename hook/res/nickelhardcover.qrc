@@ -1,0 +1,25 @@
+<!DOCTYPE RCC><RCC version="1.0">
+    <qresource prefix="/nickelhardcover">
+        <file>arrow_left.png</file>
+        <file>cover1.png</file>
+        <file>cover2.png</file>
+        <file>cover3.png</file>
+        <file>cover4.png</file>
+        <file>icon_hit.png</file>
+        <file>icon.png</file>
+        <file>left_star_hit.png</file>
+        <file>left_star.png</file>
+        <file>note.png</file>
+        <file>progress_updated.png</file>
+        <file>quote.png</file>
+        <file>rated.png</file>
+        <file>reviewed.png</file>
+        <file>right_star_hit.png</file>
+        <file>right_star.png</file>
+        <file>status_read.png</file>
+        <file>status_stopped.png</file>
+        <file>status_want_to_read.png</file>
+        <file>user_book_read_finished.png</file>
+        <file>user_book_read_started.png</file>
+    </qresource>
+</RCC>

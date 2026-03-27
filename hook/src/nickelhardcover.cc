@@ -175,14 +175,6 @@ bool hardcover_uninstall() {
   nh_delete_file(Files::cli);
   nh_delete_dir(Files::adds_directory);
 
-  nh_delete_file(Files::icon);
-  nh_delete_file(Files::icon_selected);
-  nh_delete_file(Files::cover1);
-  nh_delete_file(Files::cover2);
-  nh_delete_file(Files::cover3);
-  nh_delete_file(Files::cover4);
-  nh_delete_dir(Files::share_directory);
-
   return true;
 }
 

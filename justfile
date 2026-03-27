@@ -22,21 +22,20 @@ build: build-hook build-cli
 
 # Use inkscape to export the svgs to png
 [group('package')]
-[working-directory: 'res']
+[working-directory: 'hook/res']
 build-res:
   inkscape --export-type=png $(pwd)/*.svg
 
 # Package files into installable KoboRoot.tgz
 [group('package')]
-package: build build-res
+package: build-res build
   #!/usr/bin/env sh
   mkdir KoboRoot
   cd KoboRoot
-  mkdir -p usr/local/Kobo/imageformats/ mnt/onboard/.adds/NickelHardcover usr/share/NickelHardcover
+  mkdir -p usr/local/Kobo/imageformats/ mnt/onboard/.adds/NickelHardcover
   cp ../hook/libhardcover.so                                                 usr/local/Kobo/imageformats/
   cp ../cli/target/arm-unknown-linux-musleabihf/release/nickel-hardcover-cli mnt/onboard/.adds/NickelHardcover/cli
-  cp ../res/config_example.ini                                               mnt/onboard/.adds/NickelHardcover
-  cp ../res/*.png                                                            usr/share/NickelHardcover
+  cp ../hook/res/config_example.ini                                          mnt/onboard/.adds/NickelHardcover
   tar -vczf ../KoboRoot.tgz . | grep '[^/]$'
   cd ..
   rm -r KoboRoot
@@ -63,7 +62,7 @@ clean:
   cd hook && make clean
   cd cli && cargo clean
   rm -fv KoboRoot.tgz
-  for f in res/*.png; do git ls-files --error-unmatch $f > /dev/null 2>&1 || rm -v $f; done
+  for f in hook/res/*.png; do git ls-files --error-unmatch $f > /dev/null 2>&1 || rm -v $f; done
 
 # Run `logread` over ssh
 logs:

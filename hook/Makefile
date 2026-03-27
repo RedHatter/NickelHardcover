@@ -6,5 +6,6 @@ override CFLAGS   += -Wall -Wextra -Werror -Wno-missing-field-initializers -fvis
 override CXXFLAGS += -Wall -Wextra -Werror -Wno-missing-field-initializers -isystemminiz -fvisibility=hidden -fvisibility-inlines-hidden
 override PKGCONF  += Qt5Widgets Qt5Network
 override MOCS 	  += $(wildcard src/*.h src/**/*.h)
+override QRCS     += res/nickelhardcover.qrc
 
 include ./NickelHook/NickelHook.mk
