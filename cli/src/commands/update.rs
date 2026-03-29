@@ -179,13 +179,20 @@ pub async fn run(args: Update) -> Result<(), String> {
       SyncBookmarks::Finished => Some(Local::now().format("%+").to_string()),
       _ => Some(bookmark.date_created.clone()),
     };
+    let entry = if let Some(entry) = bookmark.annotation.as_ref()
+      && !entry.trim().is_empty()
+    {
+      format!("{}\n━━━\n{}", bookmark.text.trim(), entry.trim())
+    } else {
+      bookmark.text.clone()
+    };
 
     insert_or_update_journal(
       insert_reading_journal::Variables {
         book_id: result.book_id,
         edition_id: result.edition_id,
         event: "quote".into(),
-        entry: bookmark.text.clone(),
+        entry,
         action_at: action_at.clone(),
         page,
         possible: result.pages,
@@ -194,25 +201,6 @@ pub async fn run(args: Update) -> Result<(), String> {
       &reading_journals,
     )
     .await?;
-
-    if let Some(entry) = bookmark.annotation.clone()
-      && !entry.is_empty()
-    {
-      insert_or_update_journal(
-        insert_reading_journal::Variables {
-          book_id: result.book_id,
-          edition_id: result.edition_id,
-          event: "note".into(),
-          entry,
-          action_at: action_at.clone(),
-          page,
-          possible: result.pages,
-          percent,
-        },
-        &reading_journals,
-      )
-      .await?;
-    }
   }
 
   Ok(())
