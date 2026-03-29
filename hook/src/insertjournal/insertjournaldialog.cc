@@ -11,15 +11,10 @@
 #include "insertjournaldialog.h"
 
 void InsertJournalDialog::show() {
-  InsertJournalDialog *dialog = new InsertJournalDialog();
-  dialog->connectNetwork();
+  new InsertJournalDialog();
 }
 
-InsertJournalDialog::InsertJournalDialog(QWidget *parent) : Dialog("Add New Journal Entry", parent) {}
-
-void InsertJournalDialog::build() {
-  nh_log("InsertJournalDialog::build()");
-
+InsertJournalDialog::InsertJournalDialog(QWidget *parent) : Dialog("Add New Journal Entry", parent) {
   QVBoxLayout *layout = new QVBoxLayout(this);
 
   TouchTextEdit *touchText = reinterpret_cast<TouchTextEdit *>(calloc(1, 128));
@@ -55,8 +50,7 @@ void InsertJournalDialog::commit() {
     percentage = 1;
   }
 
-  CLI *cli = new CLI(this);
-  cli->insertJournal(textEdit->toPlainText(), percentage);
+  CLI *cli = CLI::insertJournal(textEdit->toPlainText(), percentage);
   QObject::connect(cli, &CLI::success, dialog, &QDialog::deleteLater);
   QObject::connect(cli, &CLI::failure, dialog, &QDialog::deleteLater);
 }

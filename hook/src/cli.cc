@@ -8,33 +8,31 @@
 #include "settings.h"
 #include "synccontroller.h"
 
-CLI::CLI(QObject *parent) : QObject(parent) {}
-
-void CLI::listJournal(int limit, int offset) {
+CLI *CLI::listJournal(int limit, int offset) {
   QStringList arguments = {"list-journal", "--limit", QString::number(limit), "--offset", QString::number(offset)};
   arguments.append(getIdentifier());
-  start(arguments);
+  return new CLI(arguments);
 }
 
-void CLI::insertJournal(QString text, int percentage) {
+CLI *CLI::insertJournal(QString text, int percentage) {
   QStringList arguments = {"insert-journal", "--text", text, "--percentage", QString::number(percentage)};
   arguments.append(getIdentifier());
-  start(arguments);
+  return new CLI(arguments);
 }
 
-void CLI::getUserBook() {
+CLI *CLI::getUserBook() {
   QStringList arguments = {"get-user-book"};
   arguments.append(getIdentifier());
-  start(arguments);
+  return new CLI(arguments);
 }
 
-void CLI::setUserBook(int status) {
+CLI *CLI::setUserBook(int status) {
   QStringList arguments = {"set-user-book", "--status", QString::number(status)};
   arguments.append(getIdentifier());
-  start(arguments);
+  return new CLI(arguments);
 }
 
-void CLI::setUserBook(float rating, QString text, bool spoilers, bool sponsored) {
+CLI *CLI::setUserBook(float rating, QString text, bool spoilers, bool sponsored) {
   QStringList arguments = {"set-user-book"};
 
   arguments.append(getIdentifier());
@@ -49,14 +47,14 @@ void CLI::setUserBook(float rating, QString text, bool spoilers, bool sponsored)
     arguments.append({"--text", text});
   }
 
-  start(arguments);
+  return new CLI(arguments);
 }
 
-void CLI::search(QString query, int limit, int page) {
-  start({"search", "--limit", QString::number(limit), "--page", QString::number(page), "--query", query});
+CLI *CLI::search(QString query, int limit, int page) {
+  return new CLI({"search", "--limit", QString::number(limit), "--page", QString::number(page), "--query", query});
 }
 
-void CLI::update(QString contentId, int percentage) {
+CLI *CLI::update(QString contentId, int percentage, bool silent) {
   QStringList arguments = {"update", "--content-id", contentId, "--value", QString::number(percentage)};
 
   QString linkedBook = Settings::getInstance()->getLinkedBook(contentId);
@@ -69,7 +67,7 @@ void CLI::update(QString contentId, int percentage) {
     arguments.append({"--after", lastSynced});
   }
 
-  start(arguments);
+  return new CLI(arguments, silent);
 }
 
 QStringList CLI::getIdentifier() {
@@ -82,7 +80,49 @@ QStringList CLI::getIdentifier() {
   }
 }
 
-void CLI::start(QStringList arguments) {
+CLI::CLI(QStringList arguments, bool silent, QObject *parent) : QObject(parent), arguments(arguments), silent(silent) {
+  WirelessWorkflowManager *wfm = WirelessWorkflowManager__sharedInstance();
+
+  if (WirelessWorkflowManager__isInternetAccessible(wfm)) {
+    networkConnected();
+  } else {
+    MainWindowController *mwc = MainWindowController__sharedInstance();
+    QObject::connect(wfm, SIGNAL(connectingFailed()), this, SLOT(connectingFailed()));
+
+    QWidget *window = MainWindowController__currentView(mwc)->window();
+    wifiIcon = new QLabel(window);
+    wifiIcon->setPixmap(QPixmap(Files::wifi));
+    wifiIcon->resize(90, 90);
+    wifiIcon->move(window->width() - 144, window->height() - 144);
+    wifiIcon->show();
+
+    WirelessManager *wm = WirelessManager__sharedInstance();
+    QObject::connect(wm, SIGNAL(networkConnected()), this, SLOT(networkConnected()));
+
+    if (silent) {
+      WirelessWorkflowManager__connectWirelessSilently(wfm);
+    } else {
+      WirelessWorkflowManager__connectWireless(wfm, false, false);
+    }
+  }
+}
+
+void CLI::connectingFailed() {
+  nh_log("CLI::connectingFailed()");
+
+  if (!silent) {
+    ConfirmationDialogFactory__showErrorDialog("Hardcover.app", "Failed to connect to WIFI.");
+  }
+
+  wifiIcon->deleteLater();
+  deleteLater();
+  failure();
+}
+
+void CLI::networkConnected() {
+  nh_log("CLI::networkConnected()");
+
+  wifiIcon->deleteLater();
   QProcess *process = new QProcess(this);
   process->start(Files::cli, arguments);
   QObject::connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &CLI::processFinished);

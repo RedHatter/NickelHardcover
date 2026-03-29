@@ -8,7 +8,6 @@ class Dialog : public QWidget {
   Q_OBJECT
 
 public Q_SLOTS:
-  void networkConnected();
   void currentViewChanged(QString name);
   void showKeyboard();
   void hideKeyboard();
@@ -16,8 +15,6 @@ public Q_SLOTS:
   virtual void commit() {}
 
 private:
-  QString title;
-
   KeyboardFrame *buildKeyboardFrame(KeyboardReceiver *receiver, QString goText);
 
 protected:
@@ -25,10 +22,6 @@ protected:
 
   N3Dialog *dialog = nullptr;
 
-  void connectNetwork();
-
   KeyboardFrame *buildKeyboardFrame(TouchLineEdit *lineEdit, QString goText);
   KeyboardFrame *buildKeyboardFrame(QTextEdit *textEdit, QString goText);
-
-  virtual void build() = 0;
 };

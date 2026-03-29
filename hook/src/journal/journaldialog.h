@@ -23,7 +23,4 @@ private:
 
   PagingFooter *footer;
   QVBoxLayout *rows;
-
-protected:
-  void build() override;
 };

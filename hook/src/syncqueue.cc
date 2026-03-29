@@ -14,8 +14,7 @@
 
 SyncQueue::SyncQueue(QObject *parent) : QObject(parent) {
   MainWindowController *mwc = MainWindowController__sharedInstance();
-  QWidget *cv = MainWindowController__currentView(mwc);
-  QWidget *window = cv->window();
+  QWidget *window = MainWindowController__currentView(mwc)->window();
   progressIcon = new QLabel(window);
   progressIcon->setPixmap(QPixmap(Files::icon));
   progressIcon->resize(90, 90);
@@ -55,11 +54,11 @@ void SyncQueue::prepareNext() {
     i.next();
 
     QString contentId = i.key();
+    queue.remove(contentId);
     if (Settings::getInstance()->isEnabled(contentId)) {
       run(contentId);
     } else {
       nh_log("Removing %s from queue and skipping", qPrintable(contentId));
-      queue.remove(contentId);
       prepareNext();
     }
   } else {
@@ -80,44 +79,8 @@ void SyncQueue::run(QString contentId, bool manual) {
   if (manual) {
     dialog = ConfirmationDialogFactory__getConfirmationDialog(nullptr);
     ConfirmationDialog__showCloseButton(dialog, false);
-    dialog->open();
-  }
-
-  WirelessWorkflowManager *wfm = WirelessWorkflowManager__sharedInstance();
-
-  if (WirelessWorkflowManager__isInternetAccessible(wfm)) {
-    run();
-  } else {
-    if (manual) {
-      if (dialog) {
-        ConfirmationDialog__setText(dialog, "Connecting to wifi...");
-      }
-
-      WirelessWorkflowManager__connectWireless(wfm, false, false);
-    } else {
-      WirelessWorkflowManager__connectWirelessSilently(wfm);
-    }
-
-    WirelessManager *wm = WirelessManager__sharedInstance();
-    QObject::connect(wm, SIGNAL(networkConnected()), this, SLOT(networkConnected()), Qt::UniqueConnection);
-  }
-}
-
-void SyncQueue::networkConnected() {
-  sender()->disconnect(this);
-  run();
-}
-
-void SyncQueue::run() {
-  if (contentId == nullptr) {
-    closeDialog();
-    nh_log("Error: attempted to sync with null contentId");
-    ConfirmationDialogFactory__showErrorDialog("Hardcover.app", "`contentId` is null. This should not be possible.");
-    return;
-  }
-
-  if (dialog) {
     ConfirmationDialog__setText(dialog, "Syncing with Hardcover.app...");
+    dialog->open();
   }
 
   progressIcon->show();
@@ -128,12 +91,11 @@ void SyncQueue::run() {
 
   Settings::getInstance()->setLastProgress(contentId, queue[contentId]);
 
-  CLI *cli = new CLI(this);
-  cli->update(contentId, queue[contentId]);
-  queue.remove(contentId);
+  CLI *cli = CLI::update(contentId, queue[contentId], !manual);
   QObject::connect(cli, &CLI::success, this, &SyncQueue::success);
   QObject::connect(cli, &CLI::failure, this, &SyncQueue::closeDialog);
   QObject::connect(cli, &CLI::failure, this, &SyncQueue::finished);
+  queue.remove(contentId);
 }
 
 void SyncQueue::success() {

@@ -6,6 +6,7 @@ constexpr char const *settings = "/mnt/onboard/.adds/NickelHardcover/settings.in
 constexpr char const *cli = "/mnt/onboard/.adds/NickelHardcover/CLI";
 constexpr char const *adds_directory = "/mnt/onboard/.adds/NickelHardcover";
 
+constexpr char const *wifi = ":/images/statusbar/statusbar_wifi_4.png";
 constexpr char const *arrow_left = ":/nickelhardcover/arrow_left.png";
 constexpr char const *arrow_right = ":/images/menu/label_arrow_right.png";
 constexpr char const *cover1 = ":/nickelhardcover/cover1.png";

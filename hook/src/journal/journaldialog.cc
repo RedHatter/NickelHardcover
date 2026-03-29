@@ -14,13 +14,10 @@
 #include "journalentry.h"
 
 void JournalDialog::show() {
-  JournalDialog *content = new JournalDialog();
-  content->connectNetwork();
+  new JournalDialog();
 }
 
-JournalDialog::JournalDialog(QWidget *parent) : Dialog("Reading Journal", parent) {}
-
-void JournalDialog::build() {
+JournalDialog::JournalDialog(QWidget *parent) : Dialog("Reading Journal", parent) {
   N3Dialog__enableFullViewMode(dialog);
 
   QVBoxLayout *layout = new QVBoxLayout(this);
@@ -71,8 +68,7 @@ void JournalDialog::goToPage(int page) {
     offset += pages->at(i);
   }
 
-  CLI *cli = new CLI(this);
-  cli->listJournal(15, offset);
+  CLI *cli = CLI::listJournal(15, offset);
   QObject::connect(cli, &CLI::response, this, &JournalDialog::response);
   QObject::connect(cli, &CLI::failure, dialog, &QDialog::deleteLater);
 }

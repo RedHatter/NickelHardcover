@@ -13,15 +13,11 @@
 #include "reviewdialog.h"
 
 void ReviewDialog::show() {
-  ReviewDialog *dialog = new ReviewDialog();
-  dialog->connectNetwork();
+  new ReviewDialog();
 }
 
-ReviewDialog::ReviewDialog(QWidget *parent) : Dialog("Write your review", parent) {}
-
-void ReviewDialog::build() {
-  CLI *cli = new CLI(this);
-  cli->getUserBook();
+ReviewDialog::ReviewDialog(QWidget *parent) : Dialog("Write your review", parent) {
+  CLI *cli = CLI::getUserBook();
   QObject::connect(cli, &CLI::response, this, &ReviewDialog::response);
   QObject::connect(cli, &CLI::failure, dialog, &QDialog::deleteLater);
 }
@@ -108,8 +104,7 @@ void ReviewDialog::commit() {
 
   QTextEdit *textEdit = findChild<QTextEdit *>();
 
-  CLI *cli = new CLI(this);
-  cli->setUserBook(rating, textEdit->toPlainText(), spoilers, sponsored);
+  CLI *cli = CLI::setUserBook(rating, textEdit->toPlainText(), spoilers, sponsored);
   QObject::connect(cli, &CLI::success, dialog, &QDialog::deleteLater);
   QObject::connect(cli, &CLI::failure, dialog, &QDialog::deleteLater);
 }

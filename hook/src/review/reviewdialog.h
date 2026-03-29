@@ -25,7 +25,4 @@ private:
   float rating = 0;
   bool spoilers = false;
   bool sponsored = false;
-
-protected:
-  void build() override;
 };

@@ -21,7 +21,6 @@ public Q_SLOTS:
   void openJournal(bool checked);
   void setBookStatus(bool checked);
 
-  void networkConnected();
   void showStatusMenu(QJsonObject doc);
   void statusSelected(QAction *action);
 

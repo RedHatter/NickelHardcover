@@ -18,8 +18,7 @@
 #include "searchdialog.h"
 
 void SearchDialog::show(QString query) {
-  SearchDialog *dialog = new SearchDialog(query);
-  dialog->connectNetwork();
+  new SearchDialog(query);
 }
 
 SearchDialog::SearchDialog(QString query, QWidget *parent) : Dialog("Manually link book", parent) {
@@ -42,11 +41,10 @@ SearchDialog::SearchDialog(QString query, QWidget *parent) : Dialog("Manually li
   QObject::connect(footer, SIGNAL(goToPage(int)), this, SLOT(search(int)));
   contentLayout->addWidget(footer);
   footer->hide();
-}
 
-void SearchDialog::build() {
   buildKeyboardFrame(lineEdit, "Search");
   commit();
+
   dialog->show();
 }
 
@@ -77,8 +75,7 @@ void SearchDialog::search(int page) {
   loadingLabel->setStyleSheet("QLabel { font-size: 8pt; }");
   results->addWidget(loadingLabel, 1);
 
-  CLI *cli = new CLI(this);
-  cli->search(query, limit, page);
+  CLI *cli = CLI::search(query, limit, page);
   QObject::connect(cli, &CLI::response, this, &SearchDialog::response);
   QObject::connect(cli, &CLI::failure, dialog, &QDialog::deleteLater);
 }

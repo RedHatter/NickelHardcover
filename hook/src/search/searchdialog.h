@@ -26,7 +26,4 @@ private:
   TouchLineEdit *lineEdit;
 
   void clear();
-
-protected:
-  void build() override;
 };

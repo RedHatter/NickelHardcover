@@ -136,22 +136,7 @@ void MenuController::openJournal(bool checked) {
 void MenuController::setBookStatus(bool checked) {
   nh_log("MenuController::setBookStatus(%s)", checked ? "true" : "false");
 
-  WirelessWorkflowManager *wfm = WirelessWorkflowManager__sharedInstance();
-
-  if (WirelessWorkflowManager__isInternetAccessible(wfm)) {
-    networkConnected();
-  } else {
-    WirelessWorkflowManager__connectWireless(wfm, false, false);
-    WirelessManager *wm = WirelessManager__sharedInstance();
-    QObject::connect(wm, SIGNAL(networkConnected()), this, SLOT(networkConnected()));
-  }
-}
-
-void MenuController::networkConnected() {
-  nh_log("MenuController::networkConnected()");
-
-  CLI *cli = new CLI(this);
-  cli->getUserBook();
+  CLI *cli = CLI::getUserBook();
   QObject::connect(cli, &CLI::response, this, &MenuController::showStatusMenu);
 }
 
@@ -206,7 +191,6 @@ void MenuController::statusSelected(QAction *action) {
   if (status == 0)
     return;
 
-  CLI *cli = new CLI(this);
-  cli->setUserBook(status);
+  CLI *cli = CLI::setUserBook(status);
   QObject::connect(cli, &CLI::response, this, &MenuController::showStatusMenu);
 }

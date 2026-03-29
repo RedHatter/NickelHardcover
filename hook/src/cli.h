@@ -1,21 +1,23 @@
 #include <QJsonObject>
 #include <QObject>
+#include <QStringList>
+#include <QLabel>
 
 class CLI : public QObject {
   Q_OBJECT
 
 public:
-  CLI(QObject *parent = nullptr);
-
-  void listJournal(int limit, int offset);
-  void insertJournal(QString text, int percentage);
-  void getUserBook();
-  void setUserBook(int status);
-  void setUserBook(float rating, QString text, bool spoilers, bool sponsored);
-  void search(QString query, int limit, int page);
-  void update(QString contentId, int percentage);
+  static CLI *listJournal(int limit, int offset);
+  static CLI *insertJournal(QString text, int percentage);
+  static CLI *getUserBook();
+  static CLI *setUserBook(int status);
+  static CLI *setUserBook(float rating, QString text, bool spoilers, bool sponsored);
+  static CLI *search(QString query, int limit, int page);
+  static CLI *update(QString contentId, int percentage, bool silent);
 
 public Q_SLOTS:
+  void networkConnected();
+  void connectingFailed();
   void processFinished(int exitCode);
 
 Q_SIGNALS:
@@ -24,6 +26,11 @@ Q_SIGNALS:
   void failure();
 
 private:
-  QStringList getIdentifier();
-  void start(QStringList arguments);
+  static QStringList getIdentifier();
+
+  CLI(QStringList arguments, bool silent = false, QObject *parent = nullptr);
+
+  QLabel* wifiIcon = nullptr;
+  QStringList arguments;
+  bool silent = false;
 };

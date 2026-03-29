@@ -15,7 +15,4 @@ public:
 
 private:
   InsertJournalDialog(QWidget *parent = nullptr);
-
-protected:
-  void build() override;
 };

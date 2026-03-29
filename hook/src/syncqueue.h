@@ -15,11 +15,10 @@ public:
   int getReadProgress(QString contentId);
   bool checkThreshold(QString contentId, int threshold);
 
-  void prepare(QString contentId, bool manual = false);
+  void run(QString contentId, bool manual = false);
 
 public Q_SLOTS:
   void prepareNext();
-  void networkConnected();
   void success();
   void closeDialog();
 
@@ -32,6 +31,4 @@ private:
 
   QString contentId;
   QHash<QString, int> queue;
-
-  void run();
 };

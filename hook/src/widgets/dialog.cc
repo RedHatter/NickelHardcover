@@ -9,21 +9,7 @@
 #include "../synccontroller.h"
 #include "dialog.h"
 
-Dialog::Dialog(QString title, QWidget *parent) : QWidget(parent), title(title) {}
-
-void Dialog::connectNetwork() {
-  WirelessWorkflowManager *wfm = WirelessWorkflowManager__sharedInstance();
-
-  if (WirelessWorkflowManager__isInternetAccessible(wfm)) {
-    networkConnected();
-  } else {
-    WirelessWorkflowManager__connectWireless(wfm, false, false);
-    WirelessManager *wm = WirelessManager__sharedInstance();
-    QObject::connect(wm, SIGNAL(networkConnected()), this, SLOT(networkConnected()));
-  }
-}
-
-void Dialog::networkConnected() {
+Dialog::Dialog(QString title, QWidget *parent) : QWidget(parent) {
   dialog = N3DialogFactory__getDialog(this, true);
   N3Dialog__setTitle(dialog, title);
 
@@ -34,8 +20,6 @@ void Dialog::networkConnected() {
   QObject::connect(SyncController::getInstance(), &SyncController::currentViewChanged, this,
                    &Dialog::currentViewChanged);
   QObject::connect(dialog, SIGNAL(closeTapped()), dialog, SLOT(deleteLater()));
-
-  build();
 }
 
 void Dialog::currentViewChanged(QString name) {
