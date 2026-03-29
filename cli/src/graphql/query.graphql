@@ -68,7 +68,7 @@ query GetEdition($isbn: [String!]!, $book_id: Int!, $user_id: Int!) {
         status_id
         rating
         review_has_spoilers
-        review_slate
+        review_raw
         reviewed_at
         sponsored_review
         edition {

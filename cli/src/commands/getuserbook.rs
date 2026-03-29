@@ -1,6 +1,6 @@
 use argh::FromArgs;
 use graphql_client::GraphQLQuery;
-use serde_json::{Value, json};
+use serde_json::json;
 
 use crate::config::{VERSION, log};
 use crate::hardcover::{GetEdition, GetUserId, get_edition, get_user_id, send_request};
@@ -66,13 +66,7 @@ pub async fn run(args: GetUserBook) -> Result<(), String> {
         "status_id": user_book.status_id,
         "rating": user_book.rating,
         "review_has_spoilers": user_book.review_has_spoilers,
-        "review_text": user_book
-          .review_slate
-          .get("document")
-          .map(reduce_slate)
-          .unwrap_or(String::new())
-          .trim()
-          .to_string(),
+        "review_raw": user_book.review_raw,
         "reviewed_at": user_book.reviewed_at.clone(),
         "sponsored_review": user_book.sponsored_review,
       })
@@ -82,29 +76,4 @@ pub async fn run(args: GetUserBook) -> Result<(), String> {
   log(format!("BEGIN_JSON\n{user_book}"))?;
 
   Ok(())
-}
-
-pub fn reduce_slate(data: &Value) -> String {
-  return match data {
-    Value::Array(array) => array.iter().map(reduce_slate).collect::<Vec<String>>().join(""),
-    Value::Object(map) => {
-      let mut str = match map.get("type").and_then(Value::as_str) {
-        Some("paragraph") => "\n\n".into(),
-        _ => String::new(),
-      };
-
-      let value = match map.get("object").and_then(Value::as_str) {
-        Some("text") => map.get("text").and_then(Value::as_str).unwrap_or("").into(),
-        _ => map
-          .iter()
-          .map(|(_, value)| reduce_slate(value))
-          .collect::<Vec<String>>()
-          .join(""),
-      };
-
-      str.push_str(&value);
-      str
-    }
-    _ => String::new(),
-  };
 }

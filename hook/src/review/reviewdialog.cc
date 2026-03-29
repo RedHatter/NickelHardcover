@@ -73,7 +73,7 @@ void ReviewDialog::response(QJsonObject doc) {
   TouchTextEdit__setCustomPlaceholderText(touchText, "Share you thoughts about this book with the world. Make "
                                                      "sure to Mark any spoilers!");
   QTextEdit *textEdit = touchText->findChild<QTextEdit *>();
-  textEdit->setText(doc.value("review_text").toString(""));
+  textEdit->setText(doc.value("review_raw").toString(""));
   layout->addWidget(touchText);
 
   buildKeyboardFrame(textEdit, "Submit");
