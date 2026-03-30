@@ -17,11 +17,9 @@
 #include "bookrow.h"
 #include "searchdialog.h"
 
-void SearchDialog::show(QString query) {
-  new SearchDialog(query);
-}
+void SearchDialog::show(QString query) { new SearchDialog(query); }
 
-SearchDialog::SearchDialog(QString query, QWidget *parent) : Dialog("Manually link book", parent) {
+SearchDialog::SearchDialog(QString query) : Dialog("Manually link book") {
   QVBoxLayout *contentLayout = new QVBoxLayout(this);
 
   lineEdit = reinterpret_cast<TouchLineEdit *>(calloc(1, 128));

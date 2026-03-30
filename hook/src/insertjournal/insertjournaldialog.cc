@@ -10,11 +10,9 @@
 #include "../synccontroller.h"
 #include "insertjournaldialog.h"
 
-void InsertJournalDialog::show() {
-  new InsertJournalDialog();
-}
+void InsertJournalDialog::show() { new InsertJournalDialog(); }
 
-InsertJournalDialog::InsertJournalDialog(QWidget *parent) : Dialog("Add New Journal Entry", parent) {
+InsertJournalDialog::InsertJournalDialog() : Dialog("Add New Journal Entry") {
   QVBoxLayout *layout = new QVBoxLayout(this);
 
   TouchTextEdit *touchText = reinterpret_cast<TouchTextEdit *>(calloc(1, 128));

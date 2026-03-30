@@ -1,7 +1,7 @@
 #include <QJsonObject>
+#include <QLabel>
 #include <QObject>
 #include <QStringList>
-#include <QLabel>
 
 class CLI : public QObject {
   Q_OBJECT
@@ -30,7 +30,7 @@ private:
 
   CLI(QStringList arguments, bool silent = false, QObject *parent = nullptr);
 
-  QLabel* wifiIcon = nullptr;
+  QLabel *wifiIcon = nullptr;
   QStringList arguments;
   bool silent = false;
 };

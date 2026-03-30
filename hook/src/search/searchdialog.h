@@ -18,7 +18,7 @@ public Q_SLOTS:
   void tapped(QString id);
 
 private:
-  SearchDialog(QString query, QWidget *parent = nullptr);
+  SearchDialog(QString query);
 
   QVBoxLayout *results;
   PagingFooter *footer;

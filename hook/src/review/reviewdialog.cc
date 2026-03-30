@@ -12,11 +12,9 @@
 #include "../widgets/rating.h"
 #include "reviewdialog.h"
 
-void ReviewDialog::show() {
-  new ReviewDialog();
-}
+void ReviewDialog::show() { new ReviewDialog(); }
 
-ReviewDialog::ReviewDialog(QWidget *parent) : Dialog("Write your review", parent) {
+ReviewDialog::ReviewDialog() : Dialog("Write your review") {
   CLI *cli = CLI::getUserBook();
   QObject::connect(cli, &CLI::response, this, &ReviewDialog::response);
   QObject::connect(cli, &CLI::failure, dialog, &QDialog::deleteLater);

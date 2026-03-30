@@ -8,9 +8,10 @@
 #include <QTextEdit>
 #include <QWidget>
 
-typedef void MainWindowController;
+typedef QObject MainWindowController;
 extern MainWindowController *(*MainWindowController__sharedInstance)();
 extern QWidget *(*MainWindowController__currentView)(MainWindowController *mwc);
+extern QWidget *(*MainWindowController__pushView)(MainWindowController *mwc, QWidget *view);
 
 typedef QDialog N3Dialog;
 

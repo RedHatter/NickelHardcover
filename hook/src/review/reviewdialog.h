@@ -20,7 +20,7 @@ public Q_SLOTS:
   void setSponsored(int state);
 
 private:
-  ReviewDialog(QWidget *parent = nullptr);
+  ReviewDialog();
 
   float rating = 0;
   bool spoilers = false;

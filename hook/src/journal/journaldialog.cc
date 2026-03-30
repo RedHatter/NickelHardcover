@@ -13,11 +13,9 @@
 #include "journaldialog.h"
 #include "journalentry.h"
 
-void JournalDialog::show() {
-  new JournalDialog();
-}
+void JournalDialog::show() { new JournalDialog(); }
 
-JournalDialog::JournalDialog(QWidget *parent) : Dialog("Reading Journal", parent) {
+JournalDialog::JournalDialog() : Dialog("Reading Journal") {
   N3Dialog__enableFullViewMode(dialog);
 
   QVBoxLayout *layout = new QVBoxLayout(this);

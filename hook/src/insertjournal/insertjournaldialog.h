@@ -14,5 +14,5 @@ public:
   void commit() override;
 
 private:
-  InsertJournalDialog(QWidget *parent = nullptr);
+  InsertJournalDialog();
 };

@@ -9,13 +9,16 @@
 #include "../synccontroller.h"
 #include "dialog.h"
 
-Dialog::Dialog(QString title, QWidget *parent) : QWidget(parent) {
+Dialog::Dialog(QString title) : QWidget() {
   dialog = N3DialogFactory__getDialog(this, true);
   N3Dialog__setTitle(dialog, title);
 
   QScreen *screen = QApplication::primaryScreen();
   QRect screenGeometry = screen->geometry();
   dialog->setFixedSize(screenGeometry.width(), screenGeometry.height());
+
+  MainWindowController *mwc = MainWindowController__sharedInstance();
+  MainWindowController__pushView(mwc, dialog);
 
   QObject::connect(SyncController::getInstance(), &SyncController::currentViewChanged, this,
                    &Dialog::currentViewChanged);

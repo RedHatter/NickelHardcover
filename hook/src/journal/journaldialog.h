@@ -16,7 +16,7 @@ public Q_SLOTS:
   void goToPage(int page);
 
 private:
-  JournalDialog(QWidget *parent = nullptr);
+  JournalDialog();
 
   QVector<int> *pages = new QVector<int>(1, 0);
   int currentPage = 0;

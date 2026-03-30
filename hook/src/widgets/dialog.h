@@ -18,7 +18,7 @@ private:
   KeyboardFrame *buildKeyboardFrame(KeyboardReceiver *receiver, QString goText);
 
 protected:
-  Dialog(QString title, QWidget *parent = nullptr);
+  Dialog(QString title);
 
   N3Dialog *dialog = nullptr;
 
