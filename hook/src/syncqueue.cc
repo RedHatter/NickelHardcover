@@ -54,11 +54,11 @@ void SyncQueue::prepareNext() {
     i.next();
 
     QString contentId = i.key();
-    queue.remove(contentId);
     if (Settings::getInstance()->isEnabled(contentId)) {
       run(contentId);
     } else {
       nh_log("Removing %s from queue and skipping", qPrintable(contentId));
+      queue.remove(contentId);
       prepareNext();
     }
   } else {
@@ -92,6 +92,7 @@ void SyncQueue::run(QString contentId, bool manual) {
   Settings::getInstance()->setLastProgress(contentId, queue[contentId]);
 
   CLI *cli = CLI::update(contentId, queue[contentId], !manual);
+  queue.remove(contentId);
   QObject::connect(cli, &CLI::success, this, &SyncQueue::success);
   QObject::connect(cli, &CLI::failure, this, &SyncQueue::closeDialog);
   QObject::connect(cli, &CLI::failure, this, &SyncQueue::finished);

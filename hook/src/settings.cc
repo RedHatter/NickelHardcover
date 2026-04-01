@@ -71,6 +71,41 @@ void Settings::setLastSynced(QString contentId, QString value) { setValue(conten
 
 QString Settings::getLastSynced(QString contentId) { return getValue(contentId, "lastSynced").toString(); }
 
+void Settings::setSyncDaily(int value) { config->setValue("sync_daily", value); }
+
+int Settings::getSyncDaily() {
+  int hour = config->value("sync_daily").toInt();
+  if (hour <= 0) {
+    return 0;
+  }
+
+  if (hour <= 24) {
+    return hour;
+  }
+
+  return 0;
+}
+
+void Settings::setAutoSyncDefault(bool value) { config->setValue("auto_sync_default", value); }
+
+bool Settings::getAutoSyncDefault() { return config->value("auto_sync_default", false).toBool(); }
+
+void Settings::setSyncBookmarks(QString value) { config->setValue("sync_bookmarks", value); }
+
+QString Settings::getSyncBookmarks() { return config->value("sync_bookmarks", "never").toString(); }
+
+void Settings::setCloseThreshold(int value) {
+  QVariant realValue = "never";
+
+  if (value == 1) {
+    realValue = "always";
+  } else if (value > 0 && value < 100) {
+    realValue = value;
+  }
+
+  config->setValue("sync_on_close", realValue);
+}
+
 int Settings::getCloseThreshold() {
   QVariant syncOnClose = config->value("sync_on_close", "always");
   if (syncOnClose.toString() == "always") {
@@ -82,23 +117,16 @@ int Settings::getCloseThreshold() {
     return threshold;
   }
 
-  return -1;
+  return 0;
 }
 
 int Settings::getPageThreshold() {
-  int threshold = config->value("threshold", 20).toInt();
+  int threshold = config->value("threshold").toInt();
   if (threshold > 0 && threshold < 100) {
     return threshold;
   }
 
-  return -1;
+  return 0;
 }
 
-int Settings::getSyncDaily() {
-  int hour = config->value("sync_daily").toInt();
-  if (hour <= 24) {
-    return hour;
-  }
-
-  return 24;
-}
+void Settings::setPageThreshold(int value) { config->setValue("threshold", value > 0 && value < 100 ? value : 0); }

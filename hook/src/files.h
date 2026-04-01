@@ -6,9 +6,11 @@ constexpr char const *settings = "/mnt/onboard/.adds/NickelHardcover/settings.in
 constexpr char const *cli = "/mnt/onboard/.adds/NickelHardcover/CLI";
 constexpr char const *adds_directory = "/mnt/onboard/.adds/NickelHardcover";
 
-constexpr char const *wifi = ":/images/statusbar/statusbar_wifi_4.png";
+constexpr char const *arrow_down = ":/images/widgets/settings_date_time_down.png";
 constexpr char const *arrow_left = ":/nickelhardcover/arrow_left.png";
+constexpr char const *arrow_menu = ":/images/menu/settings_menu_arrow.png";
 constexpr char const *arrow_right = ":/images/menu/label_arrow_right.png";
+constexpr char const *arrow_up = ":/images/widgets/settings_date_time_up.png";
 constexpr char const *cover1 = ":/nickelhardcover/cover1.png";
 constexpr char const *cover2 = ":/nickelhardcover/cover2.png";
 constexpr char const *cover3 = ":/nickelhardcover/cover3.png";
@@ -19,6 +21,7 @@ constexpr char const *left_star = ":/nickelhardcover/left_star.png";
 constexpr char const *left_star_hit = ":/nickelhardcover/left_star_hit.png";
 constexpr char const *right_star = ":/nickelhardcover/right_star.png";
 constexpr char const *right_star_hit = ":/nickelhardcover/right_star_hit.png";
+constexpr char const *wifi = ":/images/statusbar/statusbar_wifi_4.png";
 
 constexpr char const *note = ":/nickelhardcover/note.png";
 constexpr char const *progress_updated = ":/nickelhardcover/progress_updated.png";

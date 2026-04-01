@@ -23,9 +23,20 @@ public:
   void setLastSynced(QString contentId, QString value);
   QString getLastSynced(QString contentId);
 
-  int getCloseThreshold();
-  int getPageThreshold();
+  void setAutoSyncDefault(bool value);
+  bool getAutoSyncDefault();
+
+  void setSyncBookmarks(QString value);
+  QString getSyncBookmarks();
+
+  void setSyncDaily(int value);
   int getSyncDaily();
+
+  void setCloseThreshold(int value);
+  int getCloseThreshold();
+
+  void setPageThreshold(int value);
+  int getPageThreshold();
 
 public Q_SLOTS:
   void currentViewChanged(QString name);

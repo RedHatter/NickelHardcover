@@ -78,10 +78,10 @@ impl Default for Config {
       auto_sync_default: false,
       debug: false,
       sqlite_path: "/mnt/onboard/.kobo/KoboReader.sqlite".into(),
-      sync_bookmarks: SyncBookmarks::Always,
+      sync_bookmarks: SyncBookmarks::Never,
       sync_daily: 0,
-      sync_on_close: SyncOnClose::Always,
-      threshold: 20,
+      sync_on_close: SyncOnClose::Never,
+      threshold: 0,
     }
   }
 }
@@ -101,8 +101,9 @@ pub static CONFIG: LazyLock<Config> = LazyLock::new(|| {
   let config = if config_path.exists() {
     let content = fs::read_to_string(config_path)
       .map_err(|e| panic!("{}", report("Failed to read config file")(e)))
-      .unwrap();
-    let config: Config = serini::from_str(&content)
+      .unwrap()
+      .replace("[General]", "");
+    let config = serini::from_str(&content)
       .map_err(|e| panic!("{}", report("Failed to parse config file")(e)))
       .unwrap();
 
@@ -182,7 +183,7 @@ pub fn log(msg: String) -> Result<(), String> {
 
 pub fn report<E: Error>(msg: &str) -> impl FnOnce(E) -> String {
   move |e| {
-    let mut err: &(dyn Error) = &e;
+    let mut err: &dyn Error = &e;
     let mut s = format!("{msg}<br>> {err}");
     while let Some(src) = err.source() {
       write!(s, "<br>> {src}").unwrap();

@@ -13,6 +13,7 @@
 #include "review/reviewdialog.h"
 #include "search/searchdialog.h"
 #include "settings.h"
+#include "settings/settingsdialog.h"
 #include "synccontroller.h"
 
 MenuController::MenuController(QWidget *parent) : QWidget(parent) {
@@ -70,6 +71,11 @@ void MenuController::showMainMenu(bool checked) {
 
   action = addMenuItem(menu, "Write a review");
   QObject::connect(action, &QAction::triggered, this, &MenuController::review);
+
+  menu->addSeparator();
+
+  action = addMenuItem(menu, "Settings");
+  QObject::connect(action, &QAction::triggered, this, &MenuController::openSettings);
 
   menu->ensurePolished();
   menu->popup(icon->mapToGlobal(icon->geometry().bottomRight()) + QPoint(0, 6));
@@ -131,6 +137,12 @@ void MenuController::openJournal(bool checked) {
   nh_log("MenuController::openJournal(%s)", checked ? "true" : "false");
 
   JournalDialog::show();
+}
+
+void MenuController::openSettings(bool checked) {
+  nh_log("MenuController::openSettings(%s)", checked ? "true" : "false");
+
+  SettingsDialog::show();
 }
 
 void MenuController::setBookStatus(bool checked) {

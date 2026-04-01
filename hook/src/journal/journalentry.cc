@@ -9,14 +9,20 @@
 #include "journalentry.h"
 
 JournalEntry::JournalEntry(QJsonObject doc, QWidget *parent) : QFrame(parent) {
-  setStyleSheet("\
-    JournalEntry { \
-      border-bottom: 1px solid #111111; \
-      padding: 16px; \
-    } \
-    QLabel#actionAt { font-size: 8pt; } \
-    QLabel#label { font-size: 10pt; } \
-  ");
+  setStyleSheet(R"(
+    JournalEntry {
+      border-bottom: 1px solid #111111;
+      padding: 16px;
+    }
+
+    QLabel#actionAt {
+      font-size: 8pt;
+    }
+
+    QLabel#label {
+      font-size: 10pt;
+    }
+  )");
 
   QVBoxLayout *layout = new QVBoxLayout(this);
 
