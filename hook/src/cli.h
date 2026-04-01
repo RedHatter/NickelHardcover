@@ -9,6 +9,7 @@ class CLI : public QObject {
 public:
   static CLI *listJournal(int limit, int offset);
   static CLI *insertJournal(QString text, int percentage);
+  static CLI *getUser();
   static CLI *getUserBook();
   static CLI *setUserBook(int status);
   static CLI *setUserBook(float rating, QString text, bool spoilers, bool sponsored);

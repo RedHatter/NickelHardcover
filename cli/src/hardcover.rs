@@ -7,9 +7,13 @@ use graphql_client::{GraphQLQuery, QueryBody, Response};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
-use crate::config::{CONFIG, VERSION, debug_log, log, report};
+use crate::{
+  commands::getuser::get_user,
+  config::{CONFIG, VERSION, debug_log, log, report},
+};
 
 pub type date = String;
+pub type citext = String;
 pub type jsonb = serde_json::Map<String, serde_json::Value>;
 pub type numeric = f32;
 pub type bigint = i64;
@@ -103,15 +107,6 @@ pub async fn send_request<T: Serialize + std::fmt::Debug, R: for<'a> Deserialize
   response_derives = "Serialize,Debug,Clone",
   variables_derives = "Deserialize,Debug"
 )]
-pub struct GetUserId;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-  schema_path = "src/graphql/schema.graphql",
-  query_path = "src/graphql/query.graphql",
-  response_derives = "Serialize,Debug,Clone",
-  variables_derives = "Deserialize,Debug"
-)]
 pub struct GetEdition;
 
 #[derive(GraphQLQuery)]
@@ -160,14 +155,7 @@ pub async fn get_book(
   isbn: Vec<String>,
   book_id: i64,
 ) -> Result<(get_edition::GetEditionEditionsBook, i64, i64, i64), String> {
-  let user_id = send_request::<get_user_id::Variables, get_user_id::ResponseData>(GetUserId::build_query(
-    get_user_id::Variables {},
-  ))
-  .await?
-  .me
-  .first()
-  .ok_or("Failed to find Hardcover.app user")?
-  .id;
+  let user_id = get_user().await?.id;
 
   log(format!("user {user_id}"))?;
 

@@ -3,7 +3,7 @@
 
 #include "../nickelhardcover.h"
 
-SettingContainer *buildBookRow(QJsonObject json, bool showBottomBorder);
+SettingContainer *buildBookRow(QJsonObject json);
 
 class BookCover : public QLabel {
   Q_OBJECT

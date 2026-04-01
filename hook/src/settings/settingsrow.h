@@ -20,7 +20,7 @@ class SettingsRow : public QWidget {
 
 public:
   SettingsRow(QString heading, SettingsRowType type, QList<Item> menuItems, QList<Item> dialogItems,
-              QVariant defaultValue, bool showBorder = true, QWidget *parent = nullptr);
+              QVariant defaultValue, QWidget *parent = nullptr);
 
   static QVariant OPEN_DIALOG;
 

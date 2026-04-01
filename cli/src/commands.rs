@@ -1,3 +1,4 @@
+pub mod getuser;
 pub mod getuserbook;
 pub mod insertjournal;
 pub mod listjournal;

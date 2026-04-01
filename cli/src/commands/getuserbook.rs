@@ -2,8 +2,9 @@ use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 use serde_json::json;
 
+use crate::commands::getuser::get_user;
 use crate::config::{VERSION, log};
-use crate::hardcover::{GetEdition, GetUserId, get_edition, get_user_id, send_request};
+use crate::hardcover::{GetEdition, get_edition, send_request};
 use crate::isbn::get_isbn;
 
 /// Retrieve user book including review.
@@ -29,16 +30,7 @@ pub async fn run(args: GetUserBook) -> Result<(), String> {
   let isbn = args.content_id.map(|id| get_isbn(&id)).unwrap_or(Vec::new());
   let book_id = args.book_id.unwrap_or(0);
 
-  let user_id = send_request::<get_user_id::Variables, get_user_id::ResponseData>(GetUserId::build_query(
-    get_user_id::Variables {},
-  ))
-  .await?
-  .me
-  .first()
-  .ok_or("Failed to find Hardcover.app user")?
-  .id;
-
-  log(format!("user {user_id}"))?;
+  let user_id = get_user().await?.id;
 
   let all_isbns = isbn.join(", ");
 

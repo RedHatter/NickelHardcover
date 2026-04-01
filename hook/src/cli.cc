@@ -20,6 +20,10 @@ CLI *CLI::insertJournal(QString text, int percentage) {
   return new CLI(arguments);
 }
 
+CLI *CLI::getUser() {
+  return new CLI({"get-user"});
+}
+
 CLI *CLI::getUserBook() {
   QStringList arguments = {"get-user-book"};
   arguments.append(getIdentifier());

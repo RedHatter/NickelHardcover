@@ -12,7 +12,7 @@
 QVariant SettingsRow::OPEN_DIALOG = QVariant("OPEN_DIALOG");
 
 SettingsRow::SettingsRow(QString heading, SettingsRowType type, QList<Item> menuItems, QList<Item> dialogItems,
-                         QVariant defaultValue, bool showBorder, QWidget *parent)
+                         QVariant defaultValue, QWidget *parent)
     : QWidget(parent), type(type), menuItems(menuItems), dialogItems(dialogItems) {
   QVBoxLayout *layout = new QVBoxLayout(this);
   layout->setSpacing(0);
@@ -20,7 +20,6 @@ SettingsRow::SettingsRow(QString heading, SettingsRowType type, QList<Item> menu
 
   SettingContainer *row = reinterpret_cast<SettingContainer *>(calloc(1, 128));
   SettingContainer__constructor(row, nullptr);
-  SettingContainer__setShowBottomLine(row, showBorder);
   row->setContentsMargins(QMargins(28, 26, 26, 28));
   layout->addWidget(row);
 

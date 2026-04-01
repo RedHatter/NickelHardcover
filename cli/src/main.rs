@@ -1,7 +1,9 @@
 use std::env;
 use std::panic;
+use std::sync::LazyLock;
 
-use crate::commands::{getuserbook, insertjournal, listjournal, search, setuserbook, update};
+use crate::commands::{getuser, getuserbook, insertjournal, listjournal, search, setuserbook, update};
+use crate::config::CONFIG;
 use crate::config::VERSION;
 use crate::config::debug_log;
 
@@ -28,27 +30,30 @@ struct Arguments {
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand)]
 enum Commands {
-  ListJournal(listjournal::ListJournal),
-  InsertJournal(insertjournal::InsertJournal),
-  Search(search::Search),
-  Update(update::Update),
-  SetUserBook(setuserbook::SetUserBook),
+  GetUser(getuser::GetUser),
   GetUserBook(getuserbook::GetUserBook),
+  InsertJournal(insertjournal::InsertJournal),
+  ListJournal(listjournal::ListJournal),
+  Search(search::Search),
+  SetUserBook(setuserbook::SetUserBook),
+  Update(update::Update),
 }
 
 #[tokio::main]
 async fn main() {
   if env::var("RUST_BACKTRACE").is_err() {
     panic::set_hook(Box::new(|info| {
-      if let Some(s) = info.payload().downcast_ref::<&str>() {
-        eprintln!("{}", s);
-        debug_log(s).unwrap();
+      let msg = if let Some(s) = info.payload().downcast_ref::<&str>() {
+        s
       } else if let Some(s) = info.payload().downcast_ref::<String>() {
-        eprintln!("{}", s);
-        debug_log(s).unwrap();
+        s
       } else {
-        eprintln!("An unknown error occurred");
-        debug_log("An unknown error occurred").unwrap();
+        "An unknown error occurred"
+      };
+
+      eprintln!("{}", msg);
+      if LazyLock::get(&CONFIG).is_some() {
+        debug_log(msg).unwrap();
       }
     }));
   }
@@ -64,12 +69,13 @@ async fn main() {
     .command
     .expect("A subcommands must be present. Run with --help for more information.")
   {
-    Commands::ListJournal(args) => listjournal::run(args).await,
-    Commands::InsertJournal(args) => insertjournal::run(args).await,
-    Commands::Search(args) => search::run(args).await,
-    Commands::Update(args) => update::run(args).await,
-    Commands::SetUserBook(args) => setuserbook::run(args).await,
+    Commands::GetUser(args) => getuser::run(args).await,
     Commands::GetUserBook(args) => getuserbook::run(args).await,
+    Commands::InsertJournal(args) => insertjournal::run(args).await,
+    Commands::ListJournal(args) => listjournal::run(args).await,
+    Commands::Search(args) => search::run(args).await,
+    Commands::SetUserBook(args) => setuserbook::run(args).await,
+    Commands::Update(args) => update::run(args).await,
   };
 
   if let Err(e) = res {

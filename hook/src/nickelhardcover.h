@@ -68,7 +68,6 @@ extern void (*TouchLineEdit__constructor)(TouchLineEdit *__this, QWidget *parent
 
 typedef QWidget SettingContainer;
 extern void (*SettingContainer__constructor)(SettingContainer *__this, QWidget *parent);
-extern void (*SettingContainer__setShowBottomLine)(SettingContainer *__this, bool enabled);
 
 typedef QLabel TouchLabel;
 extern void (*TouchLabel__constructor)(TouchLabel *_this, QWidget *parent, QFlags<Qt::WindowType>);

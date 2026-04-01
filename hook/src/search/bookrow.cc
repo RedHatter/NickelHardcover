@@ -129,15 +129,18 @@ QLayout *buildBookText(QJsonObject json) {
   return textLayout;
 }
 
-SettingContainer *buildBookRow(QJsonObject json, bool showBottomBorder) {
+SettingContainer *buildBookRow(QJsonObject json) {
   SettingContainer *container = reinterpret_cast<SettingContainer *>(calloc(1, 128));
   SettingContainer__constructor(container, nullptr);
-  container->setStyleSheet("ElidedLabel#series, ElidedLabel#author, "
-                           "ElidedLabel#meta { font-size: 8pt; }");
+  container->setStyleSheet(R"(
+    ElidedLabel#series, ElidedLabel#author, ElidedLabel#meta {
+      font-size: 8pt;
+    }
 
-  if (showBottomBorder) {
-    SettingContainer__setShowBottomLine(container, true);
-  }
+    SettingContainer {
+      border-bottom: 1px solid black;
+    }
+  )");
 
   QHBoxLayout *layout = new QHBoxLayout(container);
   layout->addWidget(new BookCover(json, container));

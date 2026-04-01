@@ -78,7 +78,6 @@ void (*SearchKeyboardController__setGoText)(SearchKeyboardController *__this, QS
 void (*TouchLineEdit__constructor)(TouchLineEdit *__this, QWidget *parent);
 
 void (*SettingContainer__constructor)(SettingContainer *__this, QWidget *parent);
-void (*SettingContainer__setShowBottomLine)(SettingContainer *__this, bool enabled);
 
 void (*TouchTextEdit__constructor)(TouchTextEdit *__this, QWidget *parent);
 void (*TouchTextEdit__setCustomPlaceholderText)(TouchTextEdit *__this, QString const &text);
@@ -158,7 +157,6 @@ static struct nh_dlsym NickelHardcoverDlsym[] = {
   { .name = "_ZN24SearchKeyboardController9setGoTextERK7QString",              .out = nh_symoutptr(SearchKeyboardController__setGoText) },
 
   { .name = "_ZN16SettingContainerC1EP7QWidget",                               .out = nh_symoutptr(SettingContainer__constructor) },
-  { .name = "_ZN16SettingContainer17setShowBottomLineEb",                      .out = nh_symoutptr(SettingContainer__setShowBottomLine) },
 
   { .name = "_ZN13TouchTextEditC1EP7QWidget",                                  .out = nh_symoutptr(TouchTextEdit__constructor) },
   { .name = "_ZN13TouchTextEdit24setCustomPlaceholderTextERK7QString",         .out = nh_symoutptr(TouchTextEdit__setCustomPlaceholderText) },

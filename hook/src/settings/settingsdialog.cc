@@ -2,6 +2,7 @@
 
 #include <NickelHook.h>
 
+#include "../cli.h"
 #include "../settings.h"
 #include "settingsdialog.h"
 #include "settingsrow.h"
@@ -14,13 +15,16 @@ SettingsDialog::SettingsDialog() : Dialog("Settings") {
   layout->setContentsMargins(QMargins(84, 56, 84, 0));
 
   setStyleSheet(R"(
+    SettingContainer, QLabel#header, #row {
+      border-bottom: 1px solid black;
+    }
+
     QLabel {
       font-size: 38px;
     }
 
     QLabel#header {
       font-size: 60px;
-      border-bottom: 1px solid black;
       padding: 0 10px 26px;
     }
 
@@ -43,6 +47,23 @@ SettingsDialog::SettingsDialog() : Dialog("Settings") {
   label = new QLabel("GENERAL");
   label->setObjectName("section");
   layout->addWidget(label);
+
+  QWidget* row = new QWidget();
+  row->setObjectName("row");
+  layout->addWidget(row);
+
+  QHBoxLayout *rowLayout = new QHBoxLayout(row);
+  rowLayout->setContentsMargins(QMargins(28, 26, 26, 28));
+
+  label = new QLabel("Authorized user");
+  rowLayout->addWidget(label, 1);
+
+  username = new QLabel("Unknown");
+  username->setObjectName("value");
+  rowLayout->addWidget(username);
+
+  CLI *cli = CLI::getUser();
+  QObject::connect(cli, &CLI::response, this, &SettingsDialog::setUsername);
 
   SettingsRow *menuRow =
       new SettingsRow("Enable auto-sync by default", SettingsRowType::Toggle, {Item{"Yes", true}, Item{"No", false}},
@@ -97,12 +118,15 @@ SettingsDialog::SettingsDialog() : Dialog("Settings") {
 
   menuRow = new SettingsRow("Periodically by read percentage", SettingsRowType::Menu,
                             {Item{"Never", 0}, Item{"Set a threshold", SettingsRow::OPEN_DIALOG}}, thresholdItems,
-                            QVariant(Settings::getInstance()->getPageThreshold()), false);
+                            QVariant(Settings::getInstance()->getPageThreshold()));
+  menuRow->setStyleSheet("SettingContainer { border-bottom-width: 0px; }");
   QObject::connect(menuRow, &SettingsRow::triggered, this, &SettingsDialog::setPageThreshold);
   layout->addWidget(menuRow);
 
   dialog->show();
 }
+
+void SettingsDialog::setUsername(QJsonObject doc) { username->setText(doc.value("username").toString().prepend("@")); }
 
 void SettingsDialog::setAutoSyncDefault(QVariant value) { Settings::getInstance()->setAutoSyncDefault(value.toBool()); }
 

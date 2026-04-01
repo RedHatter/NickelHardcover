@@ -1,3 +1,5 @@
+#include <QJsonObject>
+
 #include "../widgets/dialog.h"
 
 class SettingsDialog : public Dialog {
@@ -13,6 +15,10 @@ public Q_SLOTS:
   void setCloseThreshold(QVariant value);
   void setPageThreshold(QVariant value);
 
+  void setUsername(QJsonObject doc);
+
 private:
   SettingsDialog();
+
+  QLabel* username = nullptr;
 };
