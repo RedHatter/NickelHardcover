@@ -23,8 +23,6 @@ InsertJournalDialog::InsertJournalDialog() : Dialog("Add New Journal Entry") {
   QTextEdit *textEdit = touchText->findChild<QTextEdit *>();
   buildKeyboardFrame(textEdit, "Submit");
   showKeyboard();
-
-  dialog->show();
 }
 
 void InsertJournalDialog::commit() {

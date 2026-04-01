@@ -136,8 +136,6 @@ SettingsDialog::SettingsDialog() : Dialog("Settings") {
                       QString::number(Settings::getInstance()->getLastProgress(contentId)).append("%"));
   layout->addWidget(row);
   row->setStyleSheet("StaticRow { border-bottom-width: 0px; }");
-
-  dialog->show();
 }
 
 void SettingsDialog::setUsername(QJsonObject doc) { username->setValue(doc.value("username").toString().prepend("@")); }

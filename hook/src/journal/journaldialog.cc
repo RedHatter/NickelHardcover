@@ -36,8 +36,6 @@ JournalDialog::JournalDialog() : Dialog("Reading Journal") {
   PagingFooter__constructor(footer, this);
   layout->addWidget(footer);
   QObject::connect(footer, SIGNAL(goToPage(int)), this, SLOT(goToPage(int)));
-
-  dialog->show();
   goToPage(1);
 }
 

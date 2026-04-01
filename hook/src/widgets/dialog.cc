@@ -23,6 +23,8 @@ Dialog::Dialog(QString title) : QWidget() {
   QObject::connect(SyncController::getInstance(), &SyncController::currentViewChanged, this,
                    &Dialog::currentViewChanged);
   QObject::connect(dialog, SIGNAL(closeTapped()), dialog, SLOT(deleteLater()));
+
+  dialog->show();
 }
 
 void Dialog::currentViewChanged(QString name) {

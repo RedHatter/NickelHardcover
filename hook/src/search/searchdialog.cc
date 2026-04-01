@@ -42,8 +42,6 @@ SearchDialog::SearchDialog(QString query) : Dialog("Manually link book") {
 
   buildKeyboardFrame(lineEdit, "Search");
   commit();
-
-  dialog->show();
 }
 
 void SearchDialog::commit() {
