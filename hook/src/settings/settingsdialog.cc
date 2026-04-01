@@ -1,11 +1,14 @@
+#include <QDateTime>
 #include <QVBoxLayout>
 
 #include <NickelHook.h>
 
 #include "../cli.h"
 #include "../settings.h"
+#include "../synccontroller.h"
 #include "settingsdialog.h"
 #include "settingsrow.h"
+#include "staticrow.h"
 
 void SettingsDialog::show() { new SettingsDialog(); }
 
@@ -15,7 +18,7 @@ SettingsDialog::SettingsDialog() : Dialog("Settings") {
   layout->setContentsMargins(QMargins(84, 56, 84, 0));
 
   setStyleSheet(R"(
-    SettingContainer, QLabel#header, #row {
+    SettingContainer, QLabel#header, StaticRow {
       border-bottom: 1px solid black;
     }
 
@@ -48,19 +51,11 @@ SettingsDialog::SettingsDialog() : Dialog("Settings") {
   label->setObjectName("section");
   layout->addWidget(label);
 
-  QWidget* row = new QWidget();
-  row->setObjectName("row");
+  StaticRow *row = new StaticRow("Version", VERSION);
   layout->addWidget(row);
 
-  QHBoxLayout *rowLayout = new QHBoxLayout(row);
-  rowLayout->setContentsMargins(QMargins(28, 26, 26, 28));
-
-  label = new QLabel("Authorized user");
-  rowLayout->addWidget(label, 1);
-
-  username = new QLabel("Unknown");
-  username->setObjectName("value");
-  rowLayout->addWidget(username);
+  username = new StaticRow("Authorized user", "Unknown");
+  layout->addWidget(username);
 
   CLI *cli = CLI::getUser();
   QObject::connect(cli, &CLI::response, this, &SettingsDialog::setUsername);
@@ -119,14 +114,33 @@ SettingsDialog::SettingsDialog() : Dialog("Settings") {
   menuRow = new SettingsRow("Periodically by read percentage", SettingsRowType::Menu,
                             {Item{"Never", 0}, Item{"Set a threshold", SettingsRow::OPEN_DIALOG}}, thresholdItems,
                             QVariant(Settings::getInstance()->getPageThreshold()));
-  menuRow->setStyleSheet("SettingContainer { border-bottom-width: 0px; }");
   QObject::connect(menuRow, &SettingsRow::triggered, this, &SettingsDialog::setPageThreshold);
   layout->addWidget(menuRow);
+
+  label = new QLabel("BOOK INFORMATION");
+  label->setObjectName("section");
+  layout->addWidget(label);
+
+  QDateTime alarm = SyncController::getInstance()->getAlarm();
+  row = new StaticRow("Auto-sync scheduled for", alarm.isValid() ? alarm.toLocalTime().toString() : "Never");
+  layout->addWidget(row);
+
+  QString contentId = SyncController::getInstance()->contentId;
+  QString lastSynced = Settings::getInstance()->getLastSynced(contentId);
+  row = new StaticRow("Last synced at", lastSynced.isEmpty()
+                                            ? "Never"
+                                            : QDateTime::fromString(lastSynced, Qt::ISODate).toLocalTime().toString());
+  layout->addWidget(row);
+
+  row = new StaticRow("Last synced progress",
+                      QString::number(Settings::getInstance()->getLastProgress(contentId)).append("%"));
+  layout->addWidget(row);
+  row->setStyleSheet("StaticRow { border-bottom-width: 0px; }");
 
   dialog->show();
 }
 
-void SettingsDialog::setUsername(QJsonObject doc) { username->setText(doc.value("username").toString().prepend("@")); }
+void SettingsDialog::setUsername(QJsonObject doc) { username->setValue(doc.value("username").toString().prepend("@")); }
 
 void SettingsDialog::setAutoSyncDefault(QVariant value) { Settings::getInstance()->setAutoSyncDefault(value.toBool()); }
 

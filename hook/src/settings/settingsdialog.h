@@ -1,6 +1,7 @@
 #include <QJsonObject>
 
 #include "../widgets/dialog.h"
+#include "staticrow.h"
 
 class SettingsDialog : public Dialog {
   Q_OBJECT
@@ -20,5 +21,5 @@ public Q_SLOTS:
 private:
   SettingsDialog();
 
-  QLabel* username = nullptr;
+  StaticRow *username = nullptr;
 };

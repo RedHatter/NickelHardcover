@@ -15,7 +15,7 @@ build-cli:
 [group('build')]
 [working-directory: 'hook']
 build-hook:
-  PATH=../bin:$PATH make
+  PATH=../bin:$PATH VERSION=$(git describe --tags --long) make
 
 # Cross compile all code for Kobo
 build: build-hook build-cli

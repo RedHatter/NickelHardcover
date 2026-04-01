@@ -20,7 +20,7 @@ SettingsRow::SettingsRow(QString heading, SettingsRowType type, QList<Item> menu
 
   SettingContainer *row = reinterpret_cast<SettingContainer *>(calloc(1, 128));
   SettingContainer__constructor(row, nullptr);
-  row->setContentsMargins(QMargins(28, 26, 26, 28));
+  row->setContentsMargins(QMargins(28, 26, 28, 26));
   layout->addWidget(row);
 
   QHBoxLayout *rowLayout = new QHBoxLayout(row);

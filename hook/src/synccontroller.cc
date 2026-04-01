@@ -33,9 +33,9 @@ void SyncController::currentViewIndexChanged(int index) {
     currentViewChanged(name);
   }
 
-  if (name.endsWith("DragonPowerView") && timer != nullptr && PowerTimer__timeRemaining(timer) > 0) {
-    QDateTime time = QDateTime::currentDateTime().addMSecs(PowerTimer__timeRemaining(timer));
-    nh_log("Alarm set for %s", qPrintable(time.toString()));
+  QDateTime alarm = getAlarm();
+  if (name.endsWith("DragonPowerView") && alarm.isValid()) {
+    nh_log("Alarm set for %s", qPrintable(alarm.toString()));
   }
 
   if (lastViewName == "ReadingView" && name != "N3Dialog" && Settings::getInstance()->isEnabled(contentId)) {
@@ -109,4 +109,12 @@ void SyncController::alarm() {
 void SyncController::manualSync() {
   nh_log("SyncController::manualSync()");
   queue->run(contentId, true);
+}
+
+QDateTime SyncController::getAlarm() {
+  if (timer != nullptr && PowerTimer__timeRemaining(timer) > 0) {
+    return QDateTime::currentDateTime().addMSecs(PowerTimer__timeRemaining(timer));
+  }
+
+  return QDateTime();
 }

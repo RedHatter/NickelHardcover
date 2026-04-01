@@ -18,6 +18,7 @@ public:
   QNetworkAccessManager *network = new QNetworkAccessManager();
 
   void manualSync();
+  QDateTime getAlarm();
 
 public Q_SLOTS:
   void currentViewIndexChanged(int index);
