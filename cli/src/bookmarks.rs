@@ -51,11 +51,6 @@ pub fn get_bookmarks(content_id: String, after_datetime: Option<&String>) -> Res
       AND Bookmark.DateModified > (?2)
       AND Hidden = 'false'
       AND bookmark.Text != ''
-      AND EXISTS (
-        SELECT 1
-        FROM content
-        WHERE content.___UserId = Bookmark.UserId
-      )
       GROUP BY Bookmark.BookmarkID;",
     )
     .map_err(report("Failed to parpare bookmark query"))?
