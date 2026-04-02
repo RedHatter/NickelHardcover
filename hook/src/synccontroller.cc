@@ -38,7 +38,7 @@ void SyncController::currentViewIndexChanged(int index) {
     nh_log("Alarm set for %s", qPrintable(alarm.toString()));
   }
 
-  if (lastViewName == "ReadingView" && name != "N3Dialog" && Settings::getInstance()->isEnabled(contentId)) {
+  if (lastViewName == "ReadingView" && Settings::getInstance()->isEnabled(contentId)) {
     if (queue->checkThreshold(contentId, Settings::getInstance()->getCloseThreshold())) {
       nh_log("Triggered on close auto-sync");
       queue->run(contentId);
