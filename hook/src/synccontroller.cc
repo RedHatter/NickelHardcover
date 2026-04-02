@@ -106,6 +106,10 @@ void SyncController::alarm() {
   queue->prepareNext();
 }
 
+int SyncController::getReadProgress() {
+  return queue->getReadProgress(contentId);
+}
+
 void SyncController::manualSync() {
   nh_log("SyncController::manualSync()");
   queue->run(contentId, true);

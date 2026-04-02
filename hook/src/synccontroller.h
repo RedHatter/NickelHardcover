@@ -17,6 +17,7 @@ public:
   QString contentId;
   QNetworkAccessManager *network = new QNetworkAccessManager();
 
+  int getReadProgress();
   void manualSync();
   QDateTime getAlarm();
 

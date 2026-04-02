@@ -30,23 +30,7 @@ void InsertJournalDialog::commit() {
 
   QTextEdit *textEdit = findChild<QTextEdit *>();
 
-  MainWindowController *mwc = MainWindowController__sharedInstance();
-  QWidget *cv = MainWindowController__currentView(mwc);
-  QString name = cv->objectName();
-
-  if (name != "ReadingView") {
-    nh_log("Error: attempted to call CLI while current view is %s", qPrintable(name));
-    ConfirmationDialogFactory__showErrorDialog("Hardcover.app",
-                                               "Can only insert new journal entry while a book is open");
-    return;
-  }
-
-  int percentage = ReadingView__getCalculatedReadProgress(cv);
-  if (percentage == 0) {
-    percentage = 1;
-  }
-
-  CLI *cli = CLI::insertJournal(textEdit->toPlainText(), percentage);
+  CLI *cli = CLI::insertJournal(textEdit->toPlainText(), SyncController::getInstance()->getReadProgress());
   QObject::connect(cli, &CLI::success, dialog, &QDialog::deleteLater);
   QObject::connect(cli, &CLI::failure, dialog, &QDialog::deleteLater);
 }
