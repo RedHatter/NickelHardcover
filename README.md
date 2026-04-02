@@ -1,20 +1,31 @@
 # NickelHardcover
 [Hardcover.app](https://hardcover.app/) integration for Kobo eReaders.
 
-Thanks to **pgaskin** for the [NickelHook](https://github.com/pgaskin/NickelHook) library and [NickelTC](https://github.com/pgaskin/NickelTC) toolchain without which this project would not be possible.
+Thanks to **pgaskin** for the [NickelHook](https://github.com/pgaskin/NickelHook) library and [NickelTC](https://github.com/pgaskin/NickelTC) toolchain, without which this project would not be possible.
 
 **Warning: Firmware version 5.x is not supported yet.**
 
 <img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/syncing.png?raw=true" alt="Syncing with hardcover tooltip" width="32%"> <img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/review.png?raw=true" alt="Review dialog" width="32%"> <img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/journal.png?raw=true" alt="Reading journal dialog" width="32%">
-<img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/menu.png?raw=true" alt="NickelHardcover menu" width="32%"> <img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/status.png?raw=true" alt="Reading status menu" width="32%"> <img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/linking.png?raw=true" alt="Manually linking dialog" width="32%">
+<img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/menu.png?raw=true" alt="NickelHardcover menu" width="24%"> <img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/status.png?raw=true" alt="Reading status menu" width="24%"> <img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/linking.png?raw=true" alt="Manually linking dialog" width="24%"> <img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/settings.png?raw=true" alt="Settings dialog" width="24%">
 
 ## Features
 
 * Automatically update reading progress on Hardcover
-* Automatically add Kobo highlights and annotations as Hardcover reading journal entries
+* Automatically add Kobo annotations as Hardcover reading journal entries
 * Review and rate books
 * View reading journal and add new entries
 * Update book status
+
+## FAQ
+
+* **Is my device supported?**  
+  All Kobo devices except the Kobo Mini (2012) are supported. Please make sure your device is fully up to date.
+* **Do I need to install NickelMenu as well?**  
+  No. NickelHardcover does not make use of NickelMenu.
+* **Why is it called NickelHardcover then?**  
+  The Kobo UI is internally referred to as Nickel on the device. The name is simply referencing the fact that this is a mod to the native UI.
+* **Can you add support for X feature?**  
+  Maybe. [Open a new issue](https://github.com/RedHatter/NickelHardcover/issues/new) and ask, be sure to provide your use case.
 
 ## Installation
 
@@ -27,10 +38,10 @@ Thanks to **pgaskin** for the [NickelHook](https://github.com/pgaskin/NickelHook
 To function, NickelHardcover needs to be configured with an authorization token from your Hardcover.app account.
 
 1. Visit [hardcover.app/account/api](https://hardcover.app/account/api) and sign in
-2. Copy the contents of the text box starting with “Bearer”
+2. Copy the contents of the text box starting with "Bearer”
 ![Authorization token](https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/authorization_token.png?raw=true)
 3. Connect your Kobo and edit the file `.adds/NickelHardcover/config_example.ini`
-4. On the second line, labeled “authorization”, remove the starting semicolon and paste the token (copied in step 2) after the equals sign
+4. On the second line, labeled "authorization”, remove the starting semicolon and paste the token (copied in step 2) after the equals sign
 5. Modify any other settings to suit your preferences
 6. Save the file as `config.ini`
 7. Eject/disconnect your Kobo
@@ -73,23 +84,14 @@ While a book is open, you should find a new menu on the top right where all the 
 
 ### Linking a Hardcover book
 
-NickelHardcover attempts to determine which book to update on Hardcover using the ISBN of the open book. If that fails, or you would like more control, the “Manually link book” menu option allows you to manually select which book to update. The edition of the active read can be changed on the Hardcover book page under the description.
+NickelHardcover attempts to determine which book to update on Hardcover using the ISBN of the open book. If that fails, or you would like more control, the "Manually link book” menu option allows you to manually select which book to update. The edition of the active read can be changed on the Hardcover book page under the description.
 
 <img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/edition.png?raw=true" alt="Changing edition" width="400">
 
 ### Syncing
 
-There are a few ways to sync reading progress and highlights/annotations with Hardcover. You can trigger a manual sync at any time using the “Sync now” menu option. Additionally, auto-sync can be enabled for the open book using the "Enable auto-sync" menu option. When auto-sync will run depends on the following config options.
-
-* `sync_daily`  
-  Once per day at the specified hour even if the Kobo is asleep.
-* `threshold`  
-  Whenever the difference between the last synced read percentage and the current read percentage is above this threshold.
-* `sync_on_close`   
-  Immediately after closing a book or the Kobo is put to sleep. Can also be set to a number 1-100 to only run when the read percentage difference is above that threshold.
-
-NickelHardcover will, one, automatically sync whenever the book is closed, or the Kobo is put to sleep (based on the `sync_on_close` setting), and two, sync whenever the difference in reading percentage is more than the `threshold` setting.
+There are a few ways to sync reading progress and highlights/annotations with Hardcover. You can trigger a manual sync at any time using the "Sync now” menu option. Additionally, auto-sync can be enabled for the open book using the "Enable auto-sync" menu option. When auto-sync runs can be configured in the NickelHardcover settings.
 
 ## Uninstall
 
-To uninstall NickelHardcover, simply create a file called `nickelhardcover_uninstall` on the root of your device and manually restart your Kobo.
+To uninstall NickelHardcover, create a file called `nickelhardcover_uninstall` on the root of your device and manually restart your Kobo.
