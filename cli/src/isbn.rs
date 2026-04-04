@@ -8,7 +8,8 @@ use quick_xml::name::QName;
 use rusqlite::{Connection, OpenFlags};
 use zip::ZipArchive;
 
-use crate::config::{CONFIG, log, report};
+use crate::config::CONFIG;
+use crate::utils::{log, report};
 
 fn get_oebps_path(manifest: &str) -> Result<String, String> {
   let mut reader = Reader::from_str(manifest);

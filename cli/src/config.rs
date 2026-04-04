@@ -1,12 +1,10 @@
-use std::error::Error;
-use std::fmt::Write as _;
-use std::fs::{self, File, OpenOptions};
-use std::io::Write as _;
+use std::fs;
 use std::sync::LazyLock;
 
-use chrono::Local;
 use serde::Serialize;
 use serde::{Deserialize, Deserializer, de};
+
+use crate::utils::report;
 
 #[derive(Serialize, PartialEq, Debug)]
 pub enum SyncBookmarks {
@@ -86,8 +84,6 @@ impl Default for Config {
   }
 }
 
-pub static VERSION: LazyLock<&str> = LazyLock::new(|| option_env!("VERSION").unwrap_or(env!("CARGO_PKG_VERSION")));
-
 pub static CONFIG: LazyLock<Config> = LazyLock::new(|| {
   let current_exe = std::env::current_exe()
     .map_err(|e| panic!("{}", report("Failed to get current exe path")(e)))
@@ -139,56 +135,3 @@ pub static CONFIG: LazyLock<Config> = LazyLock::new(|| {
     threshold: config.threshold,
   }
 });
-
-static LOG: LazyLock<Option<File>> = LazyLock::new(|| {
-  if CONFIG.debug {
-    let current_exe = std::env::current_exe()
-      .map_err(|e| panic!("{}", report("Failed to get current exe path")(e)))
-      .unwrap();
-    let exe_dir = current_exe
-      .as_path()
-      .parent()
-      .expect("Failed to get current exe directory");
-
-    Some(
-      OpenOptions::new()
-        .create(true)
-        .append(true)
-        .open(exe_dir.join("nickelhardcover.log"))
-        .map_err(|e| panic!("{}", report("Failed to open log")(e)))
-        .unwrap(),
-    )
-  } else {
-    None
-  }
-});
-
-pub fn debug_log(msg: &str) -> Result<(), String> {
-  if let Some(mut file) = LOG.as_ref() {
-    writeln!(file, "{} {}", Local::now().format("%b %e %k:%M:%S"), msg).map_err(report("Failed to write to log"))?;
-  }
-
-  Ok(())
-}
-
-pub fn log(msg: String) -> Result<(), String> {
-  if let Some(mut file) = LOG.as_ref() {
-    writeln!(file, "{} {}", Local::now().format("%b %e %k:%M:%S"), msg).map_err(report("Failed to write to log"))?;
-  }
-
-  println!("{}", msg);
-
-  Ok(())
-}
-
-pub fn report<E: Error>(msg: &str) -> impl FnOnce(E) -> String {
-  move |e| {
-    let mut err: &dyn Error = &e;
-    let mut s = format!("{msg}<br>> {err}");
-    while let Some(src) = err.source() {
-      write!(s, "<br>> {src}").unwrap();
-      err = src;
-    }
-    s
-  }
-}

@@ -3,11 +3,12 @@ use chrono::Local;
 use graphql_client::GraphQLQuery;
 
 use crate::bookmarks::get_bookmarks;
-use crate::config::{CONFIG, SyncBookmarks, VERSION, log};
+use crate::config::{CONFIG, SyncBookmarks};
 use crate::hardcover::{
   bigint, date, send_request, timestamptz, update_or_insert_user_book, update_user_book::UserBookUpdateInput,
 };
 use crate::isbn::get_isbn;
+use crate::utils::{VERSION, log};
 
 #[derive(GraphQLQuery)]
 #[graphql(

@@ -2,10 +2,8 @@ use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 use serde_json::{Value, json};
 
-use crate::{
-  config::{VERSION, log},
-  hardcover::{jsonb, send_request},
-};
+use crate::hardcover::{jsonb, send_request};
+use crate::utils::{VERSION, log};
 
 #[derive(GraphQLQuery)]
 #[graphql(

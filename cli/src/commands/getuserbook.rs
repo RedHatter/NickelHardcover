@@ -3,9 +3,9 @@ use graphql_client::GraphQLQuery;
 use serde_json::json;
 
 use crate::commands::getuser::get_user;
-use crate::config::{VERSION, log};
 use crate::hardcover::{GetEdition, get_edition, send_request};
 use crate::isbn::get_isbn;
+use crate::utils::{VERSION, log};
 
 /// Retrieve user book including review.
 #[derive(FromArgs, PartialEq, Debug)]

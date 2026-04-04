@@ -3,9 +3,9 @@ use std::panic;
 use chrono::Local;
 use serde_json::Value;
 
-use crate::config::{VERSION, log};
 use crate::hardcover::{update_or_insert_user_book, update_user_book::UserBookUpdateInput};
 use crate::isbn::get_isbn;
+use crate::utils::{VERSION, log};
 
 use argh::FromArgs;
 

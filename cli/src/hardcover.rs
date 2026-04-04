@@ -7,10 +7,9 @@ use graphql_client::{GraphQLQuery, QueryBody, Response};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
-use crate::{
-  commands::getuser::get_user,
-  config::{CONFIG, VERSION, debug_log, log, report},
-};
+use crate::commands::getuser::get_user;
+use crate::config::CONFIG;
+use crate::utils::{VERSION, debug_log, log, report};
 
 pub type date = String;
 pub type citext = String;

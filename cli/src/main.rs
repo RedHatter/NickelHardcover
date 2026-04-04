@@ -1,11 +1,11 @@
 use std::env;
 use std::panic;
-use std::sync::LazyLock;
 
 use crate::commands::{getuser, getuserbook, insertjournal, listjournal, search, setuserbook, update};
 use crate::config::CONFIG;
-use crate::config::VERSION;
-use crate::config::debug_log;
+use crate::utils::VERSION;
+use crate::utils::debug_log;
+use crate::utils::write_logfile;
 
 mod commands;
 mod hardcover;
@@ -13,6 +13,7 @@ mod hardcover;
 mod bookmarks;
 mod config;
 mod isbn;
+mod utils;
 
 use argh::FromArgs;
 
@@ -52,8 +53,13 @@ async fn main() {
       };
 
       eprintln!("{}", msg);
-      if LazyLock::get(&CONFIG).is_some() {
-        debug_log(msg).unwrap();
+
+      if let Err(e) = debug_log(msg) {
+        eprintln!("{}", e);
+      }
+
+      if let Err(e) = write_logfile(true) {
+        eprintln!("{}", e);
       }
     }));
   }
@@ -80,5 +86,11 @@ async fn main() {
 
   if let Err(e) = res {
     panic!("Encountered an unexpeced error. Please report this.<br><br>{e}");
+  }
+
+  if CONFIG.debug
+    && let Err(e) = write_logfile(false)
+  {
+    eprintln!("{}", e);
   }
 }

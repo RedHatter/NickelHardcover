@@ -1,9 +1,9 @@
 use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 
-use crate::config::{VERSION, log};
 use crate::hardcover::{date, get_book, send_request};
 use crate::isbn::get_isbn;
+use crate::utils::{VERSION, log};
 
 #[derive(GraphQLQuery)]
 #[graphql(

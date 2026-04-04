@@ -1,7 +1,8 @@
 use chrono::NaiveDate;
 use rusqlite::{Connection, OpenFlags};
 
-use crate::config::{CONFIG, report};
+use crate::config::CONFIG;
+use crate::utils::report;
 
 #[derive(Debug)]
 pub struct Bookmark {

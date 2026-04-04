@@ -3,9 +3,9 @@ use graphql_client::GraphQLQuery;
 use serde_json::{Value, json};
 
 use crate::commands::getuser::get_user;
-use crate::config::{VERSION, log};
 use crate::hardcover::{bigint, jsonb, send_request, timestamptz};
 use crate::isbn::get_isbn;
+use crate::utils::{VERSION, log};
 
 #[derive(GraphQLQuery)]
 #[graphql(
