@@ -1,14 +1,15 @@
 use argh::FromArgs;
 use chrono::Local;
 use graphql_client::GraphQLQuery;
+use serde_json::json;
 
 use crate::bookmarks::get_bookmarks;
 use crate::config::{CONFIG, SyncBookmarks};
 use crate::hardcover::{
-  bigint, date, send_request, timestamptz, update_or_insert_user_book, update_user_book::UserBookUpdateInput,
+  bigint, date, jsonb, send_request, timestamptz, update_or_insert_user_book, update_user_book::UserBookUpdateInput,
 };
 use crate::isbn::get_isbn;
-use crate::utils::{VERSION, log};
+use crate::utils::{VERSION, debug_log, log};
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -151,7 +152,7 @@ pub async fn run(args: Update) -> Result<(), String> {
 
   match CONFIG.sync_bookmarks {
     SyncBookmarks::Finished => {
-      bookmarks.sort_by(|a, b| a.location.total_cmp(&b.location));
+      bookmarks.sort_by(|a, b| a.location.unwrap_or(0.0).total_cmp(&b.location.unwrap_or(0.0)));
     }
     _ => {
       bookmarks.sort_by(|a, b| a.date_created.cmp(&b.date_created));
@@ -159,6 +160,8 @@ pub async fn run(args: Update) -> Result<(), String> {
   }
 
   log(format!("{} bookmarks", bookmarks.len()))?;
+
+  debug_log(&format!("{:?}", bookmarks))?;
 
   for bookmark in bookmarks.iter() {
     let reading_journals = if args.after.clone().is_some_and(|after| bookmark.date_created < after) {
@@ -174,18 +177,28 @@ pub async fn run(args: Update) -> Result<(), String> {
       Vec::new()
     };
 
-    let page = (result.pages as f64 * bookmark.location).round() as i64;
-    let percent = bookmark.location * 100.0;
-    let action_at = match CONFIG.sync_bookmarks {
-      SyncBookmarks::Finished => Some(Local::now().format("%+").to_string()),
-      _ => Some(bookmark.date_created.clone()),
-    };
     let entry = if let Some(entry) = bookmark.annotation.as_ref()
       && !entry.trim().is_empty()
     {
       format!("{}\n━━━\n{}", bookmark.text.trim(), entry.trim())
     } else {
       bookmark.text.clone()
+    };
+    let action_at = match CONFIG.sync_bookmarks {
+      SyncBookmarks::Finished => Some(Local::now().format("%+").to_string()),
+      _ => Some(bookmark.date_created.clone()),
+    };
+    let metadata = match bookmark.location.map(|location| {
+      json!({
+        "position": {
+          "page": (result.pages as f64 * location).round() as i64,
+          "possible": result.pages,
+          "percent": location * 100.0,
+        }
+      })
+    }) {
+      Some(serde_json::Value::Object(obj)) => Some(obj),
+      _ => None,
     };
 
     insert_or_update_journal(
@@ -195,9 +208,7 @@ pub async fn run(args: Update) -> Result<(), String> {
         event: "quote".into(),
         entry,
         action_at: action_at.clone(),
-        page,
-        possible: result.pages,
-        percent,
+        metadata,
       },
       &reading_journals,
     )

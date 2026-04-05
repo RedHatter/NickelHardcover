@@ -1,7 +1,8 @@
 use argh::FromArgs;
 use graphql_client::GraphQLQuery;
+use serde_json::json;
 
-use crate::hardcover::{date, get_book, send_request};
+use crate::hardcover::{date, get_book, jsonb, send_request};
 use crate::isbn::get_isbn;
 use crate::utils::{VERSION, log};
 
@@ -54,9 +55,14 @@ pub async fn run(args: InsertJournal) -> Result<(), String> {
       event: "note".into(),
       entry: args.text,
       action_at: None,
-      page: (pages as f64 * (args.percentage / 100.0)).round() as i64,
-      possible: pages,
-      percent: args.percentage,
+      metadata: match json!({
+        "page": (pages as f64 * (args.percentage / 100.0)).round() as i64,
+        "possible": pages,
+        "percent": args.percentage,
+      }) {
+        serde_json::Value::Object(obj) => Some(obj),
+        _ => None,
+      },
     }),
   )
   .await?;
