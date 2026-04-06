@@ -39,7 +39,11 @@ QString Settings::getPath(QString contentId, QString key) {
 }
 
 void Settings::setValue(QString contentId, QString key, QVariant value) {
-  internal->setValue(getPath(contentId, key), value);
+  if (value.isNull()) {
+    internal->remove(getPath(contentId, key));
+  } else {
+    internal->setValue(getPath(contentId, key), value);
+  }
 }
 
 QVariant Settings::getValue(QString contentId, QString key, QVariant defaultValue) {
@@ -53,13 +57,7 @@ bool Settings::isEnabled(QString contentId) {
   return getValue(contentId, "enabled", defaultValue).toBool();
 }
 
-void Settings::setLinkedBook(QString contentId, QString value) {
-  if (value.isEmpty()) {
-    internal->remove(getPath(contentId, "linkedbook"));
-  } else {
-    setValue(contentId, "linkedbook", value);
-  }
-}
+void Settings::setLinkedBook(QString contentId, QString value) { setValue(contentId, "linkedbook", value); }
 
 QString Settings::getLinkedBook(QString contentId) { return getValue(contentId, "linkedbook").toString(); }
 

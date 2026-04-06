@@ -51,10 +51,10 @@ SettingsDialog::SettingsDialog() : Dialog("Settings") {
   label->setObjectName("section");
   layout->addWidget(label);
 
-  StaticRow *row = new StaticRow("Version", VERSION);
+  StaticRow *row = new StaticRow("Version", VERSION, false, this);
   layout->addWidget(row);
 
-  username = new StaticRow("Authorized user", "Unknown");
+  username = new StaticRow("Authorized user", "Unknown", false, this);
   layout->addWidget(username);
 
   CLI *cli = CLI::getUser();
@@ -122,20 +122,23 @@ SettingsDialog::SettingsDialog() : Dialog("Settings") {
   layout->addWidget(label);
 
   QDateTime alarm = SyncController::getInstance()->getAlarm();
-  row = new StaticRow("Auto-sync scheduled for", alarm.isValid() ? alarm.toLocalTime().toString() : "Never");
+  row =
+      new StaticRow("Auto-sync scheduled for", alarm.isValid() ? alarm.toLocalTime().toString() : "Never", false, this);
   layout->addWidget(row);
 
   QString contentId = SyncController::getInstance()->contentId;
   QString lastSynced = Settings::getInstance()->getLastSynced(contentId);
-  row = new StaticRow("Last synced at", lastSynced.isEmpty()
-                                            ? "Never"
-                                            : QDateTime::fromString(lastSynced, Qt::ISODate).toLocalTime().toString());
+  row = new StaticRow("Last synced at",
+                      lastSynced.isEmpty() ? "Never"
+                                           : QDateTime::fromString(lastSynced, Qt::ISODate).toLocalTime().toString(),
+                      true, this);
   layout->addWidget(row);
+  QObject::connect(row, &StaticRow::clear, this, &SettingsDialog::clearLastSynced);
 
   row = new StaticRow("Last synced progress",
-                      QString::number(Settings::getInstance()->getLastProgress(contentId)).append("%"));
+                      QString::number(Settings::getInstance()->getLastProgress(contentId)).append("%"), true, this);
   layout->addWidget(row);
-  row->setStyleSheet("StaticRow { border-bottom-width: 0px; }");
+  QObject::connect(row, &StaticRow::clear, this, &SettingsDialog::clearLastProgress);
 }
 
 void SettingsDialog::setUsername(QJsonObject doc) { username->setValue(doc.value("username").toString().prepend("@")); }
@@ -149,3 +152,25 @@ void SettingsDialog::setSyncDaily(QVariant value) { Settings::getInstance()->set
 void SettingsDialog::setCloseThreshold(QVariant value) { Settings::getInstance()->setCloseThreshold(value.toInt()); }
 
 void SettingsDialog::setPageThreshold(QVariant value) { Settings::getInstance()->setPageThreshold(value.toInt()); }
+
+void SettingsDialog::setDebug(QVariant value) { Settings::getInstance()->setDebug(value.toBool()); }
+
+void SettingsDialog::dumpLogs() { nh_dump_log(); }
+
+void SettingsDialog::clearLastSynced() {
+  QString contentId = SyncController::getInstance()->contentId;
+  Settings::getInstance()->setLastSynced(contentId, QString());
+
+  StaticRow *row = qobject_cast<StaticRow *>(sender());
+  QString lastSynced = Settings::getInstance()->getLastSynced(contentId);
+  row->setValue(lastSynced.isEmpty() ? "Never"
+                                     : QDateTime::fromString(lastSynced, Qt::ISODate).toLocalTime().toString());
+}
+
+void SettingsDialog::clearLastProgress() {
+  QString contentId = SyncController::getInstance()->contentId;
+  Settings::getInstance()->setLastProgress(contentId, 0);
+
+  StaticRow *row = qobject_cast<StaticRow *>(sender());
+  row->setValue(QString::number(Settings::getInstance()->getLastProgress(contentId)).append("%"));
+}

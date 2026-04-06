@@ -16,6 +16,9 @@ public Q_SLOTS:
   void setCloseThreshold(QVariant value);
   void setPageThreshold(QVariant value);
 
+  void clearLastSynced();
+  void clearLastProgress();
+
   void setUsername(QJsonObject doc);
 
 private:

@@ -12,6 +12,7 @@ constexpr char const *arrow_menu = ":/images/menu/settings_menu_arrow.png";
 constexpr char const *arrow_right = ":/images/menu/label_arrow_right.png";
 constexpr char const *arrow_up = ":/images/widgets/settings_date_time_up.png";
 constexpr char const *cover1 = ":/nickelhardcover/cover1.png";
+constexpr char const *clear = ":/nickelhardcover/clear.png";
 constexpr char const *cover2 = ":/nickelhardcover/cover2.png";
 constexpr char const *cover3 = ":/nickelhardcover/cover3.png";
 constexpr char const *cover4 = ":/nickelhardcover/cover4.png";

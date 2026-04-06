@@ -1,8 +1,10 @@
 #include <QHBoxLayout>
 
 #include "staticrow.h"
+#include "../nickelhardcover.h"
+#include "../files.h"
 
-StaticRow::StaticRow(QString heading, QString value, QWidget *parent) : QFrame(parent) {
+StaticRow::StaticRow(QString heading, QString value, bool showClear, QWidget *parent) : QFrame(parent) {
   QHBoxLayout *rowLayout = new QHBoxLayout(this);
   rowLayout->setContentsMargins(QMargins(28, 30, 28, 30));
 
@@ -12,6 +14,14 @@ StaticRow::StaticRow(QString heading, QString value, QWidget *parent) : QFrame(p
   label = new QLabel(value);
   label->setObjectName("value");
   rowLayout->addWidget(label);
+
+  if (!showClear) return;
+
+  TouchLabel* icon = reinterpret_cast<TouchLabel *>(calloc(1, 128));
+  TouchLabel__constructor(icon, this, 0);
+  icon->setPixmap(QPixmap(Files::clear));
+  rowLayout->addWidget(icon);
+  QWidget::connect(icon, SIGNAL(tapped(bool)), this, SIGNAL(clear()));
 }
 
 void StaticRow::setValue(QString value) { label->setText(value); }

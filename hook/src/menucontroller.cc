@@ -123,7 +123,7 @@ void MenuController::linkBook(bool checked) {
   if (Settings::getInstance()->getLinkedBook(ctl->contentId).isEmpty()) {
     SearchDialog::show(ctl->title + " " + ctl->author);
   } else {
-    Settings::getInstance()->setLinkedBook(ctl->contentId, "");
+    Settings::getInstance()->setLinkedBook(ctl->contentId, QString());
   }
 }
 
