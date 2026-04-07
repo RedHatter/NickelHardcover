@@ -103,15 +103,9 @@ void SearchDialog::response(QJsonObject doc) {
   }
 
   for (int i = 0; i < length; i++) {
-    QJsonObject obj = resultsArray.at(i).toObject();
-    SettingContainer *row = buildBookRow(obj);
-    if (i == length - 1) {
-      row->setStyleSheet(row->styleSheet().append("SettingContainer { border-bottom-width: 0px; }"));
-    }
-
+    BookRow *row = new BookRow(resultsArray.at(i).toObject(), i == length - 1, box);
     results->addWidget(row);
-    QObject::connect(row, SIGNAL(tapped()), signalMapper, SLOT(map()));
-    signalMapper->setMapping(row, obj.value("id").toString());
+    QObject::connect(row, &BookRow::tapped, this, &SearchDialog::tapped);
   }
 
   results->addStretch(1);

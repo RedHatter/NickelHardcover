@@ -2,14 +2,11 @@
     <qresource prefix="/nickelhardcover">
         <file>arrow_left.png</file>
         <file>clear.png</file>
-        <file>cover1.png</file>
-        <file>cover2.png</file>
-        <file>cover3.png</file>
-        <file>cover4.png</file>
         <file>icon.png</file>
         <file>icon_hit.png</file>
         <file>left_star.png</file>
         <file>left_star_hit.png</file>
+        <file>loading.png</file>
         <file>note.png</file>
         <file>progress_updated.png</file>
         <file>quote.png</file>
