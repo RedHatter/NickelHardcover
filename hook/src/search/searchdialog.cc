@@ -14,93 +14,61 @@
 #include "../cli.h"
 #include "../settings.h"
 #include "../synccontroller.h"
+#include "../widgets/loadinglabel.h"
 #include "bookrow.h"
 #include "searchdialog.h"
 
 void SearchDialog::show(QString query) { new SearchDialog(query); }
 
 SearchDialog::SearchDialog(QString query) : Dialog("Manually link book") {
-  QVBoxLayout *contentLayout = new QVBoxLayout(this);
+  QVBoxLayout *layout = new QVBoxLayout(this);
+  layout->setContentsMargins(0, 0, 0, 0);
 
   lineEdit = reinterpret_cast<TouchLineEdit *>(calloc(1, 128));
   TouchLineEdit__constructor(lineEdit, nullptr);
   lineEdit->setText(query);
-  contentLayout->addWidget(lineEdit);
+  lineEdit->setStyleSheet("margin: 0 48px;");
+  layout->addWidget(lineEdit);
 
-  results = new QVBoxLayout();
-  results->setContentsMargins(0, 0, 0, 0);
-  results->setSpacing(0);
-  results->addStretch(1);
-
-  contentLayout->addLayout(results, 1);
-
-  footer = reinterpret_cast<PagingFooter *>(calloc(1, 128));
-  PagingFooter__constructor(footer, this);
-  QObject::connect(footer, SIGNAL(goToPage(int)), this, SLOT(search(int)));
-  contentLayout->addWidget(footer);
-  footer->hide();
+  pages = new PagedStack(this);
+  layout->addWidget(pages, 1);
+  QObject::connect(pages, &PagedStack::requestPage, this, &SearchDialog::requestPage);
 
   buildKeyboardFrame(lineEdit, "Search");
   commit();
 }
 
 void SearchDialog::commit() {
-  QTimer::singleShot(100, this, [this] { search(1); });
+  QTimer::singleShot(100, this, [this] {
+    pages->clear();
+    pages->next();
+  });
 }
 
-void SearchDialog::clear() {
-  while (QLayoutItem *item = results->takeAt(0)) {
-    if (QWidget *widget = item->widget()) {
-      widget->deleteLater();
-    }
-
-    delete item;
-  }
-}
-
-void SearchDialog::search(int page) {
+void SearchDialog::requestPage(int index) {
   QString query = lineEdit->text();
 
-  int limit = results->geometry().height() / 270;
+  int limit = pages->getAvailableHeight() / 266;
 
-  clear();
-  footer->hide();
-
-  QLabel *loadingLabel = new QLabel("Searching. Please wait...");
-  loadingLabel->setAlignment(Qt::AlignCenter);
-  loadingLabel->setStyleSheet("QLabel { font-size: 8pt; }");
-  results->addWidget(loadingLabel, 1);
-
-  CLI *cli = CLI::search(query, limit, page);
+  CLI *cli = CLI::search(query, limit, index);
   QObject::connect(cli, &CLI::response, this, &SearchDialog::response);
-  QObject::connect(cli, &CLI::failure, dialog, &QDialog::deleteLater);
 }
 
 void SearchDialog::response(QJsonObject doc) {
-  clear();
-
-  double total = doc.value("total").toDouble(1);
-
-  if (total > 1) {
-    footer->show();
-    PagingFooter__setTotalPages(footer, total);
-    PagingFooter__setCurrentPage(footer, doc.value("page").toDouble(1));
-  }
+  pages->total = doc.value("total").toInt(1);
 
   QJsonArray resultsArray = doc.value("results").toArray();
-
-  QSignalMapper *signalMapper = new QSignalMapper(this);
-  QObject::connect(signalMapper, SIGNAL(mapped(QString)), this, SLOT(tapped(QString)));
-
   int length = resultsArray.size();
 
   if (length < 1) {
-    QLabel *label = new QLabel("No results.");
-    label->setAlignment(Qt::AlignCenter);
-    label->setStyleSheet("QLabel { font-size: 8pt; }");
-    results->addWidget(label, 1);
+    pages->addPage(new LoadingLabel("No results."));
     return;
   }
+
+  QWidget *box = new QWidget(pages);
+  QVBoxLayout *results = new QVBoxLayout(box);
+  results->setContentsMargins(48, 0, 48, 0);
+  results->setSpacing(0);
 
   for (int i = 0; i < length; i++) {
     BookRow *row = new BookRow(resultsArray.at(i).toObject(), i == length - 1, box);
@@ -109,6 +77,7 @@ void SearchDialog::response(QJsonObject doc) {
   }
 
   results->addStretch(1);
+  pages->addPage(box);
 }
 
 void SearchDialog::tapped(QString id) {

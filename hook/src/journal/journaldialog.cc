@@ -5,6 +5,7 @@
 #include <QScreen>
 #include <QTextEdit>
 #include <QTimer>
+#include <QVBoxLayout>
 
 #include <NickelHook.h>
 
@@ -27,16 +28,11 @@ JournalDialog::JournalDialog() : Dialog("Reading Journal") {
   layout->addWidget(button, 0, Qt::AlignRight);
   QObject::connect(button, SIGNAL(tapped(bool)), this, SLOT(newEntry()));
 
-  rows = new QVBoxLayout();
-  rows->setSpacing(0);
-  rows->addStretch(1);
-  layout->addLayout(rows, 1);
+  pages = new PagedStack(this);
+  layout->addWidget(pages, 1);
+  QObject::connect(pages, &PagedStack::requestPage, this, &JournalDialog::requestPage);
 
-  footer = reinterpret_cast<PagingFooter *>(calloc(1, 128));
-  PagingFooter__constructor(footer, this);
-  layout->addWidget(footer);
-  QObject::connect(footer, SIGNAL(goToPage(int)), this, SLOT(goToPage(int)));
-  goToPage(1);
+  pages->next();
 }
 
 void JournalDialog::newEntry() {
@@ -46,42 +42,21 @@ void JournalDialog::newEntry() {
   dialog->deleteLater();
 }
 
-void JournalDialog::goToPage(int page) {
-  nh_log("JournalDialog::goToPage(%d)", page);
-
-  if (page > currentPage + 1) {
-    currentPage++;
-  } else {
-    currentPage = page;
-  }
-
-  PagingFooter__setTotalPages(footer, currentPage + 1);
-  PagingFooter__setCurrentPage(footer, currentPage);
-  footer->findChild<QLabel *>("pages")->setText(QString("Page %1").arg(currentPage));
-
-  int offset = 0;
-  for (int i = 0; i < currentPage && i < pages->size(); i++) {
-    offset += pages->at(i);
-  }
+void JournalDialog::requestPage(int index) {
+  nh_log("JournalDialog::requestPage(%d)", index);
 
   CLI *cli = CLI::listJournal(15, offset);
   QObject::connect(cli, &CLI::response, this, &JournalDialog::response);
-  QObject::connect(cli, &CLI::failure, dialog, &QDialog::deleteLater);
 }
 
 void JournalDialog::response(QJsonObject doc) {
-  int availableHeight = rows->geometry().height();
-
-  while (QLayoutItem *item = rows->takeAt(0)) {
-    if (QWidget *widget = item->widget()) {
-      widget->deleteLater();
-    }
-
-    delete item;
-  }
+  QWidget *box = new QWidget(this);
+  QVBoxLayout *rows = new QVBoxLayout(box);
+  rows->setSpacing(0);
 
   QJsonArray results = doc.value("reading_journals").toArray();
   int length = results.size();
+  int availableHeight = pages->getAvailableHeight();
 
   int i = 0;
   for (; i < length; i++) {
@@ -95,14 +70,13 @@ void JournalDialog::response(QJsonObject doc) {
     rows->addWidget(entry);
   }
 
+  offset += i;
+
   rows->addStretch(1);
 
-  if (pages->size() <= currentPage) {
-    pages->append(i);
+  if (i == length) {
+    pages->total = pages->countPages();
   }
 
-  if (i == length) {
-    PagingFooter__setTotalPages(footer, currentPage);
-    return;
-  }
+  pages->addPage(box);
 };

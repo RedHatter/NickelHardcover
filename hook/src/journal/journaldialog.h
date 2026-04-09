@@ -1,8 +1,9 @@
 #include <QJsonObject>
-#include <QVBoxLayout>
+#include <QStackedLayout>
 #include <QWidget>
 
 #include "../widgets/dialog.h"
+#include "../widgets/pagedstack.h"
 
 class JournalDialog : public Dialog {
   Q_OBJECT
@@ -13,14 +14,11 @@ public:
 public Q_SLOTS:
   void response(QJsonObject doc);
   void newEntry();
-  void goToPage(int page);
+  void requestPage(int index);
 
 private:
   JournalDialog();
 
-  QVector<int> *pages = new QVector<int>(1, 0);
-  int currentPage = 0;
-
-  PagingFooter *footer;
-  QVBoxLayout *rows;
+  int offset = 0;
+  PagedStack *pages;
 };

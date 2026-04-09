@@ -3,6 +3,7 @@
 
 #include "../nickelhardcover.h"
 #include "../widgets/dialog.h"
+#include "../widgets/pagedstack.h"
 
 class SearchDialog : public Dialog {
   Q_OBJECT
@@ -13,17 +14,15 @@ public:
   void commit() override;
 
 public Q_SLOTS:
-  void search(int page);
+  void requestPage(int index);
   void response(QJsonObject doc);
   void tapped(QString id);
 
 private:
   SearchDialog(QString query);
 
-  QVBoxLayout *results;
-  PagingFooter *footer;
-
-  TouchLineEdit *lineEdit;
+  PagedStack* pages = nullptr;
+  TouchLineEdit *lineEdit = nullptr;
 
   void clear();
 };

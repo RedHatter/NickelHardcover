@@ -58,11 +58,6 @@ extern void (*N3Dialog__enableFullViewMode)(N3Dialog *__this);
 extern void (*N3Dialog__showKeyboard)(N3Dialog *__this);
 extern void (*N3Dialog__hideKeyboard)(N3Dialog *__this);
 
-typedef QWidget PagingFooter;
-extern void (*PagingFooter__constructor)(PagingFooter *__this, QWidget *parent);
-extern void (*PagingFooter__setTotalPages)(PagingFooter *__this, int current);
-extern void (*PagingFooter__setCurrentPage)(PagingFooter *__this, int current);
-
 typedef QLineEdit TouchLineEdit;
 extern void (*TouchLineEdit__constructor)(TouchLineEdit *__this, QWidget *parent);
 

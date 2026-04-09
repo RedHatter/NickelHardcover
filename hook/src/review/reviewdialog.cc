@@ -9,16 +9,14 @@
 #include "../cli.h"
 #include "../synccontroller.h"
 #include "../widgets/rating.h"
+#include "../widgets/loadinglabel.h"
 #include "reviewdialog.h"
 
 void ReviewDialog::show() { new ReviewDialog(); }
 
 ReviewDialog::ReviewDialog() : Dialog("Write your review") {
   QVBoxLayout *layout = new QVBoxLayout(this);
-  QLabel *label = new QLabel("Loading. Please wait...");
-  label->setAlignment(Qt::AlignCenter);
-  label->setStyleSheet("QLabel { font-size: 8pt; }");
-  layout->addWidget(label, 1);
+  layout->addWidget(new LoadingLabel(this), 1);
 
   CLI *cli = CLI::getUserBook();
   QObject::connect(cli, &CLI::response, this, &ReviewDialog::response);

@@ -84,7 +84,11 @@ pub async fn run(args: Search) -> Result<(), String> {
     json!({
       "results": hits,
       "page": results.get("page"),
-      "total": results.get("found").and_then(Value::as_i64).unwrap_or(args.limit) / args.limit
+      "total": match results.get("found").and_then(Value::as_i64) {
+        Some(0) => 0,
+        Some(n) => (n / args.limit).max(1),
+        None => 1,
+      }
     })
     .to_string()
   ))?;

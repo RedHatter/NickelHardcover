@@ -66,10 +66,6 @@ void (*N3Dialog__enableFullViewMode)(N3Dialog *__this);
 void (*N3Dialog__showKeyboard)(N3Dialog *__this);
 void (*N3Dialog__hideKeyboard)(N3Dialog *__this);
 
-void (*PagingFooter__constructor)(PagingFooter *__this, QWidget *parent);
-void (*PagingFooter__setTotalPages)(PagingFooter *__this, int current);
-void (*PagingFooter__setCurrentPage)(PagingFooter *__this, int current);
-
 void (*KeyboardReceiver__constructor)(KeyboardReceiver *__this, QLineEdit *parent, bool idk);
 void (*KeyboardReceiver__TextEdit_constructor)(KeyboardReceiver *__this, QTextEdit *parent, bool idk);
 SearchKeyboardController *(*KeyboardFrame__createKeyboard)(KeyboardFrame *__this, int keyboardScript, QLocale locale);
@@ -144,10 +140,6 @@ static struct nh_dlsym NickelHardcoverDlsym[] = {
   { .name = "_ZN8N3Dialog18enableFullViewModeEv",                              .out = nh_symoutptr(N3Dialog__enableFullViewMode) },
   { .name = "_ZN8N3Dialog12hideKeyboardEv",                                    .out = nh_symoutptr(N3Dialog__hideKeyboard) },
   { .name = "_ZN8N3Dialog12showKeyboardEv",                                    .out = nh_symoutptr(N3Dialog__showKeyboard) },
-
-  { .name = "_ZN12PagingFooterC1EP7QWidget",                                   .out = nh_symoutptr(PagingFooter__constructor) },
-  { .name = "_ZN12PagingFooter13setTotalPagesEi",                              .out = nh_symoutptr(PagingFooter__setTotalPages) },
-  { .name = "_ZN12PagingFooter14setCurrentPageEi",                             .out = nh_symoutptr(PagingFooter__setCurrentPage) },
 
   { .name = "_ZN13TouchLineEditC1EP7QWidget",                                  .out = nh_symoutptr(TouchLineEdit__constructor) },
   { .name = "_ZN16KeyboardReceiverC1EP9QLineEditb",                            .out = nh_symoutptr(KeyboardReceiver__constructor) },

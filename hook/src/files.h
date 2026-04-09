@@ -6,7 +6,9 @@ constexpr char const *settings = "/mnt/onboard/.adds/NickelHardcover/settings.in
 constexpr char const *cli = "/mnt/onboard/.adds/NickelHardcover/CLI";
 constexpr char const *adds_directory = "/mnt/onboard/.adds/NickelHardcover";
 
+constexpr char const *arrow_backward = ":/images/reading/global_backward.png";
 constexpr char const *arrow_down = ":/images/widgets/settings_date_time_down.png";
+constexpr char const *arrow_forward = ":/images/reading/global_forward.png";
 constexpr char const *arrow_left = ":/nickelhardcover/arrow_left.png";
 constexpr char const *arrow_menu = ":/images/menu/settings_menu_arrow.png";
 constexpr char const *arrow_right = ":/images/menu/label_arrow_right.png";
