@@ -10,58 +10,132 @@
 #include "../widgets/elidedlabel.h"
 #include "bookrow.h"
 
-BookRow::BookRow(QJsonObject json, bool last, QWidget *parent) : QWidget(parent), id(json.value("id").toString()) {
-  if (last) {
-    setObjectName("last");
-  }
-
+BookRow::BookRow(QJsonObject json, QWidget *parent) : QWidget(parent), id(json.value("id").toString()) {
   setStyleSheet(R"(
-    #blank-label {
+    [qApp_deviceIsTrilogy=true] SettingContainer {
+      qproperty-spacing: 12;
+      qproperty-topMargin: 12;
+      qproperty-rightMargin: 12;
+      qproperty-bottomMargin: 12;
+      qproperty-leftMargin: 12;
+    }
+    [qApp_deviceIsPhoenix=true] SettingContainer {
+      qproperty-spacing: 15;
+      qproperty-topMargin: 15;
+      qproperty-rightMargin: 15;
+      qproperty-bottomMargin: 15;
+      qproperty-leftMargin: 15;
+    }
+    [qApp_deviceIsDragon=true] SettingContainer {
+      qproperty-spacing: 20;
+      qproperty-topMargin: 20;
+      qproperty-rightMargin: 20;
+      qproperty-bottomMargin: 20;
+      qproperty-leftMargin: 20;
+    }
+    [qApp_deviceIsStorm=true] SettingContainer {
+      qproperty-spacing: 22;
+      qproperty-topMargin: 22;
+      qproperty-rightMargin: 22;
+      qproperty-bottomMargin: 22;
+      qproperty-leftMargin: 22;
+    }
+    [qApp_deviceIsDaylight=true] SettingContainer {
+      qproperty-spacing: 26;
+      qproperty-topMargin: 26;
+      qproperty-rightMargin: 26;
+      qproperty-bottomMargin: 26;
+      qproperty-leftMargin: 26;
+    }
+
+    [qApp_deviceIsTrilogy=true] QLabel#blank-cover,
+    [qApp_deviceIsTrilogy=true] QLabel#cover {
+      max-width: 60px;
+      min-width: 60px;
+      max-height: 90px;
+      min-height: 90px;
+    }
+    [qApp_deviceIsPhoenix=true] QLabel#blank-cover,
+    [qApp_deviceIsPhoenix=true] QLabel#cover {
+      max-width: 70px;
+      min-width: 70px;
+      max-height: 110px;
+      min-height: 110px;
+    }
+    [qApp_deviceIsDragon=true] QLabel#blank-cover,
+    [qApp_deviceIsDragon=true] QLabel#cover {
+      max-width: 108px;
+      min-width: 108px;
+      max-height: 168px;
+      min-height: 168px;
+    }
+    [qApp_deviceIsStorm=true] QLabel#blank-cover,
+    [qApp_deviceIsStorm=true] QLabel#cover {
+      max-width: 126px;
+      min-width: 126px;
+      max-height: 196px;
+      min-height: 196px;
+    }
+    [qApp_deviceIsDaylight=true] QLabel#blank-cover,
+    [qApp_deviceIsDaylight=true] QLabel#cover {
+      max-width: 140px;
+      min-width: 140px;
+      max-height: 218px;
+      min-height: 218px;
+    }
+
+    [qApp_deviceIsTrilogy=true] #title {
+      font-size: 23px;
+    }
+    [qApp_deviceIsPhoenix=true] #title {
+      font-size: 28px;
+    }
+    [qApp_deviceIsDragon=true] #title {
+      font-size: 36px;
+    }
+    [qApp_deviceIsAlyssum=true],
+    [qApp_deviceIsNova=true] #title {
+      font-size: 39px;
+    }
+    [qApp_deviceIsStorm=true] #title {
+      font-size: 42px;
+    }
+    [qApp_deviceIsDaylight=true] #title {
+      font-size: 47px;
+    }
+
+    #blank-cover {
       background-color: #d9d9d9;
     }
 
-    #title {
-      font-size: 48px;
-    }
-
-    #series {
-      font-family: Avenir, sans-serif;
-      font-size: 36px;
-    }
-
-    #author, #meta {
-      font-size: 34px;
-    }
-
     SettingContainer {
-      border-bottom: 1px solid #666666;
+      border-top: 1px solid #666666;
     }
 
-    #last SettingContainer {
-      border-bottom-width: 0px;
+    #first SettingContainer {
+      border-top-width: 0;
     }
   )");
 
   QVBoxLayout *layout = new QVBoxLayout(this);
-  layout->setSpacing(0);
   layout->setContentsMargins(0, 0, 0, 0);
+  layout->setSpacing(0);
 
   SettingContainer *row = reinterpret_cast<SettingContainer *>(calloc(1, 128));
   SettingContainer__constructor(row, nullptr);
-  row->setContentsMargins(26, 22, 26, 22);
   layout->addWidget(row);
   QObject::connect(row, SIGNAL(tapped()), this, SLOT(rowTapped()));
 
   QHBoxLayout *rowLayout = new QHBoxLayout(row);
+  rowLayout->setContentsMargins(0, 0, 0, 0);
 
   cover = buildCover(json);
   rowLayout->addWidget(cover);
 
-  rowLayout->addSpacing(26);
-
   QVBoxLayout *textLayout = new QVBoxLayout();
+  textLayout->setContentsMargins(0, 0, 0, 0);
+  textLayout->setSpacing(1);
   rowLayout->addLayout(textLayout, 1);
-  textLayout->setSpacing(2);
   textLayout->addStretch(1);
 
   if (QWidget *widget = buildTitle(json)) {
@@ -84,8 +158,8 @@ BookRow::BookRow(QJsonObject json, bool last, QWidget *parent) : QWidget(parent)
 }
 
 QLabel *BookRow::buildCover(QJsonObject json) {
-  QLabel *label = new QLabel(this);
-  label->setFixedSize(138, 212);
+  QLabel *label = new QLabel();
+  label->setObjectName("cover");
   label->setScaledContents(true);
 
   QJsonValue imageUrl = json.value("image");
@@ -95,7 +169,7 @@ QLabel *BookRow::buildCover(QJsonObject json) {
     QNetworkReply *reply = SyncController::getInstance()->network->get(QNetworkRequest(QUrl(imageUrl.toString())));
     QObject::connect(reply, &QNetworkReply::finished, this, &BookRow::loadCover);
   } else {
-    label->setObjectName("blank-label");
+    label->setObjectName("blank-cover");
   }
 
   return label;
@@ -117,7 +191,7 @@ QWidget *BookRow::buildSeries(QJsonObject json) {
   if (!seriesName.isString())
     return nullptr;
 
-  QString seriesString = seriesName.toString().toUpper();
+  QString seriesString = seriesName.toString();
 
   QJsonValue seriesPosition = series.value("position");
   if (seriesPosition.isDouble()) {
@@ -125,7 +199,7 @@ QWidget *BookRow::buildSeries(QJsonObject json) {
   }
 
   ElidedLabel *label = new ElidedLabel(seriesString);
-  label->setObjectName("series");
+  label->setObjectName("metaData");
   return label;
 }
 
@@ -139,7 +213,7 @@ QWidget *BookRow::buildAuthor(QJsonObject json) {
     return nullptr;
 
   ElidedLabel *label = new ElidedLabel(authorList.join(", "));
-  label->setObjectName("author");
+  label->setObjectName("regular");
   return label;
 }
 
@@ -162,7 +236,7 @@ QWidget *BookRow::buildMeta(QJsonObject json) {
   }
 
   ElidedLabel *label = new ElidedLabel(meta.join(" • "));
-  label->setObjectName("meta");
+  label->setObjectName("regular");
   return label;
 }
 

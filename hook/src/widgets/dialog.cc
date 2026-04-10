@@ -12,6 +12,70 @@
 Dialog::Dialog(QString title) : QWidget() {
   dialog = N3DialogFactory__getDialog(this, true);
   N3Dialog__setTitle(dialog, title);
+  dialog->setStyleSheet(dialog->styleSheet().append(R"(
+    QLabel#empty {
+      qproperty-alignment: AlignCenter;
+      qproperty-text: "No results.";
+    }
+
+    QLabel#loading {
+      qproperty-alignment: AlignCenter;
+      qproperty-text: "Loading. Please wait...";
+    }
+
+    [qApp_deviceIsTrilogy=true] QLabel#empty,
+    [qApp_deviceIsTrilogy=true] QLabel#loading,
+    [qApp_deviceIsTrilogy=true] #regular {
+      font-size: 17px;
+    }
+    [qApp_deviceIsPhoenix=true] QLabel#empty,
+    [qApp_deviceIsPhoenix=true] QLabel#loading,
+    [qApp_deviceIsPhoenix=true] #regular {
+      font-size: 22px;
+    }
+    [qApp_deviceIsDragon=true] QLabel#empty,
+    [qApp_deviceIsDragon=true] QLabel#loading,
+    [qApp_deviceIsDragon=true] #regular {
+      font-size: 26px;
+    }
+    [qApp_deviceIsAlyssum=true] QLabel#empty,
+    [qApp_deviceIsAlyssum=true] QLabel#loading,
+    [qApp_deviceIsAlyssum=true] #regular,
+    [qApp_deviceIsNova=true] QLabel#empty,
+    [qApp_deviceIsNova=true] QLabel#loading,
+    [qApp_deviceIsNova=true] #regular,
+    [qApp_deviceIsStorm=true] QLabel#empty,
+    [qApp_deviceIsStorm=true] QLabel#loading,
+    [qApp_deviceIsStorm=true] #regular {
+      font-size: 30px;
+    }
+    [qApp_deviceIsDaylight=true] QLabel#empty,
+    [qApp_deviceIsDaylight=true] QLabel#loading,
+    [qApp_deviceIsDaylight=true] #regular {
+      font-size: 34px;
+    }
+
+    #metaData {
+      font-family: Avenir, sans-serif;
+      text-transform: uppercase;
+    }
+
+    [qApp_deviceIsTrilogy=true] #metaData {
+      font-size: 14px;
+    }
+    [qApp_deviceIsPhoenix=true] #metaData {
+      font-size: 17px;
+    }
+    [qApp_deviceIsDragon=true] #metaData {
+      font-size: 25px;
+    }
+    [qApp_deviceIsStorm=true] #metaData {
+      font-size: 29px;
+    }
+    [qApp_deviceIsDaylight=true] #metaData {
+      font-size: 32px;
+    }
+  )"));
 
   QScreen *screen = QApplication::primaryScreen();
   QRect screenGeometry = screen->geometry();

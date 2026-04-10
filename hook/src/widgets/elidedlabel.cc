@@ -3,9 +3,8 @@
 
 #include "elidedlabel.h"
 
-ElidedLabel::ElidedLabel(const QString &text, int maxLines, QWidget *parent) : QFrame(parent) {
-  this->text = text;
-  this->maxLines = maxLines;
+ElidedLabel::ElidedLabel(const QString &text, int maxLines, QWidget *parent)
+    : QFrame(parent), text(text), maxLines(maxLines) {
   QSizePolicy policy = QSizePolicy(QSizePolicy::Ignored, QSizePolicy::Fixed);
   policy.setHeightForWidth(true);
   setSizePolicy(policy);

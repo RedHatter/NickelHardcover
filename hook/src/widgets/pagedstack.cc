@@ -7,7 +7,6 @@
 
 #include "../files.h"
 #include "../nickelhardcover.h"
-#include "../widgets/loadinglabel.h"
 #include "pagedstack.h"
 #include "qapplication.h"
 #include "qcoreevent.h"
@@ -58,7 +57,9 @@ PagedStack::PagedStack(QWidget *parent) : QWidget(parent) {
   nextButton->hide();
   QWidget::connect(nextButton, SIGNAL(tapped(bool)), this, SLOT(next()));
 
-  stack->addWidget(new LoadingLabel(this));
+  QLabel *loading = new QLabel();
+  loading->setObjectName("loading");
+  stack->addWidget(loading);
 }
 
 void PagedStack::setCurrent(int value) {

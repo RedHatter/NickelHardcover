@@ -75,43 +75,27 @@ SettingsDialog::SettingsDialog() : Dialog("Settings") {
       font-size: 37px;
     }
 
-    [qApp_deviceIsTrilogy=true] QLabel#header {
-      font-size: 14px;
-    }
-    [qApp_deviceIsPhoenix=true] QLabel#header {
-      font-size: 17px;
-    }
-    [qApp_deviceIsDragon=true] QLabel#header {
-      font-size: 25px;
-    }
-    [qApp_deviceIsStorm=true] QLabel#header {
-      font-size: 29px;
-    }
-    [qApp_deviceIsDaylight=true] QLabel#header {
-      font-size: 32px;
-    }
-
-    [qApp_deviceIsTrilogy=true] QLabel#header,
+    [qApp_deviceIsTrilogy=true] QLabel#metaData,
     [qApp_deviceIsTrilogy=true] StaticRow {
       padding-left: 12px;
       padding-right: 12px;
     }
-    [qApp_deviceIsPhoenix=true] QLabel#header,
+    [qApp_deviceIsPhoenix=true] QLabel#metaData,
     [qApp_deviceIsPhoenix=true] StaticRow {
       padding-left: 16px;
       padding-right: 16px;
     }
-    [qApp_deviceIsDragon=true] QLabel#header,
+    [qApp_deviceIsDragon=true] QLabel#metaData,
     [qApp_deviceIsDragon=true] StaticRow{
       padding-left: 22px;
       padding-right: 22px;
     }
-    [qApp_deviceIsStorm=true] QLabel#header,
+    [qApp_deviceIsStorm=true] QLabel#metaData,
     [qApp_deviceIsStorm=true] StaticRow {
       padding-left: 25px;
       padding-right: 25px;
     }
-    [qApp_deviceIsDaylight=true] QLabel#header,
+    [qApp_deviceIsDaylight=true] QLabel#metaData,
     [qApp_deviceIsDaylight=true] StaticRow {
       padding-left: 28px;
       padding-right: 28px;
@@ -176,12 +160,9 @@ SettingsDialog::SettingsDialog() : Dialog("Settings") {
       border-top-width: 0px;
     }
 
-    QLabel#header {
-      font-family: Avenir, sans-serif;
-      text-transform: uppercase;
+    QLabel#metaData {
       padding-top: 5px;
       padding-bottom: 5px;
-      margin: 0px;
       background-color: #d9d9d9;
     }
 
@@ -246,7 +227,7 @@ QFrame *SettingsDialog::buildGeneral() {
   layout->setContentsMargins(0, 0, 0, 0);
 
   QLabel *label = new QLabel("General");
-  label->setObjectName("header");
+  label->setObjectName("metaData");
   layout->addWidget(label);
 
   StaticRow *row = new StaticRow("Version", VERSION, false);
@@ -282,7 +263,7 @@ QFrame *SettingsDialog::buildAutoSync() {
   layout->setContentsMargins(0, 0, 0, 0);
 
   QLabel *label = new QLabel("Auto-sync");
-  label->setObjectName("header");
+  label->setObjectName("metaData");
   layout->addWidget(label);
 
   QList<Item> hours;
@@ -336,7 +317,7 @@ QFrame *SettingsDialog::buildInformation() {
   layout->setContentsMargins(0, 0, 0, 0);
 
   QLabel *label = new QLabel("Book information");
-  label->setObjectName("header");
+  label->setObjectName("metaData");
   layout->addWidget(label);
 
   QDateTime alarm = SyncController::getInstance()->getAlarm();

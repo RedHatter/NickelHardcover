@@ -8,7 +8,6 @@
 
 #include "../cli.h"
 #include "../synccontroller.h"
-#include "../widgets/loadinglabel.h"
 #include "../widgets/rating.h"
 #include "reviewdialog.h"
 
@@ -16,7 +15,9 @@ void ReviewDialog::show() { new ReviewDialog(); }
 
 ReviewDialog::ReviewDialog() : Dialog("Write your review") {
   QVBoxLayout *layout = new QVBoxLayout(this);
-  layout->addWidget(new LoadingLabel(this), 1);
+  QLabel *loading = new QLabel();
+  loading->setObjectName("loading");
+  layout->addWidget(loading, 1);
 
   CLI *cli = CLI::getUserBook();
   QObject::connect(cli, &CLI::response, this, &ReviewDialog::response);

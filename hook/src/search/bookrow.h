@@ -5,7 +5,7 @@ class BookRow : public QWidget {
   Q_OBJECT
 
 public:
-  BookRow(QJsonObject json, bool last, QWidget *parent = nullptr);
+  BookRow(QJsonObject json, QWidget *parent = nullptr);
 
 public Q_SLOTS:
   void rowTapped();
