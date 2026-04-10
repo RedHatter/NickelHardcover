@@ -1,12 +1,7 @@
-#include <QApplication>
-#include <QDialog>
 #include <QJsonArray>
-#include <QJsonDocument>
 #include <QJsonObject>
 #include <QLabel>
 #include <QScreen>
-#include <QSignalMapper>
-#include <QTimer>
 #include <QVBoxLayout>
 
 #include <NickelHook.h>
@@ -33,16 +28,16 @@ SearchDialog::SearchDialog(QString query) : Dialog("Manually link book") {
   pages = new PagedStack(this);
   layout->addWidget(pages, 1);
   QObject::connect(pages, &PagedStack::requestPage, this, &SearchDialog::requestPage);
+  QObject::connect(pages, &PagedStack::afterLayout, this, &SearchDialog::commit);
 
   buildKeyboardFrame(lineEdit, "Search");
-  commit();
 }
 
 void SearchDialog::commit() {
-  QTimer::singleShot(100, this, [this] {
-    pages->clear();
-    pages->next();
-  });
+  QObject::disconnect(pages, &PagedStack::afterLayout, this, &SearchDialog::commit);
+
+  pages->clear();
+  pages->next();
 }
 
 void SearchDialog::requestPage(int index) {

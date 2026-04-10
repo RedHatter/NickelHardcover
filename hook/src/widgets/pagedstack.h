@@ -1,7 +1,7 @@
 #pragma once
 
 #include <QLabel>
-#include <QStackedLayout>
+#include <QStackedWidget>
 #include <QWidget>
 
 #include "../nickelhardcover.h"
@@ -26,13 +26,17 @@ public Q_SLOTS:
 
 Q_SIGNALS:
   void requestPage(int index);
+  void afterLayout();
+
+protected:
+  void resizeEvent(QResizeEvent *event) override;
 
 private:
   int current = 0;
   QLabel *label = nullptr;
   TouchLabel *nextButton = nullptr;
   TouchLabel *prevButton = nullptr;
-  QStackedLayout *stack;
+  QStackedWidget *stack;
 
   void setCurrent(int value);
 };

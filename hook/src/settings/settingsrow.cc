@@ -1,6 +1,5 @@
 #include <QHBoxLayout>
 #include <QLabel>
-#include <QMargins>
 #include <QWidgetAction>
 
 #include <NickelHook.h>
@@ -16,24 +15,23 @@ SettingsRow::SettingsRow(QString heading, SettingsRowType type, QList<Item> menu
     : QWidget(parent), type(type), menuItems(menuItems), dialogItems(dialogItems) {
   QVBoxLayout *layout = new QVBoxLayout(this);
   layout->setSpacing(0);
-  layout->setContentsMargins(QMargins(0, 0, 0, 0));
+  layout->setContentsMargins(0, 0, 0, 0);
 
   SettingContainer *row = reinterpret_cast<SettingContainer *>(calloc(1, 128));
   SettingContainer__constructor(row, nullptr);
-  row->setContentsMargins(QMargins(28, 26, 28, 26));
   layout->addWidget(row);
 
   QHBoxLayout *rowLayout = new QHBoxLayout(row);
   rowLayout->addWidget(new QLabel(heading), 1);
+  rowLayout->setContentsMargins(0, 0, 0, 0);
 
-  label = new QLabel("Unset", row);
+  label = new QLabel("Unset");
   label->setObjectName("value");
   rowLayout->addWidget(label);
   QObject::connect(row, SIGNAL(tapped()), this, SLOT(tapped()));
 
   if (type == SettingsRowType::Menu) {
-    rowLayout->addSpacing(25);
-    QLabel *icon = new QLabel(row);
+    QLabel *icon = new QLabel();
     icon->setPixmap(QPixmap(Files::arrow_menu));
     rowLayout->addWidget(icon);
   }

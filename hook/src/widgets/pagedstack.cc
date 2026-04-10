@@ -34,8 +34,8 @@ PagedStack::PagedStack(QWidget *parent) : QWidget(parent) {
   layout->setColumnStretch(1, 1);
   layout->setColumnMinimumWidth(2, 192);
 
-  stack = new QStackedLayout();
-  layout->addLayout(stack, 0, 0, 1, -1);
+  stack = new QStackedWidget();
+  layout->addWidget(stack, 0, 0, 1, -1);
 
   prevButton = reinterpret_cast<TouchLabel *>(calloc(1, 128));
   TouchLabel__constructor(prevButton, this, 0);
@@ -94,11 +94,13 @@ void PagedStack::next() {
   int next = current + 1;
   if (next < stack->count()) {
     setCurrent(next);
-  } else if (total <= 0 || total < next) {
+  } else if (total <= 0 || next <= total) {
     stack->setCurrentIndex(0);
     nextButton->hide();
     prevButton->hide();
     requestPage(next);
+  } else {
+    setCurrent(1);
   }
 }
 
@@ -113,7 +115,7 @@ void PagedStack::prev() {
 void PagedStack::addPage(QWidget *page) { setCurrent(stack->addWidget(page)); }
 
 void PagedStack::clear() {
-  while (QLayoutItem *item = stack->takeAt(1)) {
+  while (QLayoutItem *item = stack->layout()->takeAt(1)) {
     if (QWidget *widget = item->widget()) {
       widget->deleteLater();
     }
@@ -126,7 +128,12 @@ void PagedStack::clear() {
 
 int PagedStack::getAvailableHeight() { return qobject_cast<QGridLayout *>(layout())->cellRect(0, 1).height(); }
 
-int PagedStack::countPages() { return stack->count(); }
+int PagedStack::countPages() { return stack->count() - 1; }
+
+void PagedStack::resizeEvent(QResizeEvent *event) {
+  afterLayout();
+  QWidget::resizeEvent(event);
+}
 
 PagedStackFilter::PagedStackFilter(PagedStack *pages) : QObject(pages), pages(pages) {}
 
