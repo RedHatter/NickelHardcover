@@ -21,7 +21,7 @@ public Q_SLOTS:
 private:
   SearchDialog(QString query);
 
-  PagedStack* pages = nullptr;
+  PagedStack *pages = nullptr;
   TouchLineEdit *lineEdit = nullptr;
 
   void clear();

@@ -64,27 +64,27 @@ BookRow::BookRow(QJsonObject json, bool last, QWidget *parent) : QWidget(parent)
   textLayout->setSpacing(2);
   textLayout->addStretch(1);
 
-  if (QWidget* widget = buildTitle(json)) {
+  if (QWidget *widget = buildTitle(json)) {
     textLayout->addWidget(widget);
   }
 
-  if (QWidget* widget = buildSeries(json)) {
+  if (QWidget *widget = buildSeries(json)) {
     textLayout->addWidget(widget);
   }
 
-  if (QWidget* widget = buildAuthor(json)) {
+  if (QWidget *widget = buildAuthor(json)) {
     textLayout->addWidget(widget);
   }
 
-  if (QWidget* widget = buildMeta(json)) {
+  if (QWidget *widget = buildMeta(json)) {
     textLayout->addWidget(widget);
   }
 
   textLayout->addStretch(1);
 }
 
-QLabel* BookRow::buildCover(QJsonObject json) {
-  QLabel* label = new QLabel(this);
+QLabel *BookRow::buildCover(QJsonObject json) {
+  QLabel *label = new QLabel(this);
   label->setFixedSize(138, 212);
   label->setScaledContents(true);
 
@@ -101,19 +101,21 @@ QLabel* BookRow::buildCover(QJsonObject json) {
   return label;
 }
 
-QWidget* BookRow::buildTitle(QJsonObject json) {
+QWidget *BookRow::buildTitle(QJsonObject json) {
   QJsonValue title = json.value("title");
-  if (!title.isString()) return nullptr;
+  if (!title.isString())
+    return nullptr;
 
   ElidedLabel *label = new ElidedLabel(title.toString());
   label->setObjectName("title");
   return label;
 }
 
-QWidget* BookRow::buildSeries(QJsonObject json) {
+QWidget *BookRow::buildSeries(QJsonObject json) {
   QJsonObject series = json.value("series").toObject();
   QJsonValue seriesName = series.value("name");
-  if (!seriesName.isString()) return nullptr;
+  if (!seriesName.isString())
+    return nullptr;
 
   QString seriesString = seriesName.toString().toUpper();
 
@@ -127,19 +129,21 @@ QWidget* BookRow::buildSeries(QJsonObject json) {
   return label;
 }
 
-QWidget* BookRow::buildAuthor(QJsonObject json) {
+QWidget *BookRow::buildAuthor(QJsonObject json) {
   QJsonValue author = json.value("authors");
-  if (!author.isArray()) return nullptr;
+  if (!author.isArray())
+    return nullptr;
 
   QStringList authorList = author.toVariant().toStringList();
-  if (authorList.isEmpty()) return nullptr;
+  if (authorList.isEmpty())
+    return nullptr;
 
   ElidedLabel *label = new ElidedLabel(authorList.join(", "));
   label->setObjectName("author");
   return label;
 }
 
-QWidget* BookRow::buildMeta(QJsonObject json) {
+QWidget *BookRow::buildMeta(QJsonObject json) {
   QStringList meta;
 
   QJsonValue year = json.value("release_year");
@@ -176,6 +180,4 @@ void BookRow::loadCover() {
   reply->deleteLater();
 }
 
-void BookRow::rowTapped() {
-  tapped(id);
-}
+void BookRow::rowTapped() { tapped(id); }

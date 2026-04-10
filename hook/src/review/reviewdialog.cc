@@ -8,8 +8,8 @@
 
 #include "../cli.h"
 #include "../synccontroller.h"
-#include "../widgets/rating.h"
 #include "../widgets/loadinglabel.h"
+#include "../widgets/rating.h"
 #include "reviewdialog.h"
 
 void ReviewDialog::show() { new ReviewDialog(); }
