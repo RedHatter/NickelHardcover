@@ -88,7 +88,15 @@ JournalEntry::JournalEntry(QJsonObject doc, QWidget *parent) : QFrame(parent) {
   } else if (event == "rated") {
     icon->setPixmap(QPixmap(Files::rated));
     QJsonObject metadata = doc.value("metadata").toObject();
-    label->setText(QString("Rated %1").arg(metadata.value("rating").toString()));
+    label->setText("Rated " + metadata.value("rating").toString());
+  } else if (event == "list_book") {
+    icon->setPixmap(QPixmap(Files::list_book));
+    QJsonObject metadata = doc.value("metadata").toObject();
+    label->setText(QString("Added to list <i>%1</i>").arg(metadata.value("list_name").toString()));
+  } else if (event == "prompt_book") {
+    icon->setPixmap(QPixmap(Files::prompt_book));
+    QJsonObject metadata = doc.value("metadata").toObject();
+    label->setText(QString("Answered prompt <i>%1</i>").arg(metadata.value("prompt").toString()));
   } else if (event == "note") {
     icon->setPixmap(QPixmap(Files::note));
     label->setText("Saved a Note");

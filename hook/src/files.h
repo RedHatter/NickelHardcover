@@ -23,8 +23,10 @@ constexpr char const *right_star = ":/nickelhardcover/right_star.png";
 constexpr char const *right_star_hit = ":/nickelhardcover/right_star_hit.png";
 constexpr char const *wifi = ":/images/statusbar/statusbar_wifi_4.png";
 
+constexpr char const *list_book = ":/nickelhardcover/list_book.png";
 constexpr char const *note = ":/nickelhardcover/note.png";
 constexpr char const *progress_updated = ":/nickelhardcover/progress_updated.png";
+constexpr char const *prompt_book = ":/nickelhardcover/prompt_book.png";
 constexpr char const *quote = ":/nickelhardcover/quote.png";
 constexpr char const *rated = ":/nickelhardcover/rated.png";
 constexpr char const *reviewed = ":/nickelhardcover/reviewed.png";
