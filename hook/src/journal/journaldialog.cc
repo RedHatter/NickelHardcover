@@ -34,8 +34,7 @@ JournalDialog::JournalDialog() : Dialog("Reading Journal") {
   QVBoxLayout *layout = new QVBoxLayout(this);
   layout->setContentsMargins(0, 0, 0, 0);
 
-  N3ButtonLabel *button = reinterpret_cast<N3ButtonLabel *>(calloc(1, 512));
-  N3ButtonLabel__constructor(button, this);
+  N3ButtonLabel *button = construct_N3ButtonLabel(this);
   N3ButtonLabel__setPrimaryButton(button, true);
   button->setText("+ New entry");
   layout->addWidget(button, 0, Qt::AlignRight);

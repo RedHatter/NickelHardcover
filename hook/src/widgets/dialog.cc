@@ -142,9 +142,7 @@ void Dialog::showKeyboard() { N3Dialog__showKeyboard(dialog); }
 void Dialog::hideKeyboard() { N3Dialog__hideKeyboard(dialog); }
 
 KeyboardFrame *Dialog::buildKeyboardFrame(TouchLineEdit *lineEdit, QString goText) {
-  KeyboardReceiver *receiver = reinterpret_cast<KeyboardReceiver *>(calloc(1, 128));
-  KeyboardReceiver__constructor(receiver, lineEdit, false);
-
+  KeyboardReceiver *receiver = construct_KeyboardReceiver(lineEdit);
   KeyboardFrame *keyboard = buildKeyboardFrame(receiver, goText);
   QObject::connect(lineEdit, SIGNAL(tapped()), this, SLOT(showKeyboard()));
 
@@ -152,9 +150,7 @@ KeyboardFrame *Dialog::buildKeyboardFrame(TouchLineEdit *lineEdit, QString goTex
 }
 
 KeyboardFrame *Dialog::buildKeyboardFrame(QTextEdit *textEdit, QString goText) {
-  KeyboardReceiver *receiver = reinterpret_cast<KeyboardReceiver *>(calloc(1, 128));
-  KeyboardReceiver__TextEdit_constructor(receiver, textEdit, false);
-
+  KeyboardReceiver *receiver = construct_KeyboardReceiver(textEdit);
   KeyboardFrame *keyboard = buildKeyboardFrame(receiver, goText);
 
   return keyboard;

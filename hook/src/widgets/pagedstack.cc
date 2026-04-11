@@ -50,8 +50,7 @@ PagedStack::PagedStack(QWidget *parent) : QWidget(parent) {
   stack->layout()->setContentsMargins(0, 0, 0, 0);
   layout->addWidget(stack, 0, 0, 1, -1);
 
-  prevButton = reinterpret_cast<TouchLabel *>(calloc(1, 128));
-  TouchLabel__constructor(prevButton, this, 0);
+  prevButton = construct_TouchLabel(this);
   prevButton->setPixmap(QPixmap(Files::arrow_backward));
   prevButton->setAlignment(Qt::AlignCenter);
   layout->addWidget(prevButton, 1, 0);
@@ -64,8 +63,7 @@ PagedStack::PagedStack(QWidget *parent) : QWidget(parent) {
   layout->addWidget(label, 1, 1, Qt::AlignCenter);
   label->hide();
 
-  nextButton = reinterpret_cast<TouchLabel *>(calloc(1, 128));
-  TouchLabel__constructor(nextButton, this, 0);
+  nextButton = construct_TouchLabel(this);
   nextButton->setPixmap(QPixmap(Files::arrow_forward));
   nextButton->setAlignment(Qt::AlignCenter);
   layout->addWidget(nextButton, 1, 2);

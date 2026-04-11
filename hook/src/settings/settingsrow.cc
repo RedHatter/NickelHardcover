@@ -17,8 +17,7 @@ SettingsRow::SettingsRow(QString heading, SettingsRowType type, QList<Item> menu
   layout->setSpacing(0);
   layout->setContentsMargins(0, 0, 0, 0);
 
-  SettingContainer *row = reinterpret_cast<SettingContainer *>(calloc(1, 128));
-  SettingContainer__constructor(row, nullptr);
+  SettingContainer *row = construct_SettingContainer(this);
   layout->addWidget(row);
 
   QHBoxLayout *rowLayout = new QHBoxLayout(row);
@@ -125,14 +124,12 @@ void SettingsRow::openDialog() {
   buttons->setSpacing(0);
   row->addLayout(buttons);
 
-  TouchLabel *button = reinterpret_cast<TouchLabel *>(calloc(1, 128));
-  TouchLabel__constructor(button, dialog, 0);
+  TouchLabel *button = construct_TouchLabel(dialog);
   button->setPixmap(QPixmap(Files::arrow_up));
   buttons->addWidget(button);
   QWidget::connect(button, SIGNAL(tapped(bool)), this, SLOT(up()));
 
-  button = reinterpret_cast<TouchLabel *>(calloc(1, 128));
-  TouchLabel__constructor(button, dialog, 0);
+  button = construct_TouchLabel(dialog);
   button->setPixmap(QPixmap(Files::arrow_down));
   buttons->addWidget(button);
   QWidget::connect(button, SIGNAL(tapped(bool)), this, SLOT(down()));
@@ -167,8 +164,7 @@ void SettingsRow::down() {
 void SettingsRow::accept() { setItem(dialogItems.at(index)); }
 
 void SettingsRow::openMenu() {
-  NickelTouchMenu *menu = reinterpret_cast<NickelTouchMenu *>(calloc(1, 512));
-  NickelTouchMenu__constructor(menu, label, 0);
+  NickelTouchMenu *menu = construct_NickelTouchMenu(label);
   NickelTouchMenu__showDecoration(menu, false);
   QWidget::connect(menu, &QMenu::aboutToHide, menu, &QWidget::deleteLater);
 
@@ -179,8 +175,7 @@ void SettingsRow::openMenu() {
 
     Item item = menuItems.at(i);
 
-    MenuTextItem *menuItem = reinterpret_cast<MenuTextItem *>(calloc(1, 256));
-    MenuTextItem__constructor(menuItem, menu, false, true);
+    MenuTextItem *menuItem = construct_MenuTextItem(menu, false, true);
     MenuTextItem__setText(menuItem, item.text);
     MenuTextItem__registerForTapGestures(menuItem);
 

@@ -101,8 +101,7 @@ BookRow::BookRow(QJsonObject json, QWidget *parent) : QWidget(parent), id(json.v
   layout->setContentsMargins(0, 0, 0, 0);
   layout->setSpacing(0);
 
-  SettingContainer *row = reinterpret_cast<SettingContainer *>(calloc(1, 128));
-  SettingContainer__constructor(row, nullptr);
+  SettingContainer *row = construct_SettingContainer(nullptr);
   layout->addWidget(row);
   QObject::connect(row, SIGNAL(tapped()), this, SLOT(rowTapped()));
 

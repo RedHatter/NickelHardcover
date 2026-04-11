@@ -11,8 +11,7 @@ Rating::Rating(float value, QWidget *parent) : QWidget(parent) {
   layout->setSpacing(0);
 
   for (int i = 0; i < 5; i++) {
-    TouchLabel *icon = reinterpret_cast<TouchLabel *>(calloc(1, 128));
-    TouchLabel__constructor(icon, this, 0);
+    TouchLabel *icon = construct_TouchLabel(this);
     TouchLabel__setHitStateEnabled(icon, false);
     icon->setPixmap(QPixmap(i < value ? Files::left_star_hit : Files::left_star));
     icon->setContentsMargins(16, 0, 0, 0);
@@ -20,8 +19,7 @@ Rating::Rating(float value, QWidget *parent) : QWidget(parent) {
 
     QObject::connect(icon, SIGNAL(mouseDown()), this, SLOT(mouseDown()));
 
-    icon = reinterpret_cast<TouchLabel *>(calloc(1, 128));
-    TouchLabel__constructor(icon, this, 0);
+    icon = construct_TouchLabel(this);
     TouchLabel__setHitStateEnabled(icon, false);
     icon->setPixmap(QPixmap(i + 0.5 < value ? Files::right_star_hit : Files::right_star));
     icon->setContentsMargins(0, 0, 16, 0);

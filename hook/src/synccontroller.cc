@@ -77,8 +77,7 @@ void SyncController::pageChanged() {
   lastSyncDaily = syncDaily;
 
   if (timer == nullptr && syncDaily > 0 && queue->checkThreshold(contentId, 1)) {
-    timer = reinterpret_cast<PowerTimer *>(calloc(1, 128));
-    PowerTimer__constructor(timer, "NickelHardcover-alarm", this);
+    timer = construct_PowerTimer("NickelHardcover-alarm", this);
 
     QDateTime time = QDateTime::currentDateTime();
     if (time.time().hour() >= syncDaily) {

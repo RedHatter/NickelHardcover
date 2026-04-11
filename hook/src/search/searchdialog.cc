@@ -53,8 +53,7 @@ SearchDialog::SearchDialog(QString query) : Dialog("Manually link book") {
   layout->setContentsMargins(0, 0, 0, 0);
   layout->setSpacing(0);
 
-  lineEdit = reinterpret_cast<TouchLineEdit *>(calloc(1, 128));
-  TouchLineEdit__constructor(lineEdit, nullptr);
+  lineEdit = construct_TouchLineEdit(nullptr);
   lineEdit->setText(query);
   layout->addWidget(lineEdit);
 

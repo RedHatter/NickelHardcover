@@ -15,8 +15,7 @@ void InsertJournalDialog::show() { new InsertJournalDialog(); }
 InsertJournalDialog::InsertJournalDialog() : Dialog("Add New Journal Entry") {
   QVBoxLayout *layout = new QVBoxLayout(this);
 
-  TouchTextEdit *touchText = reinterpret_cast<TouchTextEdit *>(calloc(1, 128));
-  TouchTextEdit__constructor(touchText, this);
+  TouchTextEdit *touchText = construct_TouchTextEdit(this);
   TouchTextEdit__setCustomPlaceholderText(touchText, "Write a new note...");
   layout->addWidget(touchText);
 

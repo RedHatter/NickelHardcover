@@ -88,24 +88,21 @@ void ReviewDialog::response(QJsonObject doc) {
   QObject::connect(ratingWidget, &Rating::tapped, this, &ReviewDialog::setRating);
 
   // Has spoilers
-  TouchCheckBox *checkbox = reinterpret_cast<TouchCheckBox *>(calloc(1, 128));
-  TouchCheckBox__constructor(checkbox, this);
+  TouchCheckBox *checkbox = construct_TouchCheckBox(this);
   checkbox->setCheckState(spoilers ? Qt::Checked : Qt::Unchecked);
   checkbox->setText("This review contains spoilers");
   column->addWidget(checkbox);
   QObject::connect(checkbox, &QCheckBox::stateChanged, this, &ReviewDialog::setSpoilers);
 
   // Is sponsored
-  checkbox = reinterpret_cast<TouchCheckBox *>(calloc(1, 128));
-  TouchCheckBox__constructor(checkbox, this);
+  checkbox = construct_TouchCheckBox(this);
   checkbox->setCheckState(sponsored ? Qt::Checked : Qt::Unchecked);
   checkbox->setText("Sponsored or ARC Review");
   column->addWidget(checkbox);
   QObject::connect(checkbox, &QCheckBox::stateChanged, this, &ReviewDialog::setSponsored);
 
   // Textbox
-  TouchTextEdit *touchText = reinterpret_cast<TouchTextEdit *>(calloc(1, 128));
-  TouchTextEdit__constructor(touchText, this);
+  TouchTextEdit *touchText = construct_TouchTextEdit(this);
   TouchTextEdit__setCustomPlaceholderText(touchText, "Share you thoughts about this book with the world. Make "
                                                      "sure to Mark any spoilers!");
   QTextEdit *textEdit = touchText->findChild<QTextEdit *>();

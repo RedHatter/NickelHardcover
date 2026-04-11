@@ -39,25 +39,55 @@ bool (*WirelessWorkflowManager__isInternetAccessible)(WirelessWorkflowManager *_
 void (*TouchLabel__constructor)(TouchLabel *_this, QWidget *parent, QFlags<Qt::WindowType>);
 void (*TouchLabel__setHitStateEnabled)(TouchLabel *_this, bool enabled);
 
+TouchLabel *construct_TouchLabel(QWidget *parent) {
+  TouchLabel *label = reinterpret_cast<TouchLabel *>(calloc(1, 128));
+  TouchLabel__constructor(label, parent, 0);
+  return label;
+}
+
 void (*N3ButtonLabel__constructor)(N3ButtonLabel *_this, QWidget *parent);
 void (*N3ButtonLabel__setPrimaryButton)(N3ButtonLabel *_this, bool enabled);
 
+N3ButtonLabel *construct_N3ButtonLabel(QWidget *parent) {
+  N3ButtonLabel *button = reinterpret_cast<N3ButtonLabel *>(calloc(1, 512));
+  N3ButtonLabel__constructor(button, parent);
+  return button;
+}
+
 void (*TouchCheckBox__constructor)(TouchCheckBox *_this, QWidget *parent);
+
+TouchCheckBox* construct_TouchCheckBox(QWidget *parent) {
+  TouchCheckBox *checkbox = reinterpret_cast<TouchCheckBox *>(calloc(1, 128));
+  TouchCheckBox__constructor(checkbox, parent);
+  return checkbox;
+}
 
 void (*NickelTouchMenu__constructor)(NickelTouchMenu *_this, QWidget *parent, int pos);
 void (*NickelTouchMenu__showDecoration)(NickelTouchMenu *_this, bool show);
+
+NickelTouchMenu* construct_NickelTouchMenu(QWidget *parent) {
+  NickelTouchMenu *menu = reinterpret_cast<NickelTouchMenu *>(calloc(1, 512));
+  NickelTouchMenu__constructor(menu, parent, 0);
+  return menu;
+}
 
 void (*MenuTextItem__constructor)(MenuTextItem *_this, QWidget *parent, bool checkable, bool italic);
 void (*MenuTextItem__setText)(MenuTextItem *_this, QString const &text);
 void (*MenuTextItem__setSelected)(MenuTextItem *_this, bool selected);
 void (*MenuTextItem__registerForTapGestures)(MenuTextItem *_this);
 
+MenuTextItem* construct_MenuTextItem(QWidget *parent, bool checkable, bool italic) {
+  MenuTextItem *item = reinterpret_cast<MenuTextItem *>(calloc(1, 256));
+  MenuTextItem__constructor(item, parent, checkable, italic);
+  return item;
+}
+
 typedef QWidget ReadingMenuView;
 void (*ReadingMenuView__constructor)(ReadingMenuView *_this, QWidget *parent, bool unknown);
 void (*ReadingMenuView__constructor_2)(ReadingMenuView *_this, QWidget *, QByteArray const &unknownArray,
                                        bool unknownBool);
 
-N3Dialog *(*N3DialogFactory__getDialog)(QWidget *content, bool idk);
+N3Dialog *(*N3DialogFactory__getDialog)(QWidget *content, bool unknown);
 void (*N3Dialog__disableCloseButton)(N3Dialog *__this);
 void (*N3Dialog__enableBackButton)(N3Dialog *__this, bool enable);
 void (*N3Dialog__setTitle)(N3Dialog *__this, QString const &);
@@ -66,21 +96,62 @@ void (*N3Dialog__enableFullViewMode)(N3Dialog *__this);
 void (*N3Dialog__showKeyboard)(N3Dialog *__this);
 void (*N3Dialog__hideKeyboard)(N3Dialog *__this);
 
-void (*KeyboardReceiver__constructor)(KeyboardReceiver *__this, QLineEdit *parent, bool idk);
-void (*KeyboardReceiver__TextEdit_constructor)(KeyboardReceiver *__this, QTextEdit *parent, bool idk);
+void (*KeyboardReceiver__constructor)(KeyboardReceiver *__this, QLineEdit *lineEdit, bool unknown);
+void (*KeyboardReceiver__TextEdit_constructor)(KeyboardReceiver *__this, QTextEdit *parent, bool unknown);
+
+KeyboardReceiver * construct_KeyboardReceiver(QLineEdit *lineEdit) {
+  KeyboardReceiver *receiver = reinterpret_cast<KeyboardReceiver *>(calloc(1, 128));
+  KeyboardReceiver__constructor(receiver, lineEdit, false);
+  return receiver;
+}
+
+KeyboardReceiver * construct_KeyboardReceiver(QTextEdit *textEdit) {
+  KeyboardReceiver *receiver = reinterpret_cast<KeyboardReceiver *>(calloc(1, 128));
+  KeyboardReceiver__TextEdit_constructor(receiver, textEdit, false);
+  return receiver;
+}
+
+
 SearchKeyboardController *(*KeyboardFrame__createKeyboard)(KeyboardFrame *__this, int keyboardScript, QLocale locale);
 void (*SearchKeyboardController__setReceiver)(SearchKeyboardController *__this, KeyboardReceiver *receiver, bool idk);
 void (*SearchKeyboardController__setGoText)(SearchKeyboardController *__this, QString const &text);
+
 void (*TouchLineEdit__constructor)(TouchLineEdit *__this, QWidget *parent);
 
+TouchLineEdit* construct_TouchLineEdit(QWidget *parent) {
+TouchLineEdit* lineEdit = reinterpret_cast<TouchLineEdit *>(calloc(1, 128));
+TouchLineEdit__constructor(lineEdit, parent);
+return lineEdit;
+}
+
 void (*SettingContainer__constructor)(SettingContainer *__this, QWidget *parent);
+
+SettingContainer* construct_SettingContainer(QWidget *parent) {
+  SettingContainer *container = reinterpret_cast<SettingContainer *>(calloc(1, 128));
+  SettingContainer__constructor(container, parent);
+  return container;
+}
+
 
 void (*TouchTextEdit__constructor)(TouchTextEdit *__this, QWidget *parent);
 void (*TouchTextEdit__setCustomPlaceholderText)(TouchTextEdit *__this, QString const &text);
 
+TouchTextEdit *construct_TouchTextEdit(QWidget *parent) {
+  TouchTextEdit *touchText = reinterpret_cast<TouchTextEdit *>(calloc(1, 128));
+  TouchTextEdit__constructor(touchText, parent);
+  return touchText;
+}
+
 void (*PowerTimer__constructor)(PowerTimer *__this, QString const &name, QObject *parent);
 void (*PowerTimer__fireAt)(PowerTimer *__this, QDateTime const &datatime);
 int (*PowerTimer__timeRemaining)(PowerTimer *__this);
+
+PowerTimer* construct_PowerTimer(QString const &name, QObject *parent) {
+PowerTimer* timer = reinterpret_cast<PowerTimer *>(calloc(1, 128));
+PowerTimer__constructor(timer, name, parent);
+return timer;
+}
+
 
 static struct nh_info NickelHardcover = (struct nh_info){.name = "NickelHardcover",
                                                          .desc = "Updates reading progress on Hardcover.app",

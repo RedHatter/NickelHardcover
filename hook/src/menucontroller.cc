@@ -17,8 +17,7 @@
 #include "synccontroller.h"
 
 MenuController::MenuController(QWidget *parent) : QWidget(parent) {
-  icon = reinterpret_cast<TouchLabel *>(calloc(1, 128));
-  TouchLabel__constructor(icon, parent, 0);
+  icon = construct_TouchLabel(parent);
   TouchLabel__setHitStateEnabled(icon, false);
   icon->setPixmap(QPixmap(Files::icon));
 
@@ -30,8 +29,7 @@ void MenuController::showMainMenu(bool checked) {
 
   icon->setPixmap(QPixmap(Files::icon_hit));
 
-  NickelTouchMenu *menu = reinterpret_cast<NickelTouchMenu *>(calloc(1, 512));
-  NickelTouchMenu__constructor(menu, icon, 0);
+  NickelTouchMenu *menu = construct_NickelTouchMenu(icon);
   NickelTouchMenu__showDecoration(menu, true);
   QWidget::connect(menu, &QMenu::aboutToHide, menu, &QWidget::deleteLater);
   QWidget::connect(menu, &QMenu::aboutToHide, icon, [this] { icon->setPixmap(QPixmap(Files::icon)); });
@@ -82,8 +80,7 @@ void MenuController::showMainMenu(bool checked) {
 }
 
 QWidgetAction *MenuController::addMenuItem(NickelTouchMenu *menu, QString label, bool checkable, bool checked) {
-  MenuTextItem *item = reinterpret_cast<MenuTextItem *>(calloc(1, 256));
-  MenuTextItem__constructor(item, menu, checkable, true);
+  MenuTextItem *item = construct_MenuTextItem(menu, checkable, true);
   MenuTextItem__setText(item, label);
   MenuTextItem__registerForTapGestures(item);
 
@@ -157,8 +154,7 @@ void MenuController::showStatusMenu(QJsonObject doc) {
 
   icon->setPixmap(QPixmap(Files::icon_hit));
 
-  NickelTouchMenu *menu = reinterpret_cast<NickelTouchMenu *>(calloc(1, 512));
-  NickelTouchMenu__constructor(menu, icon, 0);
+  NickelTouchMenu *menu = construct_NickelTouchMenu(icon);
   NickelTouchMenu__showDecoration(menu, true);
 
   QWidget::connect(menu, &QMenu::aboutToHide, menu, &QWidget::deleteLater);
