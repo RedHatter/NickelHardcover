@@ -9,7 +9,7 @@
 #include "../synccontroller.h"
 #include "dialog.h"
 
-Dialog::Dialog(QString title) : QWidget() {
+Dialog::Dialog(QString title) : QFrame() {
   dialog = N3DialogFactory__getDialog(this, true);
   N3Dialog__setTitle(dialog, title);
   dialog->setStyleSheet(dialog->styleSheet().append(R"(
@@ -94,6 +94,26 @@ Dialog::Dialog(QString title) : QWidget() {
     }
     [qApp_deviceIsDaylight=true] #regular {
       font-size: 37px;
+    }
+
+    [qApp_deviceIsTrilogy=true] #large {
+      font-size: 23px;
+    }
+    [qApp_deviceIsPhoenix=true] #large {
+      font-size: 28px;
+    }
+    [qApp_deviceIsDragon=true] #large {
+      font-size: 36px;
+    }
+    [qApp_deviceIsAlyssum=true],
+    [qApp_deviceIsNova=true] #large {
+      font-size: 39px;
+    }
+    [qApp_deviceIsStorm=true] #large {
+      font-size: 42px;
+    }
+    [qApp_deviceIsDaylight=true] #large {
+      font-size: 47px;
     }
   )"));
 

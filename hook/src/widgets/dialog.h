@@ -1,10 +1,10 @@
 #pragma once
 
-#include <QWidget>
+#include <QFrame>
 
 #include "../nickelhardcover.h"
 
-class Dialog : public QWidget {
+class Dialog : public QFrame {
   Q_OBJECT
 
 public Q_SLOTS:

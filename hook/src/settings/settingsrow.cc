@@ -103,6 +103,8 @@ void SettingsRow::openDialog() {
   QVBoxLayout *layout = dialog->findChild<QVBoxLayout *>("contentLayout");
 
   QHBoxLayout *row = new QHBoxLayout();
+  row->setContentsMargins(0, 0, 0, 0);
+  row->setSpacing(0);
   layout->addLayout(row);
 
   dialogLabel = new QLabel(dialogItems.at(0).text);
@@ -119,9 +121,9 @@ void SettingsRow::openDialog() {
   }
 
   QVBoxLayout *buttons = new QVBoxLayout();
+  buttons->setContentsMargins(0, 0, 0, 0);
+  buttons->setSpacing(0);
   row->addLayout(buttons);
-
-  buttons->addSpacing(16);
 
   TouchLabel *button = reinterpret_cast<TouchLabel *>(calloc(1, 128));
   TouchLabel__constructor(button, dialog, 0);
@@ -129,15 +131,11 @@ void SettingsRow::openDialog() {
   buttons->addWidget(button);
   QWidget::connect(button, SIGNAL(tapped(bool)), this, SLOT(up()));
 
-  buttons->addSpacing(30);
-
   button = reinterpret_cast<TouchLabel *>(calloc(1, 128));
   TouchLabel__constructor(button, dialog, 0);
   button->setPixmap(QPixmap(Files::arrow_down));
   buttons->addWidget(button);
   QWidget::connect(button, SIGNAL(tapped(bool)), this, SLOT(down()));
-
-  buttons->addSpacing(16);
 
   dialog->open();
 }

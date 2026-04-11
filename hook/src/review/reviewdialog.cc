@@ -14,7 +14,42 @@
 void ReviewDialog::show() { new ReviewDialog(); }
 
 ReviewDialog::ReviewDialog() : Dialog("Write your review") {
+  setStyleSheet(R"(
+    [qApp_deviceIsTrilogy=true] ReviewDialog {
+      margin: 0 12px 12px;
+    }
+    [qApp_deviceIsPhoenix=true] ReviewDialog {
+      margin: 0 16px 16px;
+    }
+    [qApp_deviceIsDragon=true] ReviewDialog {
+      margin: 0 22px 22px;
+    }
+    [qApp_deviceIsStorm=true] ReviewDialog {
+      margin: 0 25px 25px;
+    }
+    [qApp_deviceIsDaylight=true] ReviewDialog {
+      margin: 0 28px 28px;
+    }
+
+    [qApp_deviceIsTrilogy=true] TouchTextEdit {
+      margin-top: 12px;
+    }
+    [qApp_deviceIsPhoenix=true] TouchTextEdit {
+      margin-top: 16px;
+    }
+    [qApp_deviceIsDragon=true] TouchTextEdit {
+      margin-top: 22px;
+    }
+    [qApp_deviceIsStorm=true] TouchTextEdit {
+      margin-top: 25px;
+    }
+    [qApp_deviceIsDaylight=true] TouchTextEdit {
+      margin-top: 28px;
+    }
+  )");
+
   QVBoxLayout *layout = new QVBoxLayout(this);
+  layout->setContentsMargins(0, 0, 0, 0);
   QLabel *loading = new QLabel();
   loading->setObjectName("loading");
   layout->addWidget(loading, 1);
@@ -25,8 +60,8 @@ ReviewDialog::ReviewDialog() : Dialog("Write your review") {
 }
 
 void ReviewDialog::response(QJsonObject doc) {
-  QVBoxLayout *colLayout = qobject_cast<QVBoxLayout *>(layout());
-  colLayout->takeAt(0)->widget()->deleteLater();
+  QLayout *column = layout();
+  column->takeAt(0)->widget()->deleteLater();
 
   rating = doc.value("rating").toDouble(0);
   spoilers = doc.value("review_has_spoilers").toBool(false);
@@ -37,19 +72,19 @@ void ReviewDialog::response(QJsonObject doc) {
   // Title and author
   if (ctl->title != nullptr) {
     QLabel *label = new QLabel(ctl->title);
-    label->setStyleSheet("QLabel { font-size: 12pt; }");
-    colLayout->addWidget(label);
+    label->setObjectName("large");
+    column->addWidget(label);
   }
 
   if (ctl->author != nullptr) {
     QLabel *label = new QLabel("by " + ctl->author);
-    label->setStyleSheet("QLabel { font-size: 8pt; }");
-    colLayout->addWidget(label);
+    label->setObjectName("small");
+    column->addWidget(label);
   }
 
   // Rating
   Rating *ratingWidget = new Rating(rating, this);
-  colLayout->addWidget(ratingWidget);
+  column->addWidget(ratingWidget);
   QObject::connect(ratingWidget, &Rating::tapped, this, &ReviewDialog::setRating);
 
   // Has spoilers
@@ -57,7 +92,7 @@ void ReviewDialog::response(QJsonObject doc) {
   TouchCheckBox__constructor(checkbox, this);
   checkbox->setCheckState(spoilers ? Qt::Checked : Qt::Unchecked);
   checkbox->setText("This review contains spoilers");
-  colLayout->addWidget(checkbox);
+  column->addWidget(checkbox);
   QObject::connect(checkbox, &QCheckBox::stateChanged, this, &ReviewDialog::setSpoilers);
 
   // Is sponsored
@@ -65,10 +100,8 @@ void ReviewDialog::response(QJsonObject doc) {
   TouchCheckBox__constructor(checkbox, this);
   checkbox->setCheckState(sponsored ? Qt::Checked : Qt::Unchecked);
   checkbox->setText("Sponsored or ARC Review");
-  colLayout->addWidget(checkbox);
+  column->addWidget(checkbox);
   QObject::connect(checkbox, &QCheckBox::stateChanged, this, &ReviewDialog::setSponsored);
-
-  colLayout->addSpacing(16);
 
   // Textbox
   TouchTextEdit *touchText = reinterpret_cast<TouchTextEdit *>(calloc(1, 128));
@@ -77,7 +110,7 @@ void ReviewDialog::response(QJsonObject doc) {
                                                      "sure to Mark any spoilers!");
   QTextEdit *textEdit = touchText->findChild<QTextEdit *>();
   textEdit->setText(doc.value("review_raw").toString(""));
-  colLayout->addWidget(touchText);
+  column->addWidget(touchText);
 
   buildKeyboardFrame(textEdit, "Submit");
   showKeyboard();

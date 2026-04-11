@@ -84,26 +84,6 @@ BookRow::BookRow(QJsonObject json, QWidget *parent) : QWidget(parent), id(json.v
       min-height: 218px;
     }
 
-    [qApp_deviceIsTrilogy=true] #title {
-      font-size: 23px;
-    }
-    [qApp_deviceIsPhoenix=true] #title {
-      font-size: 28px;
-    }
-    [qApp_deviceIsDragon=true] #title {
-      font-size: 36px;
-    }
-    [qApp_deviceIsAlyssum=true],
-    [qApp_deviceIsNova=true] #title {
-      font-size: 39px;
-    }
-    [qApp_deviceIsStorm=true] #title {
-      font-size: 42px;
-    }
-    [qApp_deviceIsDaylight=true] #title {
-      font-size: 47px;
-    }
-
     #blank-cover {
       background-color: #d9d9d9;
     }
@@ -181,7 +161,7 @@ QWidget *BookRow::buildTitle(QJsonObject json) {
     return nullptr;
 
   ElidedLabel *label = new ElidedLabel(title.toString());
-  label->setObjectName("title");
+  label->setObjectName("large");
   return label;
 }
 

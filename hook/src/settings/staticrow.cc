@@ -9,10 +9,12 @@ StaticRow::StaticRow(QString heading, QString value, bool showClear, QWidget *pa
   rowLayout->setContentsMargins(0, 0, 0, 0);
 
   label = new QLabel(heading);
+  label->setObjectName("regular");
   rowLayout->addWidget(label, 1);
 
   label = new QLabel(value);
-  label->setObjectName("value");
+  label->setObjectName("regular");
+  label->setStyleSheet("font-style: italic;");
   rowLayout->addWidget(label);
 
   if (!showClear)
