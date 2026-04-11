@@ -1,4 +1,3 @@
-#include <QGridLayout>
 #include <QKeyEvent>
 #include <QSizePolicy>
 #include <QVBoxLayout>
@@ -15,25 +14,40 @@
 #include "qnamespace.h"
 
 PagedStack::PagedStack(QWidget *parent) : QWidget(parent) {
-  setStyleSheet(R"(
-    #footer-label {
-      font-size: 34px;
-      font-style: italic;
-    }
-  )");
-
   QApplication::instance()->installEventFilter(new PagedStackFilter(this));
 
   QGridLayout *layout = new QGridLayout(this);
   layout->setContentsMargins(0, 0, 0, 0);
   layout->setSpacing(0);
   layout->setRowStretch(0, 1);
-  layout->setRowMinimumHeight(1, 157);
-  layout->setColumnMinimumWidth(0, 192);
   layout->setColumnStretch(1, 1);
-  layout->setColumnMinimumWidth(2, 192);
+
+  setStyleSheet(R"(
+    [qApp_deviceIsTrilogy=true] PagedStack {
+      qproperty-footerHeight: 66;
+      qproperty-footerButtonWidth: 88;
+    }
+    [qApp_deviceIsPhoenix=true] PagedStack {
+      qproperty-footerHeight: 75;
+      qproperty-footerButtonWidth: 110;
+    }
+    [qApp_deviceIsDragon=true] PagedStack {
+      qproperty-footerHeight: 120;
+      qproperty-footerButtonWidth: 147;
+    }
+    [qApp_deviceIsStorm=true] PagedStack {
+      qproperty-footerHeight: 138;
+      qproperty-footerButtonWidth: 169;
+    }
+    [qApp_deviceIsDaylight=true] PagedStack {
+      qproperty-footerHeight: 156;
+      qproperty-footerButtonWidth: 191;
+    }
+  )");
 
   stack = new QStackedWidget();
+  stack->setContentsMargins(0, 0, 0, 0);
+  stack->layout()->setContentsMargins(0, 0, 0, 0);
   layout->addWidget(stack, 0, 0, 1, -1);
 
   prevButton = reinterpret_cast<TouchLabel *>(calloc(1, 128));
@@ -44,8 +58,9 @@ PagedStack::PagedStack(QWidget *parent) : QWidget(parent) {
   prevButton->hide();
   QWidget::connect(prevButton, SIGNAL(tapped(bool)), this, SLOT(prev()));
 
-  label = new QLabel(this);
-  label->setObjectName("footer-label");
+  label = new QLabel();
+  label->setObjectName("small");
+  label->setStyleSheet("font-style: italic;");
   layout->addWidget(label, 1, 1, Qt::AlignCenter);
   label->hide();
 
@@ -89,6 +104,11 @@ void PagedStack::setCurrent(int value) {
   }
 }
 
+void PagedStack::setTotal(int value) {
+  total = value;
+  setCurrent(current);
+}
+
 void PagedStack::next() {
   nh_log("PagedStack::next()");
 
@@ -127,14 +147,33 @@ void PagedStack::clear() {
   setCurrent(0);
 }
 
-int PagedStack::getAvailableHeight() { return qobject_cast<QGridLayout *>(layout())->cellRect(0, 1).height(); }
+int PagedStack::getAvailableHeight() {
+  nh_log("margin %d %d %d %d", stack->contentsMargins().top(), stack->layout()->contentsMargins().top(),
+         stack->contentsMargins().bottom(), stack->layout()->contentsMargins().bottom());
+  return stack->contentsRect().height();
+}
 
 int PagedStack::countPages() { return stack->count() - 1; }
 
 void PagedStack::resizeEvent(QResizeEvent *event) {
   afterLayout();
   QWidget::resizeEvent(event);
+  nh_log("resize %d %d", getAvailableHeight(), stack->height());
 }
+
+QGridLayout *PagedStack::layout() const { return qobject_cast<QGridLayout *>(QWidget::layout()); }
+
+void PagedStack::setFooterHeight(int value) { layout()->setRowMinimumHeight(1, value); }
+
+int PagedStack::footerHeight() const { return layout()->rowMinimumHeight(1); }
+
+void PagedStack::setFooterButtonWidth(int value) {
+  QGridLayout *grid = layout();
+  grid->setColumnMinimumWidth(0, value);
+  grid->setColumnMinimumWidth(2, value);
+}
+
+int PagedStack::footerButtonWidth() const { return layout()->columnMinimumWidth(0); }
 
 PagedStackFilter::PagedStackFilter(PagedStack *pages) : QObject(pages), pages(pages) {}
 

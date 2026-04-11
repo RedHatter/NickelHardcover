@@ -55,26 +55,6 @@ SettingsDialog::SettingsDialog() : Dialog("Settings") {
       margin: 0 84px;
     }
 
-    [qApp_deviceIsTrilogy=true] QLabel {
-      font-size: 19px;
-    }
-    [qApp_deviceIsPhoenix=true] QLabel {
-      font-size: 23px;
-    }
-    [qApp_deviceIsDragon=true] QLabel {
-      font-size: 29px;
-    }
-    [qApp_deviceIsAlyssum=true] QLabel,
-    [qApp_deviceIsNova=true] QLabel {
-      font-size: 32px;
-    }
-    [qApp_deviceIsStorm=true] QLabel {
-      font-size: 34px;
-    }
-    [qApp_deviceIsDaylight=true] QLabel {
-      font-size: 37px;
-    }
-
     [qApp_deviceIsTrilogy=true] QLabel#metaData,
     [qApp_deviceIsTrilogy=true] StaticRow {
       padding-left: 12px;
@@ -165,10 +145,6 @@ SettingsDialog::SettingsDialog() : Dialog("Settings") {
       padding-bottom: 5px;
       background-color: #d9d9d9;
     }
-
-    QLabel#value {
-      font-style: italic;
-    }
   )");
 
   QVBoxLayout *layout = new QVBoxLayout(this);
@@ -216,7 +192,7 @@ void SettingsDialog::buildPages() {
 
   rows->addStretch(1);
   pages->addPage(page);
-  pages->total = pages->countPages();
+  pages->setTotal(pages->countPages());
   pages->next();
 }
 

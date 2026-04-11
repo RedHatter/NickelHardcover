@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QGridLayout>
 #include <QLabel>
 #include <QStackedWidget>
 #include <QWidget>
@@ -9,6 +10,8 @@
 
 class PagedStack : public QWidget {
   Q_OBJECT
+  Q_PROPERTY(int footerHeight READ footerHeight WRITE setFooterHeight)
+  Q_PROPERTY(int footerButtonWidth READ footerButtonWidth WRITE setFooterButtonWidth)
 
 public:
   PagedStack(QWidget *parent = nullptr);
@@ -17,8 +20,15 @@ public:
   void clear();
   int getAvailableHeight();
   int countPages();
+  void setTotal(int value);
 
-  int total = 0;
+  void setFooterHeight(int value);
+  int footerHeight() const;
+
+  void setFooterButtonWidth(int value);
+  int footerButtonWidth() const;
+
+  QGridLayout *layout() const;
 
 public Q_SLOTS:
   void next();
@@ -32,6 +42,7 @@ protected:
   void resizeEvent(QResizeEvent *event) override;
 
 private:
+  int total = 0;
   int current = 0;
   QLabel *label = nullptr;
   TouchLabel *nextButton = nullptr;

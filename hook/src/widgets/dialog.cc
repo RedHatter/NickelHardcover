@@ -25,33 +25,33 @@ Dialog::Dialog(QString title) : QWidget() {
 
     [qApp_deviceIsTrilogy=true] QLabel#empty,
     [qApp_deviceIsTrilogy=true] QLabel#loading,
-    [qApp_deviceIsTrilogy=true] #regular {
+    [qApp_deviceIsTrilogy=true] #small {
       font-size: 17px;
     }
     [qApp_deviceIsPhoenix=true] QLabel#empty,
     [qApp_deviceIsPhoenix=true] QLabel#loading,
-    [qApp_deviceIsPhoenix=true] #regular {
+    [qApp_deviceIsPhoenix=true] #small {
       font-size: 22px;
     }
     [qApp_deviceIsDragon=true] QLabel#empty,
     [qApp_deviceIsDragon=true] QLabel#loading,
-    [qApp_deviceIsDragon=true] #regular {
+    [qApp_deviceIsDragon=true] #small {
       font-size: 26px;
     }
     [qApp_deviceIsAlyssum=true] QLabel#empty,
     [qApp_deviceIsAlyssum=true] QLabel#loading,
-    [qApp_deviceIsAlyssum=true] #regular,
+    [qApp_deviceIsAlyssum=true] #small,
     [qApp_deviceIsNova=true] QLabel#empty,
     [qApp_deviceIsNova=true] QLabel#loading,
-    [qApp_deviceIsNova=true] #regular,
+    [qApp_deviceIsNova=true] #small,
     [qApp_deviceIsStorm=true] QLabel#empty,
     [qApp_deviceIsStorm=true] QLabel#loading,
-    [qApp_deviceIsStorm=true] #regular {
+    [qApp_deviceIsStorm=true] #small {
       font-size: 30px;
     }
     [qApp_deviceIsDaylight=true] QLabel#empty,
     [qApp_deviceIsDaylight=true] QLabel#loading,
-    [qApp_deviceIsDaylight=true] #regular {
+    [qApp_deviceIsDaylight=true] #small {
       font-size: 34px;
     }
 
@@ -74,6 +74,26 @@ Dialog::Dialog(QString title) : QWidget() {
     }
     [qApp_deviceIsDaylight=true] #metaData {
       font-size: 32px;
+    }
+
+    [qApp_deviceIsTrilogy=true] #regular {
+      font-size: 19px;
+    }
+    [qApp_deviceIsPhoenix=true] #regular {
+      font-size: 23px;
+    }
+    [qApp_deviceIsDragon=true] #regular {
+      font-size: 29px;
+    }
+    [qApp_deviceIsAlyssum=true] #regular,
+    [qApp_deviceIsNova=true] #regular {
+      font-size: 32px;
+    }
+    [qApp_deviceIsStorm=true] #regular {
+      font-size: 34px;
+    }
+    [qApp_deviceIsDaylight=true] #regular {
+      font-size: 37px;
     }
   )"));
 

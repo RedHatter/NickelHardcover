@@ -2,29 +2,57 @@
 #include <QLabel>
 #include <QVBoxLayout>
 
-#include <NickelHook.h>
-
 #include "../files.h"
 #include "../widgets/elidedlabel.h"
 #include "journalentry.h"
 
 JournalEntry::JournalEntry(QJsonObject doc, QWidget *parent) : QFrame(parent) {
   setStyleSheet(R"(
+    [qApp_deviceIsTrilogy=true] JournalEntry {
+      padding: 12px 0;
+    }
+    [qApp_deviceIsPhoenix=true] JournalEntry {
+      padding: 16px 0;
+    }
+    [qApp_deviceIsDragon=true] JournalEntry {
+      padding: 22px 0;
+    }
+    [qApp_deviceIsStorm=true] JournalEntry {
+      padding: 25px 0;
+    }
+    [qApp_deviceIsDaylight=true] JournalEntry {
+      padding: 28px 0;
+    }
+
+    [qApp_deviceIsTrilogy=true] QLabel#actionAt {
+      font-size: 14px;
+    }
+    [qApp_deviceIsPhoenix=true] QLabel#actionAt {
+      font-size: 18px;
+    }
+    [qApp_deviceIsDragon=true] QLabel#actionAt {
+      font-size: 21px;
+    }
+    [qApp_deviceIsAlyssum=true] QLabel#actionAt,
+    [qApp_deviceIsNova=true] QLabel#actionAt,
+    [qApp_deviceIsStorm=true] QLabel#actionAt {
+      font-size: 25px;
+    }
+    [qApp_deviceIsDaylight=true] QLabel#actionAt {
+      font-size: 28px;
+    }
+
     JournalEntry {
-      border-bottom: 1px solid #111111;
-      padding: 16px;
+      border-top: 1px solid #666666;
     }
 
-    QLabel#actionAt {
-      font-size: 8pt;
-    }
-
-    QLabel#label {
-      font-size: 10pt;
+    JournalEntry#first {
+      border-top-width: 0;
     }
   )");
 
   QVBoxLayout *layout = new QVBoxLayout(this);
+  layout->setContentsMargins(0, 0, 0, 0);
 
   QString event = doc.value("event").toString();
 
@@ -33,7 +61,7 @@ JournalEntry::JournalEntry(QJsonObject doc, QWidget *parent) : QFrame(parent) {
   QLabel *icon = new QLabel(this);
   line->addWidget(icon);
   QLabel *label = new QLabel(this);
-  label->setObjectName("label");
+  label->setObjectName("small");
   line->addWidget(label, 1);
 
   if (event == "status_want_to_read") {
@@ -66,12 +94,14 @@ JournalEntry::JournalEntry(QJsonObject doc, QWidget *parent) : QFrame(parent) {
     label->setText("Saved a Note");
 
     ElidedLabel *text = new ElidedLabel(doc.value("entry").toString(), 5, this);
+    text->setObjectName("regular");
     layout->addWidget(text);
   } else if (event == "quote") {
     icon->setPixmap(QPixmap(Files::quote));
     label->setText("Saved a Quote");
 
     ElidedLabel *text = new ElidedLabel(doc.value("entry").toString(), 5, this);
+    text->setObjectName("regular");
     layout->addWidget(text);
   } else if (event == "reviewed") {
     icon->setPixmap(QPixmap(Files::reviewed));
@@ -79,6 +109,7 @@ JournalEntry::JournalEntry(QJsonObject doc, QWidget *parent) : QFrame(parent) {
 
     QJsonObject metadata = doc.value("metadata").toObject();
     ElidedLabel *text = new ElidedLabel(metadata.value("review").toString(), 5, this);
+    text->setObjectName("regular");
     layout->addWidget(text);
   } else {
     label->setText("Unknown journal type " + event);

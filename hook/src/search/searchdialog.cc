@@ -84,7 +84,7 @@ void SearchDialog::requestPage(int index) {
 }
 
 void SearchDialog::response(QJsonObject doc) {
-  pages->total = doc.value("total").toInt(1);
+  pages->setTotal(doc.value("total").toInt(1));
 
   QJsonArray resultsArray = doc.value("results").toArray();
   int length = resultsArray.size();

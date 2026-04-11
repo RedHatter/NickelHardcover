@@ -1,10 +1,4 @@
-#include <QApplication>
 #include <QJsonArray>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QScreen>
-#include <QTextEdit>
-#include <QTimer>
 #include <QVBoxLayout>
 
 #include <NickelHook.h>
@@ -17,9 +11,28 @@
 void JournalDialog::show() { new JournalDialog(); }
 
 JournalDialog::JournalDialog() : Dialog("Reading Journal") {
+  setStyleSheet(R"(
+    [qApp_deviceIsTrilogy=true] QStackedWidget {
+      margin: 0 12px;
+    }
+    [qApp_deviceIsPhoenix=true] QStackedWidget {
+      margin: 0 16px;
+    }
+    [qApp_deviceIsDragon=true] QStackedWidget {
+      margin: 0 22px;
+    }
+    [qApp_deviceIsStorm=true] QStackedWidget {
+      margin: 0 25px;
+    }
+    [qApp_deviceIsDaylight=true] QStackedWidget {
+      margin: 0 28px;
+    }
+  )");
+
   N3Dialog__enableFullViewMode(dialog);
 
   QVBoxLayout *layout = new QVBoxLayout(this);
+  layout->setContentsMargins(0, 0, 0, 0);
 
   N3ButtonLabel *button = reinterpret_cast<N3ButtonLabel *>(calloc(1, 512));
   N3ButtonLabel__constructor(button, this);
@@ -52,6 +65,7 @@ void JournalDialog::requestPage(int index) {
 void JournalDialog::response(QJsonObject doc) {
   QWidget *box = new QWidget(this);
   QVBoxLayout *rows = new QVBoxLayout(box);
+  rows->setContentsMargins(0, 0, 0, 0);
   rows->setSpacing(0);
 
   QJsonArray results = doc.value("reading_journals").toArray();
@@ -61,7 +75,10 @@ void JournalDialog::response(QJsonObject doc) {
   int i = 0;
   for (; i < length; i++) {
     QJsonObject obj = results.at(i).toObject();
-    JournalEntry *entry = new JournalEntry(obj, this);
+    JournalEntry *entry = new JournalEntry(obj, pages);
+    if (i == 0) {
+      entry->setObjectName("first");
+    }
 
     availableHeight -= entry->sizeHint().height();
     if (availableHeight < 0)
@@ -73,10 +90,9 @@ void JournalDialog::response(QJsonObject doc) {
   offset += i;
 
   rows->addStretch(1);
+  pages->addPage(box);
 
   if (i == length) {
-    pages->total = pages->countPages();
+    pages->setTotal(pages->countPages());
   }
-
-  pages->addPage(box);
 };

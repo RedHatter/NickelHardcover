@@ -213,7 +213,7 @@ QWidget *BookRow::buildAuthor(QJsonObject json) {
     return nullptr;
 
   ElidedLabel *label = new ElidedLabel(authorList.join(", "));
-  label->setObjectName("regular");
+  label->setObjectName("small");
   return label;
 }
 
@@ -236,7 +236,7 @@ QWidget *BookRow::buildMeta(QJsonObject json) {
   }
 
   ElidedLabel *label = new ElidedLabel(meta.join(" • "));
-  label->setObjectName("regular");
+  label->setObjectName("small");
   return label;
 }
 

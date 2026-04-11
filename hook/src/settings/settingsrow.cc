@@ -22,11 +22,14 @@ SettingsRow::SettingsRow(QString heading, SettingsRowType type, QList<Item> menu
   layout->addWidget(row);
 
   QHBoxLayout *rowLayout = new QHBoxLayout(row);
-  rowLayout->addWidget(new QLabel(heading), 1);
   rowLayout->setContentsMargins(0, 0, 0, 0);
+  QLabel *headingLabel = new QLabel(heading);
+  headingLabel->setObjectName("regular");
+  rowLayout->addWidget(headingLabel, 1);
 
   label = new QLabel("Unset");
-  label->setObjectName("value");
+  label->setObjectName("regular");
+  label->setStyleSheet("font-style: italic;");
   rowLayout->addWidget(label);
   QObject::connect(row, SIGNAL(tapped()), this, SLOT(tapped()));
 
@@ -86,12 +89,12 @@ void SettingsRow::openDialog() {
   QLabel *rejectButton = dialog->findChild<QLabel *>("rejectButton");
   rejectButton->setText("Cancel");
   rejectButton->show();
-  QWidget::connect(rejectButton, SIGNAL(tapped(bool)), dialog, SLOT(deleteLater()));
+  QObject::connect(rejectButton, SIGNAL(tapped(bool)), dialog, SLOT(deleteLater()));
 
   QLabel *acceptButton = dialog->findChild<QLabel *>("acceptButton");
   acceptButton->setText("Set");
   acceptButton->show();
-  QWidget::connect(acceptButton, SIGNAL(tapped(bool)), this, SLOT(accept()));
+  QObject::connect(acceptButton, SIGNAL(tapped(bool)), this, SLOT(accept()));
 
   dialog->findChild<QFrame *>("bottomLine")->show();
   dialog->findChild<QFrame *>("topLine")->show();
@@ -103,6 +106,7 @@ void SettingsRow::openDialog() {
   layout->addLayout(row);
 
   dialogLabel = new QLabel(dialogItems.at(0).text);
+  dialogLabel->setObjectName("regular");
   dialogLabel->setAlignment(Qt::AlignCenter);
   row->addWidget(dialogLabel, 1);
 
