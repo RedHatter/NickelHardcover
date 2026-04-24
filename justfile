@@ -4,38 +4,40 @@ set dotenv-load := true
 default:
   @{{just_executable()}} --list --justfile {{justfile()}}
 
-# Cross compile SyncController for Kobo
+# Render modfied svgs to png
 [group('build')]
-[working-directory: 'cli']
-build-cli:
-  docker pull ewpratten/kobo-cross-armhf:latest || podman pull ewpratten/kobo-cross-armhf:latest
-  CROSS_CONTAINER_OPTS="--env VERSION=$(git describe --tags --long)" cross build --release --target arm-unknown-linux-musleabihf
-
-# Cross compile nickel hook for Kobo
-[group('build')]
-[working-directory: 'hook']
-build-hook:
-  PATH=../bin:$PATH VERSION=$(git describe --tags --long) make
-
-# Cross compile all code for Kobo
-build: build-hook build-cli
-
-# Use inkscape to export the svgs to png
-[group('package')]
 [working-directory: 'hook/res']
 build-res:
-  inkscape --export-type=png $(pwd)/*.svg
+  #!/usr/bin/env sh
+  for file in *.svg; do
+    output="${file%.svg}.png"
+    if [ ! -e "$output" -o "$file" -nt "$output" ]; then
+      echo "$output"
+      rsvg-convert "$file" --output "$output"
+    fi
+  done
+
+# Pepare the toolchain docker image
+[group('build')]
+build-tc:
+  docker build .forgejo/nickeltc --build-arg UID=$(id --user) --build-arg GID=$(id --group) --tag strayrose/nickeltc
+
+# Cross compile for Kobo
+[group('build')]
+build: build-res
+  docker run --volume="$PWD:$PWD" --workdir="$PWD" --rm strayrose/nickeltc \
+    sh -c "make --directory=hook && cd cli && VERSION=$(shell git describe --tags --long --dirty 2>/dev/null) cargo build --release --target=arm-unknown-linux-gnueabihf"
 
 # Package files into installable KoboRoot.tgz
 [group('package')]
-package: build-res build
+package: build
   #!/usr/bin/env sh
   mkdir KoboRoot
   cd KoboRoot
   mkdir -p usr/local/Kobo/imageformats/ mnt/onboard/.adds/NickelHardcover
-  cp ../hook/libhardcover.so                                                 usr/local/Kobo/imageformats/
-  cp ../cli/target/arm-unknown-linux-musleabihf/release/nickel-hardcover-cli mnt/onboard/.adds/NickelHardcover/cli
-  cp ../hook/res/config_example.ini                                          mnt/onboard/.adds/NickelHardcover
+  cp ../hook/libhardcover.so                                                usr/local/Kobo/imageformats/
+  cp ../cli/target/arm-unknown-linux-gnueabihf/release/nickel-hardcover-cli mnt/onboard/.adds/NickelHardcover/cli
+  cp ../hook/res/config_example.ini                                         mnt/onboard/.adds/NickelHardcover
   tar -vczf ../KoboRoot.tgz . | grep '[^/]$'
   cd ..
   rm -r KoboRoot

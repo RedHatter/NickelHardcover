@@ -206,7 +206,7 @@ QFrame *SettingsDialog::buildGeneral() {
   label->setObjectName("metaData");
   layout->addWidget(label);
 
-  StaticRow *row = new StaticRow("Version", VERSION, false);
+  StaticRow *row = new StaticRow("Version", NH_VERSION, false);
   layout->addWidget(row);
   row->setObjectName("first");
 
