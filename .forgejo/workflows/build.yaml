@@ -1,0 +1,22 @@
+on: [push]
+jobs:
+  build:
+    runs-on: codeberg-medium
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+          fetch-depth: 0
+          filter: tree:0
+          ref: ${{ github.ref }} # workaround for actions/checkout#1638
+      - uses: https://github.com/taiki-e/install-action@just
+      - run: apt-get -yq update && apt-get -yq install librsvg2-bin
+      - run: just build-res
+      - uses: ./.forgejo/nickeltc
+        with:
+          args: sh -c "make --directory=hook && cd cli && VERSION=$(shell git describe --tags --long --dirty 2>/dev/null) cargo build --release --target=arm-unknown-linux-gnueabihf"
+      - run: just --no-deps package
+      - uses: forgejo/upload-artifact@v5
+        with:
+          name: KoboRoot.tgz
+          path: KoboRoot.tgz

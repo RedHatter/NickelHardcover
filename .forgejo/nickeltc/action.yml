@@ -1,0 +1,11 @@
+name: "NickelTC"
+description: "Toolchain for Kobo eReaders"
+inputs:
+  args:
+    description: "The toolchain command to run"
+    required: true
+runs:
+  using: "docker"
+  image: "Dockerfile"
+  args:
+    - ${{ inputs.args }}
