@@ -1,6 +1,5 @@
 include ./NickelHook/NickelHook.mk
 
-override VERSION  := $(shell git describe --tags --long --dirty 2>/dev/null)
 override LIBRARY  := libhardcover.so
 override SOURCES  += $(wildcard src/*.cc src/**/*.cc)
 override CFLAGS   += -Wall -Wextra -Werror -Wno-missing-field-initializers -fvisibility=hidden

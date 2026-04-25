@@ -1,12 +1,12 @@
-set dotenv-load := true
+set dotenv-load
 
 [group('helpers')]
 default:
-  @{{just_executable()}} --list --justfile {{justfile()}}
+  @{{ just_executable() }} --list --justfile {{ justfile() }}
 
-# Render modfied svgs to png
+# Render modified svgs to png
 [group('build')]
-[working-directory: 'hook/res']
+[working-directory('hook/res')]
 build-res:
   #!/usr/bin/env sh
   for file in *.svg; do
@@ -17,7 +17,7 @@ build-res:
     fi
   done
 
-# Pepare the toolchain docker image
+# Prepare the toolchain docker image
 [group('build')]
 build-tc:
   docker build .forgejo/nickeltc --build-arg UID=$(id --user) --build-arg GID=$(id --group) --tag strayrose/nickeltc
@@ -25,8 +25,10 @@ build-tc:
 # Cross compile for Kobo
 [group('build')]
 build: build-res
-  docker run --volume="$PWD:$PWD" --workdir="$PWD" --rm strayrose/nickeltc \
-    sh -c "make --directory=hook && cd cli && VERSION=$(shell git describe --tags --long --dirty 2>/dev/null) cargo build --release --target=arm-unknown-linux-gnueabihf"
+  docker run --volume="$PWD:$PWD" --workdir="$PWD" --rm strayrose/nickeltc sh -c \
+    "export VERSION=$(shell git describe --tags --long --dirty 2>/dev/null) && \
+    make --directory=hook && cd cli && \
+    cargo build --release --target=arm-unknown-linux-gnueabihf"
 
 # Package files into installable KoboRoot.tgz
 [group('package')]
