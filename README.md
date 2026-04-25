@@ -1,36 +1,47 @@
+> [!NOTE]
+> The canonical location of this repo is on [codeberg.org](https://codeberg.org/StrayRose/NickelHardcover). For the best support, please consider open issues there.
+
 # NickelHardcover
+
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://codeberg.org/StrayRose/NickelHardcover/src/branch/main/LICENSE)
+[![Latest release](https://codeberg.org/StrayRose/NickelHardcover/badges/release.svg)](https://codeberg.org/StrayRose/NickelHardcover/releases/latest)
+[![donate](https://img.shields.io/badge/donate-%E2%9D%A4-F16061)](https://ko-fi.com/strayrose)
+
 [Hardcover.app](https://hardcover.app/) integration for Kobo eReaders.
 
 Thanks to **pgaskin** for the [NickelHook](https://github.com/pgaskin/NickelHook) library and [NickelTC](https://github.com/pgaskin/NickelTC) toolchain, without which this project would not be possible.
 
 **Warning: Firmware version 5.x is not supported yet.**
 
-<img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/syncing.png?raw=true" alt="Syncing with hardcover tooltip" width="32%"> <img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/review.png?raw=true" alt="Review dialog" width="32%"> <img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/journal.png?raw=true" alt="Reading journal dialog" width="32%">
-<img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/menu.png?raw=true" alt="NickelHardcover menu" width="24%"> <img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/status.png?raw=true" alt="Reading status menu" width="24%"> <img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/linking.png?raw=true" alt="Manually linking dialog" width="24%"> <img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/settings.png?raw=true" alt="Settings dialog" width="24%">
+<img src="https://codeberg.org/StrayRose/NickelHardcover/raw/branch/main/screenshots/syncing.png" alt="Syncing with hardcover tooltip" width="32%"> <img src="https://codeberg.org/StrayRose/NickelHardcover/raw/branch/main/screenshots/review.png" alt="Review dialog" width="32%"> <img src="https://codeberg.org/StrayRose/NickelHardcover/raw/branch/main/screenshots/journal.png" alt="Reading journal dialog" width="32%">
+<img src="https://codeberg.org/StrayRose/NickelHardcover/raw/branch/main/screenshots/menu.png?" alt="NickelHardcover menu" width="24%"> <img src="https://codeberg.org/StrayRose/NickelHardcover/raw/branch/main/screenshots/status.png" alt="Reading status menu" width="24%"> <img src="https://codeberg.org/StrayRose/NickelHardcover/raw/branch/main/screenshots/linking.png" alt="Manually linking dialog" width="24%"> <img src="https://codeberg.org/StrayRose/NickelHardcover/raw/branch/main/screenshots/settings.png" alt="Settings dialog" width="24%">
 
 ## Features
 
-* Automatically update reading progress on Hardcover
-* Automatically add Kobo annotations as Hardcover reading journal entries
-* Review and rate books
-* View reading journal and add new entries
-* Update book status
+- Automatically update reading progress on Hardcover
+- Automatically add Kobo annotations as Hardcover reading journal entries
+- Review and rate books
+- View reading journal and add new entries
+- Update book status
 
 ## FAQ
 
-* **Is my device supported?**  
+- **Is my device supported?**  
   All Kobo devices except the Kobo Mini (2012) are supported. Please make sure your device is fully up to date.
-* **Do I need to install NickelMenu as well?**  
+
+- **Do I need to install NickelMenu as well?**  
   No. NickelHardcover does not make use of NickelMenu.
-* **Why is it called NickelHardcover then?**  
+
+- **Why is it called NickelHardcover then?**  
   The Kobo UI is internally referred to as Nickel on the device. The name is simply referencing the fact that this is a mod to the native UI.
-* **Can you add support for X feature?**  
-  Maybe. [Open a new issue](https://github.com/RedHatter/NickelHardcover/issues/new) and ask, be sure to provide your use case.
+
+- **Can you add support for X feature?**  
+  Maybe. [Open a new issue](https://codeberg.org/StrayRose/NickelHardcover/issues/new) and ask, be sure to provide your use case.
 
 ## Installation
 
-1. Download the latest release from the [releases page](https://github.com/RedHatter/NickelHardcover/releases)
-2. Copy the *KoboRoot.tgz* file to the `.kobo` directory on your Kobo
+1. Download the latest release from the [releases page](https://codeberg.org/StrayRose/NickelHardcover/releases)
+2. Copy the _KoboRoot.tgz_ file to the `.kobo` directory on your Kobo
 3. Eject/disconnect your Kobo, and it should automatically reboot
 
 ## Configuration
@@ -38,8 +49,8 @@ Thanks to **pgaskin** for the [NickelHook](https://github.com/pgaskin/NickelHook
 To function, NickelHardcover needs to be configured with an authorization token from your Hardcover.app account.
 
 1. Visit [hardcover.app/account/api](https://hardcover.app/account/api) and sign in
-2. Copy the contents of the text box starting with "Bearer”
-![Authorization token](https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/authorization_token.png?raw=true)
+2. Copy the contents of the text box starting with "Bearer”  
+   ![Authorization token](https://codeberg.org/StrayRose/NickelHardcover/raw/branch/main/screenshots/authorization_token.png)
 3. Connect your Kobo and edit the file `.adds/NickelHardcover/config_example.ini`
 4. On the second line, labeled "authorization”, remove the starting semicolon and paste the token (copied in step 2) after the equals sign
 5. Modify any other settings to suit your preferences
@@ -86,7 +97,7 @@ While a book is open, you should find a new menu on the top right where all the 
 
 NickelHardcover attempts to determine which book to update on Hardcover using the ISBN of the open book. If that fails, or you would like more control, the "Manually link book” menu option allows you to manually select which book to update. The edition of the active read can be changed on the Hardcover book page under the description.
 
-<img src="https://github.com/RedHatter/NickelHardcover/blob/main/screenshots/edition.png?raw=true" alt="Changing edition" width="400">
+<img src="https://codeberg.org/StrayRose/NickelHardcover/raw/branch/main/screenshots/edition.png" alt="Changing edition" width="400">
 
 ### Syncing
 
