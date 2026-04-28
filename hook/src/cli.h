@@ -32,6 +32,7 @@ private:
   CLI(QStringList arguments, bool silent = false, QObject *parent = nullptr);
 
   QLabel *wifiIcon = nullptr;
+  QTimer *timer = nullptr;
   QStringList arguments;
   bool silent = false;
 };

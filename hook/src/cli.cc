@@ -1,5 +1,6 @@
 #include <QJsonDocument>
 #include <QProcess>
+#include <QTimer>
 
 #include <NickelHook.h>
 
@@ -98,6 +99,11 @@ CLI::CLI(QStringList arguments, bool silent, QObject *parent) : QObject(parent),
     wifiIcon->move(window->width() - 144, window->height() - 144);
     wifiIcon->show();
 
+    timer = new QTimer(this);
+    connect(timer, &QTimer::timeout, this, &CLI::connectingFailed);
+    timer->setSingleShot(true);
+    timer->start(30000);
+
     WirelessManager *wm = WirelessManager__sharedInstance();
     QObject::connect(wm, SIGNAL(networkConnected()), this, SLOT(networkConnected()));
 
@@ -116,7 +122,16 @@ void CLI::connectingFailed() {
     ConfirmationDialogFactory__showErrorDialog("Hardcover.app", "Failed to connect to WIFI.");
   }
 
-  wifiIcon->deleteLater();
+  if (timer != nullptr) {
+    timer->stop();
+    timer->deleteLater();
+    timer = nullptr;
+  }
+
+  if (wifiIcon != nullptr) {
+    wifiIcon->deleteLater();
+    wifiIcon = nullptr;
+  }
   deleteLater();
   failure();
 }
@@ -124,7 +139,17 @@ void CLI::connectingFailed() {
 void CLI::networkConnected() {
   nh_log("CLI::networkConnected()");
 
-  wifiIcon->deleteLater();
+  if (timer != nullptr) {
+    timer->stop();
+    timer->deleteLater();
+    timer = nullptr;
+  }
+
+  if (wifiIcon != nullptr) {
+    wifiIcon->deleteLater();
+    wifiIcon = nullptr;
+  }
+
   QProcess *process = new QProcess(this);
   process->start(Files::cli, arguments);
   QObject::connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &CLI::processFinished);
