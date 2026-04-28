@@ -13,14 +13,16 @@ public:
 public Q_SLOTS:
   void buildPages();
 
-  void setAutoSyncDefault(QVariant value);
+  void setAutoSyncDefault(bool value);
   void setSyncBookmarks(QVariant value);
   void setSyncDaily(QVariant value);
   void setCloseThreshold(QVariant value);
   void setPageThreshold(QVariant value);
 
+  void setDebug(bool value);
+  void saveLogs();
+
   void clearLastSynced();
-  void clearLastProgress();
 
   void setUsername(QJsonObject doc);
 
@@ -33,4 +35,5 @@ private:
   QFrame *buildGeneral();
   QFrame *buildAutoSync();
   QFrame *buildInformation();
+  QFrame *buildAdvanced();
 };

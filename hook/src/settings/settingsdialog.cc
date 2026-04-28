@@ -6,8 +6,9 @@
 #include "../cli.h"
 #include "../settings.h"
 #include "../synccontroller.h"
+#include "checkboxrow.h"
+#include "menurow.h"
 #include "settingsdialog.h"
-#include "settingsrow.h"
 #include "staticrow.h"
 
 void SettingsDialog::show() { new SettingsDialog(); }
@@ -128,6 +129,10 @@ SettingsDialog::SettingsDialog() : Dialog("Settings") {
       padding-bottom: 28px;
     }
 
+    SettingContainer QCheckBox {
+      padding: 0px;
+    }
+
     QLabel {
       qproperty-indent: 0;
     }
@@ -168,7 +173,7 @@ void SettingsDialog::buildPages() {
   rows->setSpacing(0);
   rows->setContentsMargins(0, 0, 0, 0);
 
-  QList<QFrame *> sections = {buildGeneral(), buildAutoSync(), buildInformation()};
+  QList<QFrame *> sections = {buildGeneral(), buildAutoSync(), buildInformation(), buildAdvanced()};
   int availableHeight = pages->getAvailableHeight();
   int pageHeight = 0;
 
@@ -216,17 +221,15 @@ QFrame *SettingsDialog::buildGeneral() {
   CLI *cli = CLI::getUser();
   QObject::connect(cli, &CLI::response, this, &SettingsDialog::setUsername);
 
-  SettingsRow *menuRow =
-      new SettingsRow("Enable auto-sync by default", SettingsRowType::Toggle, {Item{"Yes", true}, Item{"No", false}},
-                      {}, Settings::getInstance()->getAutoSyncDefault());
-  QObject::connect(menuRow, &SettingsRow::triggered, this, &SettingsDialog::setAutoSyncDefault);
-  layout->addWidget(menuRow);
+  CheckboxRow *checkboxRow = new CheckboxRow("Auto-sync by default", Settings::getInstance()->getAutoSyncDefault());
+  QObject::connect(checkboxRow, &CheckboxRow::triggered, this, &SettingsDialog::setAutoSyncDefault);
+  layout->addWidget(checkboxRow);
 
-  menuRow =
-      new SettingsRow("Sync annotations to reading journal", SettingsRowType::Menu,
-                      {Item{"Always", "always"}, Item{"Never", "never"}, Item{"Once the book is finished", "finished"}},
-                      {}, Settings::getInstance()->getSyncBookmarks());
-  QObject::connect(menuRow, &SettingsRow::triggered, this, &SettingsDialog::setSyncBookmarks);
+  MenuRow *menuRow =
+      new MenuRow("Sync annotations to reading journal", MenuRowType::Menu,
+                  {Item{"Always", "always"}, Item{"Never", "never"}, Item{"Once the book is finished", "finished"}}, {},
+                  Settings::getInstance()->getSyncBookmarks());
+  QObject::connect(menuRow, &MenuRow::triggered, this, &SettingsDialog::setSyncBookmarks);
   layout->addWidget(menuRow);
 
   return frame;
@@ -259,10 +262,11 @@ QFrame *SettingsDialog::buildAutoSync() {
     hours.append(Item{text, hour});
   }
 
-  SettingsRow *menuRow = new SettingsRow("Once per day", SettingsRowType::Menu,
-                                         {Item{"Never", 0}, Item{"Set time of day", SettingsRow::OPEN_DIALOG}}, hours,
-                                         Settings::getInstance()->getSyncDaily());
-  QObject::connect(menuRow, &SettingsRow::triggered, this, &SettingsDialog::setSyncDaily);
+  Settings *settings = Settings::getInstance();
+  MenuRow *menuRow =
+      new MenuRow("Once per day", MenuRowType::Menu, {Item{"Never", 0}, Item{"Set time of day", MenuRow::OPEN_DIALOG}},
+                  hours, settings->getSyncDaily());
+  QObject::connect(menuRow, &MenuRow::triggered, this, &SettingsDialog::setSyncDaily);
   layout->addWidget(menuRow);
   menuRow->setObjectName("first");
 
@@ -271,16 +275,16 @@ QFrame *SettingsDialog::buildAutoSync() {
     thresholdItems.append(Item{QString::number(i).append("%"), i});
   }
 
-  menuRow = new SettingsRow("After closing a book or the Kobo is put to sleep", SettingsRowType::Menu,
-                            {Item{"Always", 1}, Item{"Never", 0}, Item{"Set a threshold", SettingsRow::OPEN_DIALOG}},
-                            thresholdItems, QVariant(Settings::getInstance()->getCloseThreshold()));
-  QObject::connect(menuRow, &SettingsRow::triggered, this, &SettingsDialog::setCloseThreshold);
+  menuRow = new MenuRow("After closing a book or the Kobo is put to sleep", MenuRowType::Menu,
+                        {Item{"Always", 1}, Item{"Never", 0}, Item{"Set a threshold", MenuRow::OPEN_DIALOG}},
+                        thresholdItems, QVariant(settings->getCloseThreshold()));
+  QObject::connect(menuRow, &MenuRow::triggered, this, &SettingsDialog::setCloseThreshold);
   layout->addWidget(menuRow);
 
-  menuRow = new SettingsRow("Periodically by read percentage", SettingsRowType::Menu,
-                            {Item{"Never", 0}, Item{"Set a threshold", SettingsRow::OPEN_DIALOG}}, thresholdItems,
-                            QVariant(Settings::getInstance()->getPageThreshold()));
-  QObject::connect(menuRow, &SettingsRow::triggered, this, &SettingsDialog::setPageThreshold);
+  menuRow = new MenuRow("Periodically by read percentage", MenuRowType::Menu,
+                        {Item{"Never", 0}, Item{"Set a threshold", MenuRow::OPEN_DIALOG}}, thresholdItems,
+                        QVariant(settings->getPageThreshold()));
+  QObject::connect(menuRow, &MenuRow::triggered, this, &SettingsDialog::setPageThreshold);
   layout->addWidget(menuRow);
 
   return frame;
@@ -296,31 +300,53 @@ QFrame *SettingsDialog::buildInformation() {
   label->setObjectName("metaData");
   layout->addWidget(label);
 
-  QDateTime alarm = SyncController::getInstance()->getAlarm();
+  SyncController *ctl = SyncController::getInstance();
+  QDateTime alarm = ctl->getAlarm();
   StaticRow *row =
       new StaticRow("Auto-sync scheduled for", alarm.isValid() ? alarm.toLocalTime().toString() : "Never", false);
   layout->addWidget(row);
   row->setObjectName("first");
 
-  QString contentId = SyncController::getInstance()->contentId;
-  QString lastSynced = Settings::getInstance()->getLastSynced(contentId);
+  row = new StaticRow("Current progress", QString::number(ctl->getReadProgress()).append("%"), false);
+  layout->addWidget(row);
+
+  QString lastSynced = Settings::getInstance()->getLastSynced(ctl->contentId);
+  lastSynced = lastSynced.isEmpty() ? "Never" : QDateTime::fromString(lastSynced, Qt::ISODate).toLocalTime().toString();
   row = new StaticRow(
-      "Last synced at",
-      lastSynced.isEmpty() ? "Never" : QDateTime::fromString(lastSynced, Qt::ISODate).toLocalTime().toString(), true);
+      "Last synced",
+      QString::number(Settings::getInstance()->getLastProgress(ctl->contentId)).append("% at ").append(lastSynced),
+      true);
   layout->addWidget(row);
   QObject::connect(row, &StaticRow::clear, this, &SettingsDialog::clearLastSynced);
 
-  row = new StaticRow("Last synced progress",
-                      QString::number(Settings::getInstance()->getLastProgress(contentId)).append("%"), true);
-  layout->addWidget(row);
-  QObject::connect(row, &StaticRow::clear, this, &SettingsDialog::clearLastProgress);
+  return frame;
+}
+
+QFrame *SettingsDialog::buildAdvanced() {
+  QFrame *frame = new QFrame(this);
+  QVBoxLayout *layout = new QVBoxLayout(frame);
+  layout->setSpacing(0);
+  layout->setContentsMargins(0, 0, 0, 0);
+
+  QLabel *label = new QLabel("Advanced");
+  label->setObjectName("metaData");
+  layout->addWidget(label);
+
+  CheckboxRow *checkboxRow = new CheckboxRow("Debug logs", Settings::getInstance()->getDebug());
+  QObject::connect(checkboxRow, &CheckboxRow::triggered, this, &SettingsDialog::setAutoSyncDefault);
+  layout->addWidget(checkboxRow);
+  checkboxRow->setObjectName("first");
+
+  MenuRow *menuRow = new MenuRow("Save system logs", MenuRowType::Tap, {Item{"Save", true}}, {}, true);
+  QObject::connect(menuRow, &MenuRow::triggered, this, &SettingsDialog::saveLogs);
+  layout->addWidget(menuRow);
 
   return frame;
 }
 
 void SettingsDialog::setUsername(QJsonObject doc) { username->setValue(doc.value("username").toString().prepend("@")); }
 
-void SettingsDialog::setAutoSyncDefault(QVariant value) { Settings::getInstance()->setAutoSyncDefault(value.toBool()); }
+void SettingsDialog::setAutoSyncDefault(bool value) { Settings::getInstance()->setAutoSyncDefault(value); }
 
 void SettingsDialog::setSyncBookmarks(QVariant value) { Settings::getInstance()->setSyncBookmarks(value.toString()); }
 
@@ -332,18 +358,16 @@ void SettingsDialog::setPageThreshold(QVariant value) { Settings::getInstance()-
 
 void SettingsDialog::clearLastSynced() {
   QString contentId = SyncController::getInstance()->contentId;
-  Settings::getInstance()->setLastSynced(contentId, QString());
+  Settings *settings = Settings::getInstance();
+  settings->setLastSynced(contentId, QString());
+  settings->setLastProgress(contentId, 0);
 
   StaticRow *row = qobject_cast<StaticRow *>(sender());
-  QString lastSynced = Settings::getInstance()->getLastSynced(contentId);
-  row->setValue(lastSynced.isEmpty() ? "Never"
-                                     : QDateTime::fromString(lastSynced, Qt::ISODate).toLocalTime().toString());
+  QString lastSynced = settings->getLastSynced(contentId);
+  lastSynced = lastSynced.isEmpty() ? "Never" : QDateTime::fromString(lastSynced, Qt::ISODate).toLocalTime().toString();
+  row->setValue(QString::number(settings->getLastProgress(contentId)).append("% at ").append(lastSynced));
 }
 
-void SettingsDialog::clearLastProgress() {
-  QString contentId = SyncController::getInstance()->contentId;
-  Settings::getInstance()->setLastProgress(contentId, 0);
+void SettingsDialog::setDebug(bool value) { Settings::getInstance()->setDebug(value); }
 
-  StaticRow *row = qobject_cast<StaticRow *>(sender());
-  row->setValue(QString::number(Settings::getInstance()->getLastProgress(contentId)).append("%"));
-}
+void SettingsDialog::saveLogs() { nh_dump_log(); }

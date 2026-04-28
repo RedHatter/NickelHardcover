@@ -4,8 +4,10 @@
 #include <QVariant>
 #include <QWidget>
 
-enum SettingsRowType {
-  Toggle,
+#include "../nickelhardcover.h"
+
+enum MenuRowType {
+  Tap,
   Menu,
   Dialog,
 };
@@ -15,12 +17,12 @@ struct Item {
   QVariant value;
 };
 
-class SettingsRow : public QWidget {
+class MenuRow : public QWidget {
   Q_OBJECT
 
 public:
-  SettingsRow(QString heading, SettingsRowType type, QList<Item> menuItems, QList<Item> dialogItems,
-              QVariant defaultValue, QWidget *parent = nullptr);
+  MenuRow(QString heading, MenuRowType type, QList<Item> menuItems, QList<Item> dialogItems, QVariant defaultValue,
+          QWidget *parent = nullptr);
 
   static QVariant OPEN_DIALOG;
 
@@ -34,7 +36,7 @@ Q_SIGNALS:
   void triggered(QVariant value);
 
 private:
-  SettingsRowType type;
+  MenuRowType type;
   QLabel *label = nullptr;
   QLabel *dialogLabel = nullptr;
   QList<Item> menuItems;

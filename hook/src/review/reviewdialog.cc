@@ -89,14 +89,14 @@ void ReviewDialog::response(QJsonObject doc) {
 
   // Has spoilers
   TouchCheckBox *checkbox = construct_TouchCheckBox(this);
-  checkbox->setCheckState(spoilers ? Qt::Checked : Qt::Unchecked);
+  checkbox->setChecked(spoilers);
   checkbox->setText("This review contains spoilers");
   column->addWidget(checkbox);
   QObject::connect(checkbox, &QCheckBox::stateChanged, this, &ReviewDialog::setSpoilers);
 
   // Is sponsored
   checkbox = construct_TouchCheckBox(this);
-  checkbox->setCheckState(sponsored ? Qt::Checked : Qt::Unchecked);
+  checkbox->setChecked(sponsored);
   checkbox->setText("Sponsored or ARC Review");
   column->addWidget(checkbox);
   QObject::connect(checkbox, &QCheckBox::stateChanged, this, &ReviewDialog::setSponsored);

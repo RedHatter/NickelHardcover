@@ -5,13 +5,12 @@
 #include <NickelHook.h>
 
 #include "../files.h"
-#include "../nickelhardcover.h"
-#include "settingsrow.h"
+#include "menurow.h"
 
-QVariant SettingsRow::OPEN_DIALOG = QVariant("OPEN_DIALOG");
+QVariant MenuRow::OPEN_DIALOG = QVariant("OPEN_DIALOG");
 
-SettingsRow::SettingsRow(QString heading, SettingsRowType type, QList<Item> menuItems, QList<Item> dialogItems,
-                         QVariant defaultValue, QWidget *parent)
+MenuRow::MenuRow(QString heading, MenuRowType type, QList<Item> menuItems, QList<Item> dialogItems,
+                 QVariant defaultValue, QWidget *parent)
     : QWidget(parent), type(type), menuItems(menuItems), dialogItems(dialogItems) {
   QVBoxLayout *layout = new QVBoxLayout(this);
   layout->setSpacing(0);
@@ -30,9 +29,10 @@ SettingsRow::SettingsRow(QString heading, SettingsRowType type, QList<Item> menu
   label->setObjectName("regular");
   label->setStyleSheet("font-style: italic;");
   rowLayout->addWidget(label);
+
   QObject::connect(row, SIGNAL(tapped()), this, SLOT(tapped()));
 
-  if (type == SettingsRowType::Menu) {
+  if (type == MenuRowType::Menu) {
     QLabel *icon = new QLabel();
     icon->setPixmap(QPixmap(Files::arrow_menu));
     rowLayout->addWidget(icon);
@@ -57,29 +57,32 @@ SettingsRow::SettingsRow(QString heading, SettingsRowType type, QList<Item> menu
   }
 }
 
-void SettingsRow::tapped() {
+void MenuRow::tapped() {
+  nh_log("MenuRow::tapped()");
+
   switch (type) {
-  case SettingsRowType::Dialog:
+  case MenuRowType::Tap:
+    setItem(menuItems.at(0));
+    break;
+
+  case MenuRowType::Dialog:
     openDialog();
     break;
 
-  case SettingsRowType::Menu:
+  case MenuRowType::Menu:
     openMenu();
-    break;
-
-  case SettingsRowType::Toggle:
-    setItem(item.value == menuItems.at(0).value ? menuItems.at(1) : menuItems.at(0));
     break;
   }
 }
 
-void SettingsRow::setItem(Item item) {
+void MenuRow::setItem(Item item) {
   this->item = item;
   label->setText(item.text);
+
   triggered(item.value);
 }
 
-void SettingsRow::openDialog() {
+void MenuRow::openDialog() {
   ConfirmationDialog *dialog = ConfirmationDialogFactory__getConfirmationDialog(this);
   QLabel *title = dialog->findChild<QLabel *>("title");
   title->setText("Enter a value");
@@ -137,8 +140,8 @@ void SettingsRow::openDialog() {
   dialog->open();
 }
 
-void SettingsRow::up() {
-  nh_log("SettingsRow::up()");
+void MenuRow::up() {
+  nh_log("MenuRow::up()");
 
   if (index < dialogItems.size() - 1) {
     index++;
@@ -149,8 +152,8 @@ void SettingsRow::up() {
   dialogLabel->setText(dialogItems.at(index).text);
 }
 
-void SettingsRow::down() {
-  nh_log("SettingsRow::down()");
+void MenuRow::down() {
+  nh_log("MenuRow::down()");
 
   if (index > 0) {
     index--;
@@ -161,9 +164,9 @@ void SettingsRow::down() {
   dialogLabel->setText(dialogItems.at(index).text);
 }
 
-void SettingsRow::accept() { setItem(dialogItems.at(index)); }
+void MenuRow::accept() { setItem(dialogItems.at(index)); }
 
-void SettingsRow::openMenu() {
+void MenuRow::openMenu() {
   NickelTouchMenu *menu = construct_NickelTouchMenu(label);
   NickelTouchMenu__showDecoration(menu, false);
   QWidget::connect(menu, &QMenu::aboutToHide, menu, &QWidget::deleteLater);
@@ -187,7 +190,7 @@ void SettingsRow::openMenu() {
     QObject::connect(action, &QAction::triggered, menu, &QMenu::hide);
     QObject::connect(menuItem, SIGNAL(tapped(bool)), action, SIGNAL(triggered()));
     QObject::connect(action, &QAction::triggered, [this, item]() {
-      if (item.value == SettingsRow::OPEN_DIALOG) {
+      if (item.value == MenuRow::OPEN_DIALOG) {
         openDialog();
       } else {
         setItem(item);

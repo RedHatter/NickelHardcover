@@ -128,3 +128,13 @@ int Settings::getPageThreshold() {
 }
 
 void Settings::setPageThreshold(int value) { config->setValue("threshold", value > 0 && value < 100 ? value : 0); }
+
+void Settings::setDebug(bool value) {
+  if (value) {
+    config->setValue("debug", value);
+  } else {
+    config->remove("debug");
+  }
+}
+
+bool Settings::getDebug() { return config->value("debug").toBool(); }

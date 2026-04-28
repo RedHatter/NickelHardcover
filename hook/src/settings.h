@@ -38,6 +38,9 @@ public:
   void setPageThreshold(int value);
   int getPageThreshold();
 
+  void setDebug(bool value);
+  bool getDebug();
+
 public Q_SLOTS:
   void currentViewChanged(QString name);
 
