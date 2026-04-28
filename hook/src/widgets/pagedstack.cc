@@ -145,18 +145,13 @@ void PagedStack::clear() {
   setCurrent(0);
 }
 
-int PagedStack::getAvailableHeight() {
-  nh_log("margin %d %d %d %d", stack->contentsMargins().top(), stack->layout()->contentsMargins().top(),
-         stack->contentsMargins().bottom(), stack->layout()->contentsMargins().bottom());
-  return stack->contentsRect().height();
-}
+int PagedStack::getAvailableHeight() { return stack->contentsRect().height(); }
 
 int PagedStack::countPages() { return stack->count() - 1; }
 
 void PagedStack::resizeEvent(QResizeEvent *event) {
   afterLayout();
   QWidget::resizeEvent(event);
-  nh_log("resize %d %d", getAvailableHeight(), stack->height());
 }
 
 QGridLayout *PagedStack::layout() const { return qobject_cast<QGridLayout *>(QWidget::layout()); }

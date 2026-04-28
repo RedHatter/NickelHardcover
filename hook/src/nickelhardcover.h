@@ -38,8 +38,8 @@ extern void (*ComboButton__addItem)(ComboButton *_this, QString const &label, QV
 extern void (*ComboButton__renameItem)(ComboButton *_this, int index, QString const &label);
 
 typedef QWidget KeyboardReceiver;
-KeyboardReceiver * construct_KeyboardReceiver(QLineEdit *lineEdit);
-KeyboardReceiver * construct_KeyboardReceiver(QTextEdit *textEdit);
+KeyboardReceiver *construct_KeyboardReceiver(QLineEdit *lineEdit);
+KeyboardReceiver *construct_KeyboardReceiver(QTextEdit *textEdit);
 
 typedef QWidget KeyboardFrame;
 typedef QObject SearchKeyboardController;
@@ -59,10 +59,10 @@ extern void (*N3Dialog__showKeyboard)(N3Dialog *__this);
 extern void (*N3Dialog__hideKeyboard)(N3Dialog *__this);
 
 typedef QLineEdit TouchLineEdit;
-TouchLineEdit* construct_TouchLineEdit(QWidget *parent);
+TouchLineEdit *construct_TouchLineEdit(QWidget *parent);
 
 typedef QWidget SettingContainer;
-SettingContainer* construct_SettingContainer(QWidget *parent);
+SettingContainer *construct_SettingContainer(QWidget *parent);
 
 typedef QLabel TouchLabel;
 TouchLabel *construct_TouchLabel(QWidget *parent);
@@ -73,14 +73,14 @@ N3ButtonLabel *construct_N3ButtonLabel(QWidget *parent);
 extern void (*N3ButtonLabel__setPrimaryButton)(N3ButtonLabel *_this, bool enabled);
 
 typedef QCheckBox TouchCheckBox;
-TouchCheckBox* construct_TouchCheckBox(QWidget *parent);
+TouchCheckBox *construct_TouchCheckBox(QWidget *parent);
 
 typedef QMenu NickelTouchMenu;
-NickelTouchMenu* construct_NickelTouchMenu(QWidget *parent);
+NickelTouchMenu *construct_NickelTouchMenu(QWidget *parent);
 extern void (*NickelTouchMenu__showDecoration)(NickelTouchMenu *_this, bool show);
 
 typedef QWidget MenuTextItem;
-MenuTextItem* construct_MenuTextItem(QWidget *parent, bool checkable, bool italic);
+MenuTextItem *construct_MenuTextItem(QWidget *parent, bool checkable, bool italic);
 extern void (*MenuTextItem__setText)(MenuTextItem *_this, QString const &text);
 extern void (*MenuTextItem__setSelected)(MenuTextItem *_this, bool selected);
 extern void (*MenuTextItem__registerForTapGestures)(MenuTextItem *_this);
@@ -90,6 +90,6 @@ TouchTextEdit *construct_TouchTextEdit(QWidget *parent);
 extern void (*TouchTextEdit__setCustomPlaceholderText)(TouchTextEdit *__this, QString const &text);
 
 typedef QObject PowerTimer;
-PowerTimer* construct_PowerTimer(QString const &name, QObject *parent);
+PowerTimer *construct_PowerTimer(QString const &name, QObject *parent);
 extern void (*PowerTimer__fireAt)(PowerTimer *__this, QDateTime const &datatime);
 extern int (*PowerTimer__timeRemaining)(PowerTimer *__this);
