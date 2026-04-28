@@ -54,7 +54,8 @@ void SyncQueue::prepareNext() {
     i.next();
 
     QString contentId = i.key();
-    if (Settings::getInstance()->isEnabled(contentId)) {
+    if (Settings::getInstance()->isEnabled(contentId) && queue[contentId] > 0) {
+      nh_log("Syncing %s", qPrintable(contentId));
       run(contentId);
     } else {
       nh_log("Removing %s from queue and skipping", qPrintable(contentId));
@@ -68,7 +69,10 @@ void SyncQueue::prepareNext() {
 }
 
 void SyncQueue::run(QString contentId, bool manual) {
-  if (queue[contentId] == 0) {
+  int progress = queue[contentId];
+  queue.remove(contentId);
+
+  if (progress == 0) {
     nh_log("Attempted to sync %s with no saved reading progress", qPrintable(contentId));
     ConfirmationDialogFactory__showErrorDialog("Hardcover.app", "Attempted to sync with no saved reading progress");
     return;
@@ -85,18 +89,16 @@ void SyncQueue::run(QString contentId, bool manual) {
 
   progressIcon->show();
 
-  if (queue[contentId] == 100) {
+  if (progress == 100) {
     Settings::getInstance()->setEnabled(contentId, false);
   }
 
-  Settings::getInstance()->setLastProgress(contentId, queue[contentId]);
+  Settings::getInstance()->setLastProgress(contentId, progress);
 
-  CLI *cli = CLI::update(contentId, queue[contentId], !manual);
-  queue.remove(contentId);
+  CLI *cli = CLI::update(contentId, progress, !manual);
   QObject::connect(cli, &CLI::success, this, &SyncQueue::success);
   QObject::connect(cli, &CLI::failure, this, &SyncQueue::closeDialog);
   QObject::connect(cli, &CLI::failure, this, &SyncQueue::finished);
-  queue.remove(contentId);
 }
 
 void SyncQueue::success() {
