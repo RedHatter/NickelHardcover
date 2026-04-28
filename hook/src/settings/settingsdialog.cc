@@ -221,7 +221,7 @@ QFrame *SettingsDialog::buildGeneral() {
   CLI *cli = CLI::getUser();
   QObject::connect(cli, &CLI::response, this, &SettingsDialog::setUsername);
 
-  CheckboxRow *checkboxRow = new CheckboxRow("Auto-sync by default", Settings::getInstance()->getAutoSyncDefault());
+  CheckboxRow *checkboxRow = new CheckboxRow("Enable auto-sync by default", Settings::getInstance()->getAutoSyncDefault());
   QObject::connect(checkboxRow, &CheckboxRow::triggered, this, &SettingsDialog::setAutoSyncDefault);
   layout->addWidget(checkboxRow);
 
@@ -302,20 +302,20 @@ QFrame *SettingsDialog::buildInformation() {
 
   SyncController *ctl = SyncController::getInstance();
   QDateTime alarm = ctl->getAlarm();
-  StaticRow *row =
-      new StaticRow("Auto-sync scheduled for", alarm.isValid() ? alarm.toLocalTime().toString() : "Never", false);
+  StaticRow *row = new StaticRow("Auto-sync scheduled for",
+                                 alarm.isValid() ? alarm.toLocalTime().toString() : "Never", false);
   layout->addWidget(row);
   row->setObjectName("first");
 
   row = new StaticRow("Current progress", QString::number(ctl->getReadProgress()).append("%"), false);
   layout->addWidget(row);
 
-  QString lastSynced = Settings::getInstance()->getLastSynced(ctl->contentId);
-  lastSynced = lastSynced.isEmpty() ? "Never" : QDateTime::fromString(lastSynced, Qt::ISODate).toLocalTime().toString();
-  row = new StaticRow(
-      "Last synced",
-      QString::number(Settings::getInstance()->getLastProgress(ctl->contentId)).append("% at ").append(lastSynced),
-      true);
+  int progress = Settings::getInstance()->getLastProgress(ctl->contentId);
+  QString time = Settings::getInstance()->getLastSynced(ctl->contentId);
+  QString lastSynced = progress <= 0 ? "" : QString::number(progress).append("% at ");
+  lastSynced =
+      lastSynced.append(time.isEmpty() ? "Never" : QDateTime::fromString(time, Qt::ISODate).toLocalTime().toString());
+  row = new StaticRow("Last synced", lastSynced, true);
   layout->addWidget(row);
   QObject::connect(row, &StaticRow::clear, this, &SettingsDialog::clearLastSynced);
 

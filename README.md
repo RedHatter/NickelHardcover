@@ -1,5 +1,5 @@
 > [!NOTE]
-> The canonical location of this repo is on [codeberg.org](https://codeberg.org/StrayRose/NickelHardcover). For the best support, please consider open issues there.
+> The canonical location of this repo is on [codeberg.org](https://codeberg.org/StrayRose/NickelHardcover). For the best support, please consider opening issues there.
 
 # NickelHardcover
 

@@ -14,7 +14,7 @@ jobs:
       - run: just build-res
       - uses: ./.forgejo/nickeltc
         with:
-          args: sh -c "export VERSION=$(shell git describe --tags --long --dirty 2>/dev/null) && make --directory=hook && cd cli && cargo build --release --target=arm-unknown-linux-gnueabihf"
+          args: sh -c "export VERSION=$(git describe --tags --long --dirty 2>/dev/null) && make --directory=hook && cd cli && cargo build --release --target=arm-unknown-linux-gnueabihf"
       - run: just --no-deps package
       - uses: forgejo/upload-artifact@v5
         with:

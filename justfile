@@ -26,7 +26,7 @@ build-tc:
 [group('build')]
 build: build-res
   docker run --volume="$PWD:$PWD" --workdir="$PWD" --rm strayrose/nickeltc sh -c \
-    "export VERSION=$(shell git describe --tags --long --dirty 2>/dev/null) && \
+    "export VERSION=$(git describe --tags --long --dirty 2>/dev/null) && \
     make --directory=hook && cd cli && \
     cargo build --release --target=arm-unknown-linux-gnueabihf"
 
