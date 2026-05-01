@@ -333,7 +333,7 @@ QFrame *SettingsDialog::buildAdvanced() {
   layout->addWidget(label);
 
   CheckboxRow *checkboxRow = new CheckboxRow("Debug logs", Settings::getInstance()->getDebug());
-  QObject::connect(checkboxRow, &CheckboxRow::triggered, this, &SettingsDialog::setAutoSyncDefault);
+  QObject::connect(checkboxRow, &CheckboxRow::triggered, this, &SettingsDialog::setDebug);
   layout->addWidget(checkboxRow);
   checkboxRow->setObjectName("first");
 
