@@ -58,7 +58,7 @@ async fn main() {
         eprintln!("{}", e);
       }
 
-      if let Err(e) = write_logfile(true) {
+      if let Err(e) = write_logfile() {
         eprintln!("{}", e);
       }
     }));
@@ -89,7 +89,7 @@ async fn main() {
   }
 
   if CONFIG.debug
-    && let Err(e) = write_logfile(false)
+    && let Err(e) = write_logfile()
   {
     eprintln!("{}", e);
   }

@@ -25,7 +25,7 @@ pub fn log(msg: String) -> Result<(), String> {
   Ok(())
 }
 
-pub fn write_logfile(include_time: bool) -> Result<(), String> {
+pub fn write_logfile() -> Result<(), String> {
   let current_exe = std::env::current_exe()
     .map_err(report("Failed to get current exe path"))
     .unwrap();
@@ -33,11 +33,7 @@ pub fn write_logfile(include_time: bool) -> Result<(), String> {
     .as_path()
     .parent()
     .expect("Failed to get current exe directory")
-    .join(if include_time {
-      Local::now().format("nickelhardcover_%Y-%m-%d_%H-%M-%S.log").to_string()
-    } else {
-      "nickelhardcover.log".into()
-    });
+    .join(Local::now().format("nickelhardcover_%Y-%m-%d_%H-%M-%S.log").to_string());
 
   write(file, LOG.lock().map_err(report("Failed to lock log"))?.as_str())
     .map_err(report("Failed to write log file"))?;
