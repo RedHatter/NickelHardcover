@@ -92,6 +92,10 @@ void Settings::setSyncBookmarks(QString value) { config->setValue("sync_bookmark
 
 QString Settings::getSyncBookmarks() { return config->value("sync_bookmarks", "never").toString(); }
 
+void Settings::setJournalPrivacy(QString value) { config->setValue("journal_privacy", value); }
+
+QString Settings::getJournalPrivacy() { return config->value("journal_privacy", "public").toString(); }
+
 void Settings::setCloseThreshold(int value) {
   QVariant realValue = "never";
 

@@ -89,6 +89,7 @@ mutation InsertReadingJournal(
   $book_id: Int!
   $edition_id: Int!
   $event: String!
+  $privacy_setting_id: Int!
   $entry: String!
   $action_at: date
   $metadata: jsonb
@@ -98,7 +99,7 @@ mutation InsertReadingJournal(
       book_id: $book_id
       edition_id: $edition_id
       event: $event
-      privacy_setting_id: 1
+      privacy_setting_id: $privacy_setting_id
       tags: { category: "", spoiler: false, tag: "" }
       entry: $entry
       action_at: $action_at

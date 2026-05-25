@@ -27,6 +27,30 @@ impl<'de> Deserialize<'de> for SyncBookmarks {
   }
 }
 
+#[derive(Clone, Copy, Serialize, PartialEq, Debug)]
+#[serde(rename_all = "lowercase")]
+pub enum JournalPrivacy {
+  Public = 1,
+  Followers,
+  Private,
+}
+
+impl<'de> Deserialize<'de> for JournalPrivacy {
+  fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+  where
+    D: Deserializer<'de>,
+  {
+    match String::deserialize(deserializer)? {
+      s if s.eq_ignore_ascii_case("Public") => Ok(JournalPrivacy::Public),
+      s if s.eq_ignore_ascii_case("Followers") => Ok(JournalPrivacy::Followers),
+      s if s.eq_ignore_ascii_case("Private") => Ok(JournalPrivacy::Private),
+      s => Err(de::Error::custom(format!(
+        "{s} is not a valid journal_privacy_default value"
+      ))),
+    }
+  }
+}
+
 #[derive(Serialize, PartialEq, Debug)]
 pub enum SyncOnClose {
   Always,
@@ -64,6 +88,7 @@ pub struct Config {
   pub debug: bool,
   pub sqlite_path: String,
   pub sync_bookmarks: SyncBookmarks,
+  pub journal_privacy: JournalPrivacy,
   pub sync_daily: u8,
   pub sync_on_close: SyncOnClose,
   pub threshold: u8,
@@ -77,6 +102,7 @@ impl Default for Config {
       debug: false,
       sqlite_path: "/mnt/onboard/.kobo/KoboReader.sqlite".into(),
       sync_bookmarks: SyncBookmarks::Never,
+      journal_privacy: JournalPrivacy::Public,
       sync_daily: 0,
       sync_on_close: SyncOnClose::Never,
       threshold: 0,
@@ -130,6 +156,7 @@ pub static CONFIG: LazyLock<Config> = LazyLock::new(|| {
       .expect("Failed to get SQLite path")
       .to_string(),
     sync_bookmarks: config.sync_bookmarks,
+    journal_privacy: config.journal_privacy,
     sync_daily: config.sync_daily,
     sync_on_close: config.sync_on_close,
     threshold: config.threshold,

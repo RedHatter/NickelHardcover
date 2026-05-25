@@ -2,6 +2,7 @@ use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 use serde_json::json;
 
+use crate::config::{CONFIG};
 use crate::hardcover::{date, get_book, jsonb, send_request};
 use crate::isbn::get_isbn;
 use crate::utils::{VERSION, log};
@@ -53,6 +54,7 @@ pub async fn run(args: InsertJournal) -> Result<(), String> {
       book_id: book.id,
       edition_id,
       event: "note".into(),
+      privacy_setting_id: CONFIG.journal_privacy as i64,
       entry: args.text,
       action_at: None,
       metadata: match json!({

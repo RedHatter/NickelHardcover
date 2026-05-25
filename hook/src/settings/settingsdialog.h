@@ -15,6 +15,7 @@ public Q_SLOTS:
 
   void setAutoSyncDefault(bool value);
   void setSyncBookmarks(QVariant value);
+  void setJournalPrivacy(QVariant value);
   void setSyncDaily(QVariant value);
   void setCloseThreshold(QVariant value);
   void setPageThreshold(QVariant value);

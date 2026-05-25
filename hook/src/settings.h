@@ -29,6 +29,9 @@ public:
   void setSyncBookmarks(QString value);
   QString getSyncBookmarks();
 
+  void setJournalPrivacy(QString value);
+  QString getJournalPrivacy();
+
   void setSyncDaily(int value);
   int getSyncDaily();
 

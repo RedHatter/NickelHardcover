@@ -232,6 +232,13 @@ QFrame *SettingsDialog::buildGeneral() {
   QObject::connect(menuRow, &MenuRow::triggered, this, &SettingsDialog::setSyncBookmarks);
   layout->addWidget(menuRow);
 
+  MenuRow *journalPrivacyRow =
+      new MenuRow("Reading journal privacy", MenuRowType::Menu,
+                  {Item{"Public", "public"}, Item{"Follows", "follows"}, Item{"Private", "private"}}, {},
+                  Settings::getInstance()->getJournalPrivacy());
+  QObject::connect(journalPrivacyRow, &MenuRow::triggered, this, &SettingsDialog::setJournalPrivacy);
+  layout->addWidget(journalPrivacyRow);
+
   return frame;
 }
 
@@ -349,6 +356,8 @@ void SettingsDialog::setUsername(QJsonObject doc) { username->setValue(doc.value
 void SettingsDialog::setAutoSyncDefault(bool value) { Settings::getInstance()->setAutoSyncDefault(value); }
 
 void SettingsDialog::setSyncBookmarks(QVariant value) { Settings::getInstance()->setSyncBookmarks(value.toString()); }
+
+void SettingsDialog::setJournalPrivacy(QVariant value) { Settings::getInstance()->setJournalPrivacy(value.toString()); }
 
 void SettingsDialog::setSyncDaily(QVariant value) { Settings::getInstance()->setSyncDaily(value.toInt()); }
 

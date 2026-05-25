@@ -206,6 +206,7 @@ pub async fn run(args: Update) -> Result<(), String> {
         book_id: result.book_id,
         edition_id: result.edition_id,
         event: "quote".into(),
+        privacy_setting_id: CONFIG.journal_privacy as i64,
         entry,
         action_at: action_at.clone(),
         metadata,
