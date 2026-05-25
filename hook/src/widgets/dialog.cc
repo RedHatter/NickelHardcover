@@ -159,7 +159,7 @@ KeyboardFrame *Dialog::buildKeyboardFrame(QTextEdit *textEdit, QString goText) {
 KeyboardFrame *Dialog::buildKeyboardFrame(KeyboardReceiver *receiver, QString goText) {
   KeyboardFrame *keyboard = N3Dialog__keyboardFrame(dialog);
 
-  SearchKeyboardController *ctl = KeyboardFrame__createKeyboard(keyboard, 0, QLocale::English);
+  SearchKeyboardController *ctl = KeyboardFrame__createKeyboard(keyboard, 0, locale());
   SearchKeyboardController__setReceiver(ctl, receiver, false);
   SearchKeyboardController__setGoText(ctl, goText);
 

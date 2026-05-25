@@ -1,5 +1,7 @@
+#include <NickelHook.h>
 #include <QDateTime>
 #include <QLabel>
+#include <QLocale>
 #include <QVBoxLayout>
 
 #include "../files.h"
@@ -123,9 +125,8 @@ JournalEntry::JournalEntry(QJsonObject doc, QWidget *parent) : QFrame(parent) {
     label->setText("Unknown journal type " + event);
   }
 
-  QString actionAt = QDateTime::fromString(doc.value("action_at").toString(), Qt::ISODate)
-                         .toLocalTime()
-                         .toString(Qt::SystemLocaleShortDate);
+  QString actionAt = locale().toString(
+      QDateTime::fromString(doc.value("action_at").toString(), Qt::ISODate).toLocalTime(), QLocale::ShortFormat);
   QLabel *actionAtLabel = new QLabel(actionAt, this);
   actionAtLabel->setObjectName("actionAt");
   layout->addWidget(actionAtLabel, 0, Qt::AlignRight);
