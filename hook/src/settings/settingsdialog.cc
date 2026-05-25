@@ -177,8 +177,7 @@ void SettingsDialog::buildPages() {
   int availableHeight = pages->getAvailableHeight();
   int pageHeight = 0;
 
-  for (int i = 0; i < sections.size(); i++) {
-    QFrame *section = sections.at(i);
+  for (QFrame *section : sections) {
     int height = section->sizeHint().height();
     pageHeight += height;
 
@@ -221,7 +220,8 @@ QFrame *SettingsDialog::buildGeneral() {
   CLI *cli = CLI::getUser();
   QObject::connect(cli, &CLI::response, this, &SettingsDialog::setUsername);
 
-  CheckboxRow *checkboxRow = new CheckboxRow("Enable auto-sync by default", Settings::getInstance()->getAutoSyncDefault());
+  CheckboxRow *checkboxRow =
+      new CheckboxRow("Enable auto-sync by default", Settings::getInstance()->getAutoSyncDefault());
   QObject::connect(checkboxRow, &CheckboxRow::triggered, this, &SettingsDialog::setAutoSyncDefault);
   layout->addWidget(checkboxRow);
 
@@ -232,12 +232,11 @@ QFrame *SettingsDialog::buildGeneral() {
   QObject::connect(menuRow, &MenuRow::triggered, this, &SettingsDialog::setSyncBookmarks);
   layout->addWidget(menuRow);
 
-  MenuRow *journalPrivacyRow =
-      new MenuRow("Reading journal privacy", MenuRowType::Menu,
-                  {Item{"Public", "public"}, Item{"Follows", "follows"}, Item{"Private", "private"}}, {},
-                  Settings::getInstance()->getJournalPrivacy());
-  QObject::connect(journalPrivacyRow, &MenuRow::triggered, this, &SettingsDialog::setJournalPrivacy);
-  layout->addWidget(journalPrivacyRow);
+  menuRow = new MenuRow("Reading journal privacy", MenuRowType::Menu,
+                        {Item{"Public", "public"}, Item{"Follows", "follows"}, Item{"Private", "private"}}, {},
+                        Settings::getInstance()->getJournalPrivacy());
+  QObject::connect(menuRow, &MenuRow::triggered, this, &SettingsDialog::setJournalPrivacy);
+  layout->addWidget(menuRow);
 
   return frame;
 }
@@ -309,8 +308,8 @@ QFrame *SettingsDialog::buildInformation() {
 
   SyncController *ctl = SyncController::getInstance();
   QDateTime alarm = ctl->getAlarm();
-  StaticRow *row = new StaticRow("Auto-sync scheduled for",
-                                 alarm.isValid() ? alarm.toLocalTime().toString() : "Never", false);
+  StaticRow *row =
+      new StaticRow("Auto-sync scheduled for", alarm.isValid() ? alarm.toLocalTime().toString() : "Never", false);
   layout->addWidget(row);
   row->setObjectName("first");
 

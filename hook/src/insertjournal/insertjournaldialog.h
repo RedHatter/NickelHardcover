@@ -2,6 +2,7 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
+#include "../widgets/buttongroup.h"
 #include "../widgets/dialog.h"
 
 class InsertJournalDialog : public Dialog {
@@ -10,9 +11,10 @@ class InsertJournalDialog : public Dialog {
 public:
   static void show();
 
-public:
   void commit() override;
 
 private:
   InsertJournalDialog();
+
+  ButtonGroup *privacy;
 };

@@ -2,7 +2,7 @@ use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 use serde_json::json;
 
-use crate::config::{CONFIG};
+use crate::config::{CONFIG, JournalPrivacy};
 use crate::hardcover::{date, get_book, jsonb, send_request};
 use crate::isbn::get_isbn;
 use crate::utils::{VERSION, log};
@@ -35,6 +35,10 @@ pub struct InsertJournal {
   /// current read percentage
   #[argh(option)]
   percentage: f64,
+
+  /// set journal privacy
+  #[argh(option)]
+  privacy: Option<JournalPrivacy>,
 }
 
 pub async fn run(args: InsertJournal) -> Result<(), String> {
@@ -54,7 +58,7 @@ pub async fn run(args: InsertJournal) -> Result<(), String> {
       book_id: book.id,
       edition_id,
       event: "note".into(),
-      privacy_setting_id: CONFIG.journal_privacy as i64,
+      privacy_setting_id: args.privacy.unwrap_or(CONFIG.journal_privacy) as i64,
       entry: args.text,
       action_at: None,
       metadata: match json!({
@@ -73,8 +77,8 @@ pub async fn run(args: InsertJournal) -> Result<(), String> {
     return Err(
       errors
         .iter()
-        .filter_map(|error| error.as_deref())
-        .collect::<Vec<&str>>()
+        .filter_map(Option::as_deref)
+        .collect::<Vec<_>>()
         .join("<br>"),
     );
   }

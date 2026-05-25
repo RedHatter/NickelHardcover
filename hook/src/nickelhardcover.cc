@@ -46,7 +46,6 @@ TouchLabel *construct_TouchLabel(QWidget *parent) {
 }
 
 void (*N3ButtonLabel__constructor)(N3ButtonLabel *_this, QWidget *parent);
-void (*N3ButtonLabel__setPrimaryButton)(N3ButtonLabel *_this, bool enabled);
 
 N3ButtonLabel *construct_N3ButtonLabel(QWidget *parent) {
   N3ButtonLabel *button = reinterpret_cast<N3ButtonLabel *>(calloc(1, 512));
@@ -189,7 +188,6 @@ static struct nh_dlsym NickelHardcoverDlsym[] = {
   { .name = "_ZN10TouchLabel18setHitStateEnabledEb",                           .out = nh_symoutptr(TouchLabel__setHitStateEnabled) },
 
   { .name = "_ZN13N3ButtonLabelC1EP7QWidget",                                  .out = nh_symoutptr(N3ButtonLabel__constructor) },
-  { .name = "_ZN13N3ButtonLabel16setPrimaryButtonEb",                          .out = nh_symoutptr(N3ButtonLabel__setPrimaryButton) },
 
   { .name = "_ZN13TouchCheckBoxC1EP7QWidget",                                  .out = nh_symoutptr(TouchCheckBox__constructor) },
 

@@ -15,8 +15,9 @@ CLI *CLI::listJournal(int limit, int offset) {
   return new CLI(arguments);
 }
 
-CLI *CLI::insertJournal(QString text, int percentage) {
-  QStringList arguments = {"insert-journal", "--text", text, "--percentage", QString::number(percentage)};
+CLI *CLI::insertJournal(QString text, int percentage, QString privacy) {
+  QStringList arguments = {"insert-journal", "--text", text, "--percentage", QString::number(percentage),
+                           "--privacy",      privacy};
   arguments.append(getIdentifier());
   return new CLI(arguments);
 }

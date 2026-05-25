@@ -90,11 +90,11 @@ bool Settings::getAutoSyncDefault() { return config->value("auto_sync_default", 
 
 void Settings::setSyncBookmarks(QString value) { config->setValue("sync_bookmarks", value); }
 
-QString Settings::getSyncBookmarks() { return config->value("sync_bookmarks", "never").toString(); }
+QString Settings::getSyncBookmarks() { return config->value("sync_bookmarks", "never").toString().toLower(); }
 
 void Settings::setJournalPrivacy(QString value) { config->setValue("journal_privacy", value); }
 
-QString Settings::getJournalPrivacy() { return config->value("journal_privacy", "public").toString(); }
+QString Settings::getJournalPrivacy() { return config->value("journal_privacy", "public").toString().toLower(); }
 
 void Settings::setCloseThreshold(int value) {
   QVariant realValue = "never";
@@ -110,7 +110,7 @@ void Settings::setCloseThreshold(int value) {
 
 int Settings::getCloseThreshold() {
   QVariant syncOnClose = config->value("sync_on_close", "always");
-  if (syncOnClose.toString() == "always") {
+  if (syncOnClose.toString().toLower() == "always") {
     return 1;
   }
 

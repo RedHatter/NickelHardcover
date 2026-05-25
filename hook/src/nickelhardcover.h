@@ -70,7 +70,6 @@ extern void (*TouchLabel__setHitStateEnabled)(TouchLabel *_this, bool enabled);
 
 typedef TouchLabel N3ButtonLabel;
 N3ButtonLabel *construct_N3ButtonLabel(QWidget *parent);
-extern void (*N3ButtonLabel__setPrimaryButton)(N3ButtonLabel *_this, bool enabled);
 
 typedef QCheckBox TouchCheckBox;
 TouchCheckBox *construct_TouchCheckBox(QWidget *parent);

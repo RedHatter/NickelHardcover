@@ -35,7 +35,7 @@ JournalDialog::JournalDialog() : Dialog("Reading Journal") {
   layout->setContentsMargins(0, 0, 0, 0);
 
   N3ButtonLabel *button = construct_N3ButtonLabel(this);
-  N3ButtonLabel__setPrimaryButton(button, true);
+  button->setProperty("primaryButton", true);
   button->setText("+ New entry");
   layout->addWidget(button, 0, Qt::AlignRight);
   QObject::connect(button, SIGNAL(tapped(bool)), this, SLOT(newEntry()));

@@ -38,8 +38,7 @@ MenuRow::MenuRow(QString heading, MenuRowType type, QList<Item> menuItems, QList
     rowLayout->addWidget(icon);
   }
 
-  for (int i = 0; i < menuItems.size(); ++i) {
-    Item item = menuItems.at(i);
+  for (Item item : menuItems) {
     if (item.value == defaultValue) {
       this->item = item;
       label->setText(item.text);
@@ -47,8 +46,7 @@ MenuRow::MenuRow(QString heading, MenuRowType type, QList<Item> menuItems, QList
     }
   }
 
-  for (int i = 0; i < dialogItems.size(); ++i) {
-    Item item = dialogItems.at(i);
+  for (Item item : dialogItems) {
     if (item.value == defaultValue) {
       this->item = item;
       label->setText(item.text);

@@ -84,7 +84,7 @@ pub async fn run(args: ListJournal) -> Result<(), String> {
 
 pub fn reduce_slate(data: &Value) -> String {
   return match data {
-    Value::Array(array) => array.iter().map(reduce_slate).collect::<Vec<String>>().join(""),
+    Value::Array(array) => array.iter().map(reduce_slate).collect::<Vec<_>>().join(""),
     Value::Object(map) => {
       let mut str = match map.get("type").and_then(Value::as_str) {
         Some("paragraph") => "\n\n".into(),
@@ -96,7 +96,7 @@ pub fn reduce_slate(data: &Value) -> String {
         _ => map
           .iter()
           .map(|(_, value)| reduce_slate(value))
-          .collect::<Vec<String>>()
+          .collect::<Vec<_>>()
           .join(""),
       };
 

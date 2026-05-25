@@ -1,7 +1,6 @@
 use std::panic;
 
 use chrono::Local;
-use serde_json::Value;
 
 use crate::hardcover::{update_or_insert_user_book, update_user_book::UserBookUpdateInput};
 use crate::isbn::get_isbn;
@@ -84,7 +83,7 @@ pub async fn run(args: SetUserBook) -> Result<(), String> {
                     ]
                   })
                 })
-                .collect::<Vec<Value>>()
+                .collect::<Vec<_>>()
             }
           })
           .as_object()

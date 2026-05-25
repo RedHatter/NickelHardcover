@@ -1,4 +1,5 @@
 use std::fs;
+use std::str::FromStr;
 use std::sync::LazyLock;
 
 use serde::Serialize;
@@ -7,6 +8,7 @@ use serde::{Deserialize, Deserializer, de};
 use crate::utils::report;
 
 #[derive(Serialize, PartialEq, Debug)]
+#[serde(rename_all = "lowercase")]
 pub enum SyncBookmarks {
   Always,
   Never,
@@ -31,8 +33,21 @@ impl<'de> Deserialize<'de> for SyncBookmarks {
 #[serde(rename_all = "lowercase")]
 pub enum JournalPrivacy {
   Public = 1,
-  Followers,
+  Follows,
   Private,
+}
+
+impl FromStr for JournalPrivacy {
+  type Err = String;
+
+  fn from_str(value: &str) -> Result<Self, Self::Err> {
+    match value {
+      s if s.eq_ignore_ascii_case("Public") => Ok(JournalPrivacy::Public),
+      s if s.eq_ignore_ascii_case("Follows") => Ok(JournalPrivacy::Follows),
+      s if s.eq_ignore_ascii_case("Private") => Ok(JournalPrivacy::Private),
+      s => Err(format!("{s} is not a valid journal_privacy value")),
+    }
+  }
 }
 
 impl<'de> Deserialize<'de> for JournalPrivacy {
@@ -40,14 +55,7 @@ impl<'de> Deserialize<'de> for JournalPrivacy {
   where
     D: Deserializer<'de>,
   {
-    match String::deserialize(deserializer)? {
-      s if s.eq_ignore_ascii_case("Public") => Ok(JournalPrivacy::Public),
-      s if s.eq_ignore_ascii_case("Followers") => Ok(JournalPrivacy::Followers),
-      s if s.eq_ignore_ascii_case("Private") => Ok(JournalPrivacy::Private),
-      s => Err(de::Error::custom(format!(
-        "{s} is not a valid journal_privacy_default value"
-      ))),
-    }
+    Self::from_str(&String::deserialize(deserializer)?).map_err(de::Error::custom)
   }
 }
 
@@ -148,17 +156,11 @@ pub static CONFIG: LazyLock<Config> = LazyLock::new(|| {
     } else {
       "Bearer ".to_string() + &config.authorization
     },
-    auto_sync_default: config.auto_sync_default,
-    debug: config.debug,
     sqlite_path: exe_dir
       .join(config.sqlite_path)
       .to_str()
       .expect("Failed to get SQLite path")
       .to_string(),
-    sync_bookmarks: config.sync_bookmarks,
-    journal_privacy: config.journal_privacy,
-    sync_daily: config.sync_daily,
-    sync_on_close: config.sync_on_close,
-    threshold: config.threshold,
+    ..config
   }
 });

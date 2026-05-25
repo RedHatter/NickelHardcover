@@ -242,8 +242,8 @@ pub async fn insert_or_update_journal(
         return Err(
           errors
             .iter()
-            .filter_map(|error| error.as_deref())
-            .collect::<Vec<&str>>()
+            .filter_map(Option::as_deref)
+            .collect::<Vec<_>>()
             .join("<br>"),
         );
       }
@@ -265,8 +265,8 @@ pub async fn insert_or_update_journal(
       return Err(
         errors
           .iter()
-          .filter_map(|error| error.as_deref())
-          .collect::<Vec<&str>>()
+          .filter_map(Option::as_deref)
+          .collect::<Vec<_>>()
           .join("<br>"),
       );
     }

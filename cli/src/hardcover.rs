@@ -88,7 +88,7 @@ pub async fn send_request<T: Serialize + std::fmt::Debug, R: for<'a> Deserialize
       errors
         .iter()
         .map(|err| err.message.as_ref())
-        .collect::<Vec<&str>>()
+        .collect::<Vec<_>>()
         .join("<br>>")
     ));
   }
