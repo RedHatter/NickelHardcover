@@ -18,6 +18,9 @@ static QString (*Content__getId)(Volume *_this);
 static QString (*Content__getTitle)(Volume *_this);
 static QString (*Content__getAttribution)(Volume *_this);
 
+typedef QList<QPair<QString, QString>> SupportedLocales;
+static SupportedLocales *(*SupportedLocales__supportedLocales)(SupportedLocales *_this, bool b1);
+
 MainWindowController *(*MainWindowController__sharedInstance)();
 QWidget *(*MainWindowController__currentView)(MainWindowController *mwc);
 QWidget *(*MainWindowController__pushView)(MainWindowController *mwc, QWidget *view);
@@ -156,9 +159,10 @@ static struct nh_info NickelHardcover = (struct nh_info){.name = "NickelHardcove
 
 // clang-format off
 static struct nh_hook NickelHardcoverHook[] = {
-  { .sym = "_ZN17ReadingController9setVolumeERK6VolumeRK8Bookmark", .sym_new = "_nh_set_volume",                      .lib = "libnickel.so.1.0.0", .out = nh_symoutptr(ReadingController__setVolume),   .desc = "The main entry point" },
-  { .sym = "_ZN15ReadingMenuViewC1EP7QWidgetb",                     .sym_new = "_nh_reading_menu_view_constructor",   .lib = "libnickel.so.1.0.0", .out = nh_symoutptr(ReadingMenuView__constructor),   .desc = "Used to inject menu items", .optional = true },
-  { .sym = "_ZN15ReadingMenuViewC1EP7QWidgetRK10QByteArrayb",       .sym_new = "_nh_reading_menu_view_constructor_2", .lib = "libnickel.so.1.0.0", .out = nh_symoutptr(ReadingMenuView__constructor_2), .desc = "Used to inject menu items", .optional = true }, // Version 4.44+
+  { .sym = "_ZN17ReadingController9setVolumeERK6VolumeRK8Bookmark", .sym_new = "_nh_ReadingController__setVolume",       .lib = "libnickel.so.1.0.0", .out = nh_symoutptr(ReadingController__setVolume),       .desc = "The main entry point" },
+  { .sym = "_ZN15ReadingMenuViewC1EP7QWidgetb",                     .sym_new = "_nh_ReadingMenuView__constructor",       .lib = "libnickel.so.1.0.0", .out = nh_symoutptr(ReadingMenuView__constructor),       .desc = "Used to inject menu items", .optional = true },
+  { .sym = "_ZN15ReadingMenuViewC1EP7QWidgetRK10QByteArrayb",       .sym_new = "_nh_ReadingMenuView__constructor_2",     .lib = "libnickel.so.1.0.0", .out = nh_symoutptr(ReadingMenuView__constructor_2),     .desc = "Used to inject menu items", .optional = true }, // Version 4.44+
+  { .sym = "_ZN16SupportedLocales16supportedLocalesEb",             .sym_new = "_nh_SupportedLocales__supportedLocales", .lib = "libnickel.so.1.0.0", .out = nh_symoutptr(SupportedLocales__supportedLocales), .desc = "Add support for 'English (UK)'", .optional = true },
   {0},
 };
 
@@ -243,7 +247,7 @@ QStackedWidget *stackedWidget = nullptr;
 
 void handleStackedWidgetDestroyed() { stackedWidget = nullptr; }
 
-extern "C" __attribute__((visibility("default"))) void _nh_set_volume(ReadingController *_this, Volume *volume,
+extern "C" __attribute__((visibility("default"))) void _nh_ReadingController__setVolume(ReadingController *_this, Volume *volume,
                                                                       Bookmark *bookmark) {
   nh_log("ReadingController::setVolume(%p, %p, %p)", _this, volume, bookmark);
 
@@ -281,16 +285,31 @@ void injectMenuWidget(ReadingMenuView *parent) {
 }
 
 extern "C" __attribute__((visibility("default"))) void
-_nh_reading_menu_view_constructor(ReadingMenuView *_this, QWidget *parent, bool unknown) {
+_nh_ReadingMenuView__constructor(ReadingMenuView *_this, QWidget *parent, bool unknown) {
   nh_log("ReadingMenuView::ReadingMenuView(%p, %p, %s)", _this, parent, unknown ? "true" : "false");
   ReadingMenuView__constructor(_this, parent, unknown);
   injectMenuWidget(parent);
 }
 
 extern "C" __attribute__((visibility("default"))) void
-_nh_reading_menu_view_constructor_2(ReadingMenuView *_this, QWidget *parent, QByteArray const &unknownArray,
+_nh_ReadingMenuView__constructor_2(ReadingMenuView *_this, QWidget *parent, QByteArray const &unknownArray,
                                     bool unknownBool) {
   nh_log("ReadingMenuView::ReadingMenuView(%p, %p, %s)", _this, parent, unknownBool ? "true" : "false");
   ReadingMenuView__constructor_2(_this, parent, unknownArray, unknownBool);
   injectMenuWidget(parent);
+}
+
+extern "C" __attribute__((visibility("default"))) SupportedLocales *
+_nh_SupportedLocales__supportedLocales(SupportedLocales *_this, bool b1) {
+  SupportedLocales *items = SupportedLocales__supportedLocales(_this, b1);
+
+  int index = 0;
+  for (; index < items->count(); index++) {
+    if (items->at(index).second == "en")
+      break;
+  }
+
+  items->insert(index + 1, QPair<QString, QString>(QString("English (UK)"), QString("en_GB")));
+
+  return items;
 }
