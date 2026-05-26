@@ -1,11 +1,12 @@
 #![allow(non_camel_case_types)]
 
-use std::{num::NonZeroU32, sync::LazyLock};
+use std::{fmt::Debug, sync::LazyLock};
 
-use governor::{DefaultDirectRateLimiter, Quota, RateLimiter};
-use graphql_client::{GraphQLQuery, QueryBody, Response};
-use reqwest::Client;
+use graphql_client::{GraphQLQuery, QueryBody};
+use reqwest::{Client, StatusCode};
 use serde::{Deserialize, Serialize};
+use tokio::time::sleep;
+use tokio_retry::{Retry, strategy::ExponentialBackoff};
 
 use crate::commands::getuser::get_user;
 use crate::config::CONFIG;
@@ -26,10 +27,43 @@ static CLIENT: LazyLock<Result<Client, String>> = LazyLock::new(|| {
     .map_err(report("Failed to construct http client"))
 });
 
-static LIMITER: LazyLock<DefaultDirectRateLimiter> =
-  LazyLock::new(|| RateLimiter::direct(Quota::per_minute(NonZeroU32::new(55).expect("55 is non-zero"))));
+async fn try_request<T: Serialize>(request_body: &QueryBody<T>) -> Result<reqwest::Response, String> {
+  let res = CLIENT
+    .as_ref()?
+    .post("https://api.hardcover.app/v1/graphql")
+    .header("authorization", &CONFIG.authorization)
+    .json(&request_body)
+    .send()
+    .await
+    .map_err(report(&format!(
+      "Failed to send request {}",
+      request_body.operation_name
+    )))?;
 
-pub async fn send_request<T: Serialize + std::fmt::Debug, R: for<'a> Deserialize<'a> + std::fmt::Debug>(
+  if res.status() == StatusCode::TOO_MANY_REQUESTS {
+    let timestamp = res
+      .headers()
+      .get("ratelimit-reset")
+      .ok_or("Failed to get `ratelimit-reset` header from http 429")?
+      .to_str()
+      .map_err(report("Failed to get `ratelimit-reset` header value"))?
+      .parse::<i64>()
+      .map_err(report("Failed to parse `ratelimit-reset` header"))?;
+    let duration = chrono::DateTime::from_timestamp(timestamp, 0)
+      .ok_or(format!("Failed to create DateTime from timestamp `{timestamp}`"))?
+      .signed_duration_since(chrono::Utc::now())
+      .to_std()
+      .map_err(report("Timestamp is in the past"))?;
+    log(format!("Encountered http 429 sleeping for {}", duration.as_secs()))?;
+    sleep(duration).await;
+  }
+
+  res
+    .error_for_status()
+    .map_err(report(&format!("{} request failed", request_body.operation_name)))
+}
+
+pub async fn send_request<T: Serialize + Debug, R: for<'a> Deserialize<'a> + Debug>(
   request_body: QueryBody<T>,
 ) -> Result<R, String> {
   assert!(
@@ -42,39 +76,12 @@ pub async fn send_request<T: Serialize + std::fmt::Debug, R: for<'a> Deserialize
     request_body.operation_name, request_body.variables
   ))?;
 
-  let mut n = 0;
+  let res = Retry::spawn(ExponentialBackoff::from_millis(10).take(3), async || {
+    try_request(&request_body).await
+  })
+  .await?;
 
-  let res = loop {
-    n += 1;
-
-    LIMITER.until_ready().await;
-
-    let res = CLIENT
-      .as_ref()?
-      .post("https://api.hardcover.app/v1/graphql")
-      .header("authorization", &CONFIG.authorization)
-      .json(&request_body)
-      .send()
-      .await
-      .map_err(report(&format!(
-        "Failed to send request {}",
-        request_body.operation_name
-      )))
-      .and_then(|res| {
-        res
-          .error_for_status()
-          .map_err(report(&format!("{} request failed", request_body.operation_name)))
-      });
-
-    match res {
-      Err(e) if n < 3 => {
-        log(format!("Attempt {n} failed: {e}"))?;
-      }
-      _ => break res,
-    }
-  }?;
-
-  let obj: Response<R> = res.json().await.map_err(report(&format!(
+  let obj: graphql_client::Response<R> = res.json().await.map_err(report(&format!(
     "Failed to parse {} response",
     request_body.operation_name
   )))?;
