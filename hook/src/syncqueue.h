@@ -26,7 +26,6 @@ Q_SIGNALS:
   void finished();
 
 private:
-  QLabel *progressIcon = nullptr;
   ConfirmationDialog *dialog = nullptr;
 
   QString contentId;

@@ -247,8 +247,8 @@ QStackedWidget *stackedWidget = nullptr;
 
 void handleStackedWidgetDestroyed() { stackedWidget = nullptr; }
 
-extern "C" __attribute__((visibility("default"))) void _nh_ReadingController__setVolume(ReadingController *_this, Volume *volume,
-                                                                      Bookmark *bookmark) {
+extern "C" __attribute__((visibility("default"))) void
+_nh_ReadingController__setVolume(ReadingController *_this, Volume *volume, Bookmark *bookmark) {
   nh_log("ReadingController::setVolume(%p, %p, %p)", _this, volume, bookmark);
 
   SyncController *syncController = SyncController::getInstance();
@@ -284,8 +284,8 @@ void injectMenuWidget(ReadingMenuView *parent) {
   }
 }
 
-extern "C" __attribute__((visibility("default"))) void
-_nh_ReadingMenuView__constructor(ReadingMenuView *_this, QWidget *parent, bool unknown) {
+extern "C" __attribute__((visibility("default"))) void _nh_ReadingMenuView__constructor(ReadingMenuView *_this,
+                                                                                        QWidget *parent, bool unknown) {
   nh_log("ReadingMenuView::ReadingMenuView(%p, %p, %s)", _this, parent, unknown ? "true" : "false");
   ReadingMenuView__constructor(_this, parent, unknown);
   injectMenuWidget(parent);
@@ -293,7 +293,7 @@ _nh_ReadingMenuView__constructor(ReadingMenuView *_this, QWidget *parent, bool u
 
 extern "C" __attribute__((visibility("default"))) void
 _nh_ReadingMenuView__constructor_2(ReadingMenuView *_this, QWidget *parent, QByteArray const &unknownArray,
-                                    bool unknownBool) {
+                                   bool unknownBool) {
   nh_log("ReadingMenuView::ReadingMenuView(%p, %p, %s)", _this, parent, unknownBool ? "true" : "false");
   ReadingMenuView__constructor_2(_this, parent, unknownArray, unknownBool);
   injectMenuWidget(parent);

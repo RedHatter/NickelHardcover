@@ -16,7 +16,7 @@ void InsertJournalDialog::show() { new InsertJournalDialog(); }
 InsertJournalDialog::InsertJournalDialog() : Dialog("Add New Journal Entry") {
   QVBoxLayout *layout = new QVBoxLayout(this);
 
-  privacy = new ButtonGroup({Item{"Public", "public"}, Item{"Follows", "follows"}, Item{"Private", "private"}},
+  privacy = new ButtonGroup({{"Public", "public"}, {"Follows", "follows"}, {"Private", "private"}},
                             Settings::getInstance()->getJournalPrivacy(), "Privacy");
   layout->addWidget(privacy, 0, Qt::AlignLeft);
 

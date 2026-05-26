@@ -9,34 +9,34 @@
 #include "settings.h"
 #include "synccontroller.h"
 
-CLI *CLI::listJournal(int limit, int offset) {
+CLI *CLI::listJournal(int limit, int offset, bool silent, bool icon) {
   QStringList arguments = {"list-journal", "--limit", QString::number(limit), "--offset", QString::number(offset)};
   arguments.append(getIdentifier());
-  return new CLI(arguments);
+  return new CLI(arguments, silent, icon);
 }
 
-CLI *CLI::insertJournal(QString text, int percentage, QString privacy) {
+CLI *CLI::insertJournal(QString text, int percentage, QString privacy, bool silent, bool icon) {
   QStringList arguments = {"insert-journal", "--text", text, "--percentage", QString::number(percentage),
                            "--privacy",      privacy};
   arguments.append(getIdentifier());
-  return new CLI(arguments);
+  return new CLI(arguments, silent, icon);
 }
 
-CLI *CLI::getUser() { return new CLI({"get-user"}); }
+CLI *CLI::getUser(bool silent, bool icon) { return new CLI({"get-user"}, silent, icon); }
 
-CLI *CLI::getUserBook() {
+CLI *CLI::getUserBook(bool silent, bool icon) {
   QStringList arguments = {"get-user-book"};
   arguments.append(getIdentifier());
-  return new CLI(arguments);
+  return new CLI(arguments, silent, icon);
 }
 
-CLI *CLI::setUserBook(int status) {
+CLI *CLI::setUserBook(int status, bool silent, bool icon) {
   QStringList arguments = {"set-user-book", "--status", QString::number(status)};
   arguments.append(getIdentifier());
-  return new CLI(arguments);
+  return new CLI(arguments, silent, icon);
 }
 
-CLI *CLI::setUserBook(float rating, QString text, bool spoilers, bool sponsored) {
+CLI *CLI::setUserBook(float rating, QString text, bool spoilers, bool sponsored, bool silent, bool icon) {
   QStringList arguments = {"set-user-book"};
 
   arguments.append(getIdentifier());
@@ -51,14 +51,15 @@ CLI *CLI::setUserBook(float rating, QString text, bool spoilers, bool sponsored)
     arguments.append({"--text", text});
   }
 
-  return new CLI(arguments);
+  return new CLI(arguments, silent, icon);
 }
 
-CLI *CLI::search(QString query, int limit, int page) {
-  return new CLI({"search", "--limit", QString::number(limit), "--page", QString::number(page), "--query", query});
+CLI *CLI::search(QString query, int limit, int page, bool silent, bool icon) {
+  return new CLI({"search", "--limit", QString::number(limit), "--page", QString::number(page), "--query", query},
+                 silent, icon);
 }
 
-CLI *CLI::update(QString contentId, int percentage, bool silent) {
+CLI *CLI::update(QString contentId, int percentage, bool silent, bool icon) {
   QStringList arguments = {"update", "--content-id", contentId, "--value", QString::number(percentage)};
 
   QString linkedBook = Settings::getInstance()->getLinkedBook(contentId);
@@ -71,7 +72,7 @@ CLI *CLI::update(QString contentId, int percentage, bool silent) {
     arguments.append({"--after", lastSynced});
   }
 
-  return new CLI(arguments, silent);
+  return new CLI(arguments, silent, icon);
 }
 
 QStringList CLI::getIdentifier() {
@@ -84,21 +85,17 @@ QStringList CLI::getIdentifier() {
   }
 }
 
-CLI::CLI(QStringList arguments, bool silent, QObject *parent) : QObject(parent), arguments(arguments), silent(silent) {
+CLI::CLI(QStringList arguments, bool silent, bool icon, QObject *parent)
+    : QObject(parent), arguments(arguments), silent(silent), icon(icon) {
+
   WirelessWorkflowManager *wfm = WirelessWorkflowManager__sharedInstance();
 
   if (WirelessWorkflowManager__isInternetAccessible(wfm)) {
     networkConnected();
   } else {
-    MainWindowController *mwc = MainWindowController__sharedInstance();
     QObject::connect(wfm, SIGNAL(connectingFailed()), this, SLOT(connectingFailed()));
 
-    QWidget *window = MainWindowController__currentView(mwc)->window();
-    wifiIcon = new QLabel(window);
-    wifiIcon->setPixmap(QPixmap(Files::wifi));
-    wifiIcon->resize(90, 90);
-    wifiIcon->move(window->width() - 144, window->height() - 144);
-    wifiIcon->show();
+    showIcon(Files::wifi);
 
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &CLI::connectingFailed);
@@ -108,11 +105,22 @@ CLI::CLI(QStringList arguments, bool silent, QObject *parent) : QObject(parent),
     WirelessManager *wm = WirelessManager__sharedInstance();
     QObject::connect(wm, SIGNAL(networkConnected()), this, SLOT(networkConnected()));
 
-    if (silent) {
-      WirelessWorkflowManager__connectWirelessSilently(wfm);
-    } else {
-      WirelessWorkflowManager__connectWireless(wfm, false, false);
-    }
+    // Yield to caller so signals can be setup before a possible connectingFailed() is triggered
+    QTimer::singleShot(0, this, [silent] {
+      WirelessWorkflowManager *wfm = WirelessWorkflowManager__sharedInstance();
+
+      if (silent) {
+        WirelessWorkflowManager__connectWirelessSilently(wfm);
+      } else {
+        WirelessWorkflowManager__connectWireless(wfm, false, false);
+      }
+    });
+  }
+}
+
+CLI::~CLI() {
+  if (iconLabel != nullptr) {
+    iconLabel->deleteLater();
   }
 }
 
@@ -129,26 +137,34 @@ void CLI::connectingFailed() {
     timer = nullptr;
   }
 
-  if (wifiIcon != nullptr) {
-    wifiIcon->deleteLater();
-    wifiIcon = nullptr;
-  }
   deleteLater();
   failure();
+}
+
+void CLI::showIcon(const char *path) {
+  if (iconLabel == nullptr) {
+    MainWindowController *mwc = MainWindowController__sharedInstance();
+    QWidget *window = MainWindowController__currentView(mwc)->window();
+    iconLabel = new QLabel(window);
+    iconLabel->resize(90, 90);
+    iconLabel->move(window->width() - 144, window->height() - 144);
+  }
+
+  iconLabel->setPixmap(QPixmap(path));
+  iconLabel->show();
 }
 
 void CLI::networkConnected() {
   nh_log("CLI::networkConnected()");
 
+  if (icon) {
+    showIcon(Files::icon);
+  }
+
   if (timer != nullptr) {
     timer->stop();
     timer->deleteLater();
     timer = nullptr;
-  }
-
-  if (wifiIcon != nullptr) {
-    wifiIcon->deleteLater();
-    wifiIcon = nullptr;
   }
 
   QProcess *process = new QProcess(this);

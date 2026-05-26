@@ -7,14 +7,15 @@ class CLI : public QObject {
   Q_OBJECT
 
 public:
-  static CLI *listJournal(int limit, int offset);
-  static CLI *insertJournal(QString text, int percentage, QString privacy);
-  static CLI *getUser();
-  static CLI *getUserBook();
-  static CLI *setUserBook(int status);
-  static CLI *setUserBook(float rating, QString text, bool spoilers, bool sponsored);
-  static CLI *search(QString query, int limit, int page);
-  static CLI *update(QString contentId, int percentage, bool silent);
+  static CLI *listJournal(int limit, int offset, bool silent = false, bool icon = false);
+  static CLI *insertJournal(QString text, int percentage, QString privacy, bool silent = false, bool icon = false);
+  static CLI *getUser(bool silent = false, bool icon = false);
+  static CLI *getUserBook(bool silent = false, bool icon = false);
+  static CLI *setUserBook(int status, bool silent = false, bool icon = false);
+  static CLI *setUserBook(float rating, QString text, bool spoilers, bool sponsored, bool silent = false,
+                          bool icon = false);
+  static CLI *search(QString query, int limit, int page, bool silent = false, bool icon = false);
+  static CLI *update(QString contentId, int percentage, bool silent = false, bool icon = false);
 
 public Q_SLOTS:
   void networkConnected();
@@ -29,10 +30,15 @@ Q_SIGNALS:
 private:
   static QStringList getIdentifier();
 
-  CLI(QStringList arguments, bool silent = false, QObject *parent = nullptr);
+  CLI(QStringList arguments, bool silent = false, bool icon = false, QObject *parent = nullptr);
 
-  QLabel *wifiIcon = nullptr;
+  ~CLI();
+
+  void showIcon(const char *path);
+
+  QLabel *iconLabel = nullptr;
   QTimer *timer = nullptr;
   QStringList arguments;
-  bool silent = false;
+  bool silent;
+  bool icon;
 };

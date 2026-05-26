@@ -7,19 +7,11 @@
 #include <stdlib.h>
 
 #include "cli.h"
-#include "files.h"
 #include "qglobal.h"
 #include "settings.h"
 #include "syncqueue.h"
 
-SyncQueue::SyncQueue(QObject *parent) : QObject(parent) {
-  MainWindowController *mwc = MainWindowController__sharedInstance();
-  QWidget *window = MainWindowController__currentView(mwc)->window();
-  progressIcon = new QLabel(window);
-  progressIcon->setPixmap(QPixmap(Files::icon));
-  progressIcon->resize(90, 90);
-  progressIcon->move(window->width() - 144, window->height() - 144);
-};
+SyncQueue::SyncQueue(QObject *parent) : QObject(parent) {};
 
 void SyncQueue::updateReadProgress(QString contentId) {
   MainWindowController *mwc = MainWindowController__sharedInstance();
@@ -87,22 +79,19 @@ void SyncQueue::run(QString contentId, bool manual) {
     dialog->open();
   }
 
-  progressIcon->show();
-
   if (progress == 100) {
     Settings::getInstance()->setEnabled(contentId, false);
   }
 
   Settings::getInstance()->setLastProgress(contentId, progress);
 
-  CLI *cli = CLI::update(contentId, progress, !manual);
+  CLI *cli = CLI::update(contentId, progress, !manual, true);
   QObject::connect(cli, &CLI::success, this, &SyncQueue::success);
   QObject::connect(cli, &CLI::failure, this, &SyncQueue::closeDialog);
   QObject::connect(cli, &CLI::failure, this, &SyncQueue::finished);
 }
 
 void SyncQueue::success() {
-  progressIcon->hide();
   Settings::getInstance()->setLastSynced(contentId, QDateTime::currentDateTimeUtc().toString(Qt::ISODate));
   finished();
 
@@ -114,8 +103,6 @@ void SyncQueue::success() {
 }
 
 void SyncQueue::closeDialog() {
-  progressIcon->hide();
-
   if (dialog == nullptr)
     return;
 

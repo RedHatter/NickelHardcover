@@ -217,7 +217,7 @@ QFrame *SettingsDialog::buildGeneral() {
   username = new StaticRow("Authorized user", "Unknown", false);
   layout->addWidget(username);
 
-  CLI *cli = CLI::getUser();
+  CLI *cli = CLI::getUser(true);
   QObject::connect(cli, &CLI::response, this, &SettingsDialog::setUsername);
 
   CheckboxRow *checkboxRow =
@@ -225,15 +225,14 @@ QFrame *SettingsDialog::buildGeneral() {
   QObject::connect(checkboxRow, &CheckboxRow::triggered, this, &SettingsDialog::setAutoSyncDefault);
   layout->addWidget(checkboxRow);
 
-  MenuRow *menuRow =
-      new MenuRow("Sync annotations to reading journal", MenuRowType::Menu,
-                  {Item{"Always", "always"}, Item{"Never", "never"}, Item{"Once the book is finished", "finished"}}, {},
-                  Settings::getInstance()->getSyncBookmarks());
+  MenuRow *menuRow = new MenuRow("Sync annotations to reading journal", MenuRowType::Menu,
+                                 {{"Always", "always"}, {"Never", "never"}, {"Once the book is finished", "finished"}},
+                                 {}, Settings::getInstance()->getSyncBookmarks());
   QObject::connect(menuRow, &MenuRow::triggered, this, &SettingsDialog::setSyncBookmarks);
   layout->addWidget(menuRow);
 
   menuRow = new MenuRow("Reading journal privacy", MenuRowType::Menu,
-                        {Item{"Public", "public"}, Item{"Follows", "follows"}, Item{"Private", "private"}}, {},
+                        {{"Public", "public"}, {"Follows", "follows"}, {"Private", "private"}}, {},
                         Settings::getInstance()->getJournalPrivacy());
   QObject::connect(menuRow, &MenuRow::triggered, this, &SettingsDialog::setJournalPrivacy);
   layout->addWidget(menuRow);
@@ -270,25 +269,25 @@ QFrame *SettingsDialog::buildAutoSync() {
 
   Settings *settings = Settings::getInstance();
   MenuRow *menuRow =
-      new MenuRow("Once per day", MenuRowType::Menu, {Item{"Never", 0}, Item{"Set time of day", MenuRow::OPEN_DIALOG}},
-                  hours, settings->getSyncDaily());
+      new MenuRow("Once per day", MenuRowType::Menu, {{"Never", 0}, {"Set time of day", MenuRow::OPEN_DIALOG}}, hours,
+                  settings->getSyncDaily());
   QObject::connect(menuRow, &MenuRow::triggered, this, &SettingsDialog::setSyncDaily);
   layout->addWidget(menuRow);
   menuRow->setObjectName("first");
 
   QList<Item> thresholdItems;
   for (int i = 1; i < 100; i++) {
-    thresholdItems.append(Item{QString::number(i).append("%"), i});
+    thresholdItems.append({QString::number(i).append("%"), i});
   }
 
   menuRow = new MenuRow("After closing a book or the Kobo is put to sleep", MenuRowType::Menu,
-                        {Item{"Always", 1}, Item{"Never", 0}, Item{"Set a threshold", MenuRow::OPEN_DIALOG}},
-                        thresholdItems, QVariant(settings->getCloseThreshold()));
+                        {{"Always", 1}, {"Never", 0}, {"Set a threshold", MenuRow::OPEN_DIALOG}}, thresholdItems,
+                        QVariant(settings->getCloseThreshold()));
   QObject::connect(menuRow, &MenuRow::triggered, this, &SettingsDialog::setCloseThreshold);
   layout->addWidget(menuRow);
 
   menuRow = new MenuRow("Periodically by read percentage", MenuRowType::Menu,
-                        {Item{"Never", 0}, Item{"Set a threshold", MenuRow::OPEN_DIALOG}}, thresholdItems,
+                        {{"Never", 0}, {"Set a threshold", MenuRow::OPEN_DIALOG}}, thresholdItems,
                         QVariant(settings->getPageThreshold()));
   QObject::connect(menuRow, &MenuRow::triggered, this, &SettingsDialog::setPageThreshold);
   layout->addWidget(menuRow);
@@ -343,7 +342,7 @@ QFrame *SettingsDialog::buildAdvanced() {
   layout->addWidget(checkboxRow);
   checkboxRow->setObjectName("first");
 
-  MenuRow *menuRow = new MenuRow("Save system logs", MenuRowType::Tap, {Item{"Save", true}}, {}, true);
+  MenuRow *menuRow = new MenuRow("Save system logs", MenuRowType::Tap, {{"Save", true}}, {}, true);
   QObject::connect(menuRow, &MenuRow::triggered, this, &SettingsDialog::saveLogs);
   layout->addWidget(menuRow);
 
