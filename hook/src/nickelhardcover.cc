@@ -275,12 +275,13 @@ _nh_ReadingController__setVolume(ReadingController *_this, Volume *volume, Bookm
 
 void injectMenuWidget(ReadingMenuView *parent) {
   QHBoxLayout *childLayout = parent->findChild<QHBoxLayout *>("bottomHorizontalLayout");
+  QLabel *settingsIcon = parent->findChild<QLabel *>("settingsIcon");
 
-  if (childLayout) {
-    MenuController *ctl = new MenuController(parent);
+  if (childLayout && settingsIcon) {
+    MenuController *ctl = new MenuController(settingsIcon->height(), parent);
     childLayout->insertWidget(childLayout->count() - 1, ctl->icon);
   } else {
-    nh_log("Error: unable to find bottomHorizontalLayout");
+    nh_log("Error: unable to find bottomHorizontalLayout and settingsIcon");
   }
 }
 

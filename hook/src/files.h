@@ -21,7 +21,7 @@ constexpr char const *left_star_hit = ":/nickelhardcover/left_star_hit.png";
 constexpr char const *loading = ":/nickelhardcover/loading.png";
 constexpr char const *right_star = ":/nickelhardcover/right_star.png";
 constexpr char const *right_star_hit = ":/nickelhardcover/right_star_hit.png";
-constexpr char const *wifi = ":/images/statusbar/statusbar_wifi_4.png";
+constexpr char const *wifi = ":/images/statusbar/wifi05.png";
 
 constexpr char const *list_book = ":/nickelhardcover/list_book.png";
 constexpr char const *note = ":/nickelhardcover/note.png";

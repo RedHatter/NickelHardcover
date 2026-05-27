@@ -16,23 +16,27 @@
 #include "settings/settingsdialog.h"
 #include "synccontroller.h"
 
-MenuController::MenuController(QWidget *parent) : QWidget(parent) {
+MenuController::MenuController(int iconHeight, QWidget *parent) : QWidget(parent), iconHeight(iconHeight) {
   icon = construct_TouchLabel(parent);
   TouchLabel__setHitStateEnabled(icon, false);
-  icon->setPixmap(QPixmap(Files::icon));
+  setSelected(false);
 
   QWidget::connect(icon, SIGNAL(tapped(bool)), this, SLOT(showMainMenu(bool)));
 };
 
+void MenuController::setSelected(bool selected) {
+  icon->setPixmap(QPixmap(selected ? Files::icon_hit : Files::icon).scaledToHeight(iconHeight));
+}
+
 void MenuController::showMainMenu(bool checked) {
   nh_log("MenuController::showMainMenu(%s)", checked ? "true" : "false");
 
-  icon->setPixmap(QPixmap(Files::icon_hit));
+  setSelected(true);
 
   NickelTouchMenu *menu = construct_NickelTouchMenu(icon);
   NickelTouchMenu__showDecoration(menu, true);
   QWidget::connect(menu, &QMenu::aboutToHide, menu, &QWidget::deleteLater);
-  QWidget::connect(menu, &QMenu::aboutToHide, icon, [this] { icon->setPixmap(QPixmap(Files::icon)); });
+  QWidget::connect(menu, &QMenu::aboutToHide, icon, [this] { setSelected(false); });
 
   QWidgetAction *action = addMenuItem(menu, "Sync now");
   QObject::connect(action, &QAction::triggered, this, &MenuController::syncNow);
@@ -152,13 +156,13 @@ void MenuController::setBookStatus(bool checked) {
 void MenuController::showStatusMenu(QJsonObject doc) {
   nh_log("MenuController::showStatusMenu()");
 
-  icon->setPixmap(QPixmap(Files::icon_hit));
+  setSelected(true);
 
   NickelTouchMenu *menu = construct_NickelTouchMenu(icon);
   NickelTouchMenu__showDecoration(menu, true);
 
   QWidget::connect(menu, &QMenu::aboutToHide, menu, &QWidget::deleteLater);
-  QWidget::connect(menu, &QMenu::aboutToHide, icon, [this] { icon->setPixmap(QPixmap(Files::icon)); });
+  QWidget::connect(menu, &QMenu::aboutToHide, icon, [this] { setSelected(false); });
   QWidget::connect(menu, &QMenu::triggered, this, &MenuController::statusSelected);
 
   QWidgetAction *action = addMenuItem(menu, "Back", true, true);

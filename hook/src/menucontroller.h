@@ -8,7 +8,7 @@ class MenuController : public QWidget {
   Q_OBJECT
 
 public:
-  MenuController(QWidget *parent = nullptr);
+  MenuController(int iconHeight, QWidget *parent = nullptr);
   TouchLabel *icon = nullptr;
 
 public Q_SLOTS:
@@ -27,4 +27,8 @@ public Q_SLOTS:
 
 private:
   QWidgetAction *addMenuItem(NickelTouchMenu *menu, QString label, bool checkable = false, bool checked = false);
+
+  void setSelected(bool selected);
+
+  int iconHeight;
 };
