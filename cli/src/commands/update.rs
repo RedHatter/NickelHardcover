@@ -16,7 +16,7 @@ use crate::utils::{VERSION, debug_log, log};
 #[derive(GraphQLQuery, SendRequest)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
-  query_path = "src/graphql/mutation.graphql",
+  query_path = "src/graphql/mutations/updateread.graphql",
   response_derives = "Debug,AggregateErrors",
   variables_derives = "Debug"
 )]
@@ -25,7 +25,7 @@ struct UpdateRead;
 #[derive(GraphQLQuery, SendRequest)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
-  query_path = "src/graphql/mutation.graphql",
+  query_path = "src/graphql/mutations/insertread.graphql",
   response_derives = "Debug,AggregateErrors",
   variables_derives = "Debug"
 )]
@@ -34,7 +34,7 @@ struct InsertRead;
 #[derive(GraphQLQuery, SendRequest)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
-  query_path = "src/graphql/mutation.graphql",
+  query_path = "src/graphql/mutations/insertreadingjournal.graphql",
   response_derives = "Debug,AggregateErrors",
   variables_derives = "Debug"
 )]
@@ -43,7 +43,7 @@ struct InsertReadingJournal;
 #[derive(GraphQLQuery, SendRequest)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
-  query_path = "src/graphql/mutation.graphql",
+  query_path = "src/graphql/mutations/updatejournal.graphql",
   response_derives = "Debug,AggregateErrors",
   variables_derives = "Debug"
 )]
@@ -52,7 +52,7 @@ struct UpdateJournal;
 #[derive(GraphQLQuery, SendRequest)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
-  query_path = "src/graphql/query.graphql",
+  query_path = "src/graphql/queries/getjournal.graphql",
   response_derives = "Debug,AggregateErrors",
   variables_derives = "Debug"
 )]

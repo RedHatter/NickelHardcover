@@ -1,0 +1,23 @@
+mutation UpdateUserBook($user_book_id: Int!, $object: UserBookUpdateInput!) {
+  update_user_book(id: $user_book_id, object: $object) {
+    id
+    error
+    user_book {
+      user_book_reads(
+        where: { finished_at: { _is_null: true } }
+        order_by: { started_at: desc }
+        limit: 1
+      ) {
+        id
+        started_at
+        edition {
+          id
+          pages
+          book {
+            pages
+          }
+        }
+      }
+    }
+  }
+}

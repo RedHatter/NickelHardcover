@@ -123,7 +123,7 @@ where
 #[derive(GraphQLQuery, SendRequest)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
-  query_path = "src/graphql/query.graphql",
+  query_path = "src/graphql/queries/getedition.graphql",
   response_derives = "Debug,AggregateErrors,Clone",
   variables_derives = "Debug"
 )]
@@ -132,7 +132,7 @@ pub struct GetEdition;
 #[derive(GraphQLQuery, SendRequest)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
-  query_path = "src/graphql/mutation.graphql",
+  query_path = "src/graphql/mutations/updateuserbook.graphql",
   response_derives = "Debug,AggregateErrors",
   variables_derives = "Debug,Default",
   skip_serializing_none
@@ -142,7 +142,7 @@ pub struct UpdateUserBook;
 #[derive(GraphQLQuery, SendRequest)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
-  query_path = "src/graphql/mutation.graphql",
+  query_path = "src/graphql/mutations/insertuserbook.graphql",
   response_derives = "Debug,AggregateErrors",
   variables_derives = "Debug,Default",
   skip_serializing_none

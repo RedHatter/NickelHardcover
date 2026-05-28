@@ -1,0 +1,18 @@
+mutation InsertRead(
+  $user_book_id: Int!
+  $edition_id: Int!
+  $progress_pages: Int!
+  $started_at: date!
+) {
+  insert_user_book_read(
+    user_book_id: $user_book_id
+    user_book_read: {
+      edition_id: $edition_id
+      progress_pages: $progress_pages
+      started_at: $started_at
+    }
+  ) {
+    id
+    error
+  }
+}

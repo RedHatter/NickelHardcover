@@ -1,0 +1,25 @@
+mutation InsertReadingJournal(
+  $book_id: Int!
+  $edition_id: Int!
+  $event: String!
+  $privacy_setting_id: Int!
+  $entry: String!
+  $action_at: date
+  $metadata: jsonb
+) {
+  insert_reading_journal(
+    object: {
+      book_id: $book_id
+      edition_id: $edition_id
+      event: $event
+      privacy_setting_id: $privacy_setting_id
+      tags: { category: "", spoiler: false, tag: "" }
+      entry: $entry
+      action_at: $action_at
+      metadata: $metadata
+    }
+  ) {
+    errors
+    id
+  }
+}

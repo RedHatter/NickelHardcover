@@ -10,7 +10,7 @@ use crate::utils::{VERSION, log};
 #[derive(GraphQLQuery, SendRequest)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
-  query_path = "src/graphql/query.graphql",
+  query_path = "src/graphql/queries/searchbooks.graphql",
   response_derives = "Debug,AggregateErrors",
   variables_derives = "Debug"
 )]

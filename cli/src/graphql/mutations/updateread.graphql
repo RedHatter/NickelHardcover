@@ -1,0 +1,18 @@
+mutation UpdateRead(
+  $id: Int!
+  $progress_pages: Int!
+  $edition_id: Int!
+  $started_at: date!
+) {
+  update_user_book_read(
+    id: $id
+    object: {
+      edition_id: $edition_id
+      started_at: $started_at
+      progress_pages: $progress_pages
+    }
+  ) {
+    id
+    error
+  }
+}

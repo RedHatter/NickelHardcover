@@ -1,0 +1,24 @@
+mutation InsertUserBook($object: UserBookCreateInput!) {
+  insert_user_book(object: $object) {
+    error
+    user_book {
+      id
+      user_book_reads(
+        where: { finished_at: { _is_null: true } }
+        order_by: { started_at: desc }
+        limit: 1
+      ) {
+        id
+        paused_at
+        started_at
+        edition {
+          id
+          pages
+          book {
+            pages
+          }
+        }
+      }
+    }
+  }
+}
