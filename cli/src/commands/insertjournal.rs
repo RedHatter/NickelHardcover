@@ -2,17 +2,19 @@ use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 use serde_json::json;
 
+use macros::{AggregateErrors, SendRequest};
+
 use crate::config::{CONFIG, JournalPrivacy};
-use crate::hardcover::{date, get_book, jsonb, send_request};
+use crate::hardcover::{date, get_book, jsonb};
 use crate::isbn::get_isbn;
 use crate::utils::{VERSION, log};
 
-#[derive(GraphQLQuery)]
+#[derive(GraphQLQuery, SendRequest)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/mutation.graphql",
-  response_derives = "Serialize,Debug",
-  variables_derives = "Deserialize,Debug"
+  response_derives = "Debug,AggregateErrors",
+  variables_derives = "Debug"
 )]
 struct InsertReadingJournal;
 
@@ -53,35 +55,23 @@ pub async fn run(args: InsertJournal) -> Result<(), String> {
 
   let (book, edition_id, pages, _) = get_book(isbn, book_id).await?;
 
-  let res = send_request::<insert_reading_journal::Variables, insert_reading_journal::ResponseData>(
-    InsertReadingJournal::build_query(insert_reading_journal::Variables {
-      book_id: book.id,
-      edition_id,
-      event: "note".into(),
-      privacy_setting_id: args.privacy.unwrap_or(CONFIG.journal_privacy) as i64,
-      entry: args.text,
-      action_at: None,
-      metadata: match json!({
-        "page": (pages as f64 * (args.percentage / 100.0)).round() as i64,
-        "possible": pages,
-        "percent": args.percentage,
-      }) {
-        serde_json::Value::Object(obj) => Some(obj),
-        _ => None,
-      },
-    }),
-  )
+  InsertReadingJournal::send_request(insert_reading_journal::Variables {
+    book_id: book.id,
+    edition_id,
+    event: "note".into(),
+    privacy_setting_id: args.privacy.unwrap_or(CONFIG.journal_privacy) as i64,
+    entry: args.text,
+    action_at: None,
+    metadata: match json!({
+      "page": (pages as f64 * (args.percentage / 100.0)).round() as i64,
+      "possible": pages,
+      "percent": args.percentage,
+    }) {
+      serde_json::Value::Object(obj) => Some(obj),
+      _ => None,
+    },
+  })
   .await?;
-
-  if let Some(errors) = res.insert_reading_journal.and_then(|res| res.errors) {
-    return Err(
-      errors
-        .iter()
-        .filter_map(Option::as_deref)
-        .collect::<Vec<_>>()
-        .join("<br>"),
-    );
-  }
 
   Ok(())
 }

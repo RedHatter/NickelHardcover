@@ -1,3 +1,7 @@
+[workspace]
+resolver = "3"
+members = ["macros"]
+
 [package]
 name = "nickel-hardcover-cli"
 version = "0.4.2"
@@ -15,6 +19,7 @@ serini = "0.2.0"
 tokio = { version = "1.45.0", features = ["full"] }
 tokio-retry = { version = "0.3.1", default-features = false }
 zip = "4.3.0"
+macros = { path = "./macros" }
 
 [dependencies.reqwest]
 version = "0.12.15"

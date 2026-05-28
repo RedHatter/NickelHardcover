@@ -2,15 +2,17 @@ use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 use serde_json::{Value, json};
 
-use crate::hardcover::{jsonb, send_request};
+use macros::{AggregateErrors, SendRequest};
+
+use crate::hardcover::jsonb;
 use crate::utils::{VERSION, log};
 
-#[derive(GraphQLQuery)]
+#[derive(GraphQLQuery, SendRequest)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/query.graphql",
-  response_derives = "Serialize,Debug",
-  variables_derives = "Deserialize,Debug"
+  response_derives = "Debug,AggregateErrors",
+  variables_derives = "Debug"
 )]
 struct SearchBooks;
 
@@ -34,13 +36,11 @@ pub struct Search {
 pub async fn run(args: Search) -> Result<(), String> {
   log(format!("{} {:?}", &*VERSION, args))?;
 
-  let results = send_request::<search_books::Variables, search_books::ResponseData>(SearchBooks::build_query(
-    search_books::Variables {
-      query: args.query,
-      limit: args.limit,
-      page: args.page,
-    },
-  ))
+  let results = SearchBooks::send_request(search_books::Variables {
+    query: args.query,
+    limit: args.limit,
+    page: args.page,
+  })
   .await?
   .search
   .ok_or("Failed to find field <i>search</i> in Hardcover.app results")?

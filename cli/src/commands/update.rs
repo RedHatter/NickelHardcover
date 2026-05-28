@@ -3,56 +3,58 @@ use chrono::Local;
 use graphql_client::GraphQLQuery;
 use serde_json::json;
 
+use macros::{AggregateErrors, SendRequest};
+
 use crate::bookmarks::get_bookmarks;
 use crate::config::{CONFIG, SyncBookmarks};
 use crate::hardcover::{
-  bigint, date, jsonb, send_request, timestamptz, update_or_insert_user_book, update_user_book::UserBookUpdateInput,
+  bigint, date, jsonb, timestamptz, update_or_insert_user_book, update_user_book::UserBookUpdateInput,
 };
 use crate::isbn::get_isbn;
 use crate::utils::{VERSION, debug_log, log};
 
-#[derive(GraphQLQuery)]
+#[derive(GraphQLQuery, SendRequest)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/mutation.graphql",
-  response_derives = "Serialize,Debug",
-  variables_derives = "Deserialize,Debug"
+  response_derives = "Debug,AggregateErrors",
+  variables_derives = "Debug"
 )]
 struct UpdateRead;
 
-#[derive(GraphQLQuery)]
+#[derive(GraphQLQuery, SendRequest)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/mutation.graphql",
-  response_derives = "Serialize,Debug",
-  variables_derives = "Deserialize,Debug"
+  response_derives = "Debug,AggregateErrors",
+  variables_derives = "Debug"
 )]
 struct InsertRead;
 
-#[derive(GraphQLQuery)]
+#[derive(GraphQLQuery, SendRequest)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/mutation.graphql",
-  response_derives = "Serialize,Debug",
-  variables_derives = "Deserialize,Debug"
+  response_derives = "Debug,AggregateErrors",
+  variables_derives = "Debug"
 )]
 struct InsertReadingJournal;
 
-#[derive(GraphQLQuery)]
+#[derive(GraphQLQuery, SendRequest)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/mutation.graphql",
-  response_derives = "Serialize,Debug",
-  variables_derives = "Deserialize,Debug"
+  response_derives = "Debug,AggregateErrors",
+  variables_derives = "Debug"
 )]
 struct UpdateJournal;
 
-#[derive(GraphQLQuery)]
+#[derive(GraphQLQuery, SendRequest)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/query.graphql",
-  response_derives = "Serialize,Debug",
-  variables_derives = "Deserialize,Debug"
+  response_derives = "Debug,AggregateErrors",
+  variables_derives = "Debug"
 )]
 struct GetJournal;
 
@@ -104,38 +106,26 @@ pub async fn run(args: Update) -> Result<(), String> {
       result.edition_id
     ))?;
 
-    let res = send_request::<update_read::Variables, update_read::ResponseData>(UpdateRead::build_query(
-      update_read::Variables {
-        id: user_read_id,
-        progress_pages,
-        edition_id: result.edition_id,
-        started_at: result.started_at.unwrap_or(Local::now().format("%Y-%m-%d").to_string()),
-      },
-    ))
+    UpdateRead::send_request(update_read::Variables {
+      id: user_read_id,
+      progress_pages,
+      edition_id: result.edition_id,
+      started_at: result.started_at.unwrap_or(Local::now().format("%Y-%m-%d").to_string()),
+    })
     .await?;
-
-    if let Some(error) = res.update_user_book_read.and_then(|res| res.error) {
-      return Err(error);
-    }
   } else {
     log(format!(
       "Insert new read for edition `{}` at page `{progress_pages}`",
       result.edition_id
     ))?;
 
-    let res = send_request::<insert_read::Variables, insert_read::ResponseData>(InsertRead::build_query(
-      insert_read::Variables {
-        user_book_id: result.user_book_id,
-        progress_pages,
-        edition_id: result.edition_id,
-        started_at: result.started_at.unwrap_or(Local::now().format("%Y-%m-%d").to_string()),
-      },
-    ))
+    InsertRead::send_request(insert_read::Variables {
+      user_book_id: result.user_book_id,
+      progress_pages,
+      edition_id: result.edition_id,
+      started_at: result.started_at.unwrap_or(Local::now().format("%Y-%m-%d").to_string()),
+    })
     .await?;
-
-    if let Some(error) = res.insert_user_book_read.and_then(|res| res.error) {
-      return Err(error);
-    }
   }
 
   if CONFIG.sync_bookmarks == SyncBookmarks::Never
@@ -165,12 +155,10 @@ pub async fn run(args: Update) -> Result<(), String> {
 
   for bookmark in bookmarks.iter() {
     let reading_journals = if args.after.clone().is_some_and(|after| bookmark.date_created < after) {
-      send_request::<get_journal::Variables, get_journal::ResponseData>(GetJournal::build_query(
-        get_journal::Variables {
-          user_id: result.user_id,
-          action_at: bookmark.date_created.clone(),
-        },
-      ))
+      GetJournal::send_request(get_journal::Variables {
+        user_id: result.user_id,
+        action_at: bookmark.date_created.clone(),
+      })
       .await?
       .reading_journals
     } else {
@@ -230,23 +218,11 @@ pub async fn insert_or_update_journal(
     if journal.entry.as_ref() != Some(&object.entry) {
       log(format!("Update `{}` with id `{}`", object.event, journal.id))?;
 
-      let res = send_request::<update_journal::Variables, update_journal::ResponseData>(UpdateJournal::build_query(
-        update_journal::Variables {
-          journal_id: journal.id,
-          entry: object.entry,
-        },
-      ))
+      UpdateJournal::send_request(update_journal::Variables {
+        journal_id: journal.id,
+        entry: object.entry,
+      })
       .await?;
-
-      if let Some(errors) = res.update_reading_journal.and_then(|res| res.errors) {
-        return Err(
-          errors
-            .iter()
-            .filter_map(Option::as_deref)
-            .collect::<Vec<_>>()
-            .join("<br>"),
-        );
-      }
     } else {
       log(format!("Skipping `{}` with id `{}`", object.event, journal.id))?;
     }
@@ -256,20 +232,7 @@ pub async fn insert_or_update_journal(
       object.event, object.book_id, object.edition_id,
     ))?;
 
-    let res = send_request::<insert_reading_journal::Variables, insert_reading_journal::ResponseData>(
-      InsertReadingJournal::build_query(object),
-    )
-    .await?;
-
-    if let Some(errors) = res.insert_reading_journal.and_then(|res| res.errors) {
-      return Err(
-        errors
-          .iter()
-          .filter_map(Option::as_deref)
-          .collect::<Vec<_>>()
-          .join("<br>"),
-      );
-    }
+    InsertReadingJournal::send_request(object).await?;
   }
 
   Ok(())

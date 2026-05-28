@@ -4,15 +4,17 @@ use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 use serde_json::json;
 
-use crate::hardcover::{citext, send_request};
+use macros::{AggregateErrors, SendRequest};
+
+use crate::hardcover::citext;
 use crate::utils::{VERSION, log};
 
-#[derive(GraphQLQuery)]
+#[derive(GraphQLQuery, SendRequest)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/query.graphql",
-  response_derives = "Serialize,Debug,Clone",
-  variables_derives = "Deserialize,Debug"
+  response_derives = "Debug,AggregateErrors,Clone,Serialize",
+  variables_derives = "Debug"
 )]
 pub struct GetUserId;
 
@@ -23,11 +25,7 @@ pub async fn get_user() -> Result<&'static get_user_id::GetUserIdMe, String> {
     return Ok(user);
   }
 
-  let res = send_request::<get_user_id::Variables, get_user_id::ResponseData>(GetUserId::build_query(
-    get_user_id::Variables {},
-  ))
-  .await?;
-
+  let res = GetUserId::send_request(get_user_id::Variables {}).await?;
   let user = res.me.first().ok_or("Failed to find Hardcover.app user")?;
 
   log(format!("user {}", user.id))?;

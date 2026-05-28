@@ -52,3 +52,7 @@ pub fn report<E: Error>(msg: &str) -> impl FnOnce(E) -> String {
     s
   }
 }
+
+pub trait AggregateErrors {
+  fn errors<'a>(&'a self) -> impl Iterator<Item = &'a str>;
+}

@@ -4,13 +4,15 @@ use std::{fmt::Debug, sync::LazyLock};
 
 use graphql_client::{GraphQLQuery, QueryBody};
 use reqwest::{Client, StatusCode};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use tokio::time::sleep;
 use tokio_retry::{Retry, strategy::ExponentialBackoff};
 
+use macros::{AggregateErrors, SendRequest};
+
 use crate::commands::getuser::get_user;
 use crate::config::CONFIG;
-use crate::utils::{VERSION, debug_log, log, report};
+use crate::utils::{AggregateErrors, VERSION, debug_log, log, report};
 
 pub type date = String;
 pub type citext = String;
@@ -19,6 +21,17 @@ pub type numeric = f32;
 pub type bigint = i64;
 pub type timestamp = String;
 pub type timestamptz = String;
+
+impl<Data: AggregateErrors> AggregateErrors for graphql_client::Response<Data> {
+  fn errors<'a>(&'a self) -> impl Iterator<Item = &'a str> {
+    self
+      .errors
+      .iter()
+      .flatten()
+      .map(|e| e.message.as_str())
+      .chain(self.data.iter().flat_map(AggregateErrors::errors))
+  }
+}
 
 static CLIENT: LazyLock<Result<Client, String>> = LazyLock::new(|| {
   Client::builder()
@@ -63,9 +76,13 @@ async fn try_request<T: Serialize>(request_body: &QueryBody<T>) -> Result<reqwes
     .map_err(report(&format!("{} request failed", request_body.operation_name)))
 }
 
-pub async fn send_request<T: Serialize + Debug, R: for<'a> Deserialize<'a> + Debug>(
-  request_body: QueryBody<T>,
-) -> Result<R, String> {
+pub async fn send_request<Q: graphql_client::GraphQLQuery>(
+  request_body: QueryBody<Q::Variables>,
+) -> Result<Q::ResponseData, String>
+where
+  <Q as GraphQLQuery>::Variables: Debug,
+  <Q as GraphQLQuery>::ResponseData: Debug + AggregateErrors,
+{
   assert!(
     !CONFIG.authorization.is_empty(),
     "Please set the Hardcover.app authorization token in `.adds/nickelpagesync/config.ini`"
@@ -81,22 +98,19 @@ pub async fn send_request<T: Serialize + Debug, R: for<'a> Deserialize<'a> + Deb
   })
   .await?;
 
-  let obj: graphql_client::Response<R> = res.json().await.map_err(report(&format!(
+  let obj: graphql_client::Response<Q::ResponseData> = res.json().await.map_err(report(&format!(
     "Failed to parse {} response",
     request_body.operation_name
   )))?;
 
   debug_log(&format!("{:?}", obj))?;
 
-  if let Some(errors) = obj.errors {
+  let errors = obj.errors().collect::<Vec<_>>();
+  if !errors.is_empty() {
     return Err(format!(
       "{} has errors<br>{}",
       request_body.operation_name,
-      errors
-        .iter()
-        .map(|err| err.message.as_ref())
-        .collect::<Vec<_>>()
-        .join("<br>>")
+      errors.join("<br>>")
     ));
   }
 
@@ -106,31 +120,31 @@ pub async fn send_request<T: Serialize + Debug, R: for<'a> Deserialize<'a> + Deb
   }
 }
 
-#[derive(GraphQLQuery)]
+#[derive(GraphQLQuery, SendRequest)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/query.graphql",
-  response_derives = "Serialize,Debug,Clone",
-  variables_derives = "Deserialize,Debug"
+  response_derives = "Debug,AggregateErrors,Clone",
+  variables_derives = "Debug"
 )]
 pub struct GetEdition;
 
-#[derive(GraphQLQuery)]
+#[derive(GraphQLQuery, SendRequest)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/mutation.graphql",
-  response_derives = "Serialize,Debug",
-  variables_derives = "Deserialize,Default,Debug",
+  response_derives = "Debug,AggregateErrors",
+  variables_derives = "Debug,Default",
   skip_serializing_none
 )]
 pub struct UpdateUserBook;
 
-#[derive(GraphQLQuery)]
+#[derive(GraphQLQuery, SendRequest)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/mutation.graphql",
-  response_derives = "Serialize,Debug",
-  variables_derives = "Deserialize,Default,Debug",
+  response_derives = "Debug,AggregateErrors",
+  variables_derives = "Debug,Default",
   skip_serializing_none
 )]
 struct InsertUserBook;
@@ -168,10 +182,7 @@ pub async fn get_book(
   let all_isbns = isbn.join(", ");
 
   // retrieve book, edition and maybe user book and user book read
-  let res = send_request::<get_edition::Variables, get_edition::ResponseData>(GetEdition::build_query(
-    get_edition::Variables { isbn, book_id, user_id },
-  ))
-  .await?;
+  let res = GetEdition::send_request(get_edition::Variables { isbn, book_id, user_id }).await?;
 
   let book = res
     .editions
@@ -258,17 +269,11 @@ pub async fn update_or_insert_user_book(
     {
       log(format!("Update user book `{}`", user_book.id))?;
 
-      let res = send_request::<update_user_book::Variables, update_user_book::ResponseData>(
-        UpdateUserBook::build_query(update_user_book::Variables {
-          user_book_id: user_book.id,
-          object,
-        }),
-      )
+      let res = UpdateUserBook::send_request(update_user_book::Variables {
+        user_book_id: user_book.id,
+        object,
+      })
       .await?;
-
-      if let Some(error) = res.update_user_book.as_ref().and_then(|res| res.error.clone()) {
-        return Err(error);
-      }
 
       let updated_user_book = res
         .update_user_book
@@ -296,26 +301,20 @@ pub async fn update_or_insert_user_book(
       book.id
     ))?;
 
-    let res = send_request::<insert_user_book::Variables, insert_user_book::ResponseData>(InsertUserBook::build_query(
-      insert_user_book::Variables {
-        object: insert_user_book::UserBookCreateInput {
-          book_id: book.id,
-          edition_id: Some(edition_id),
-          status_id: object.status_id,
-          rating: object.rating,
-          review_slate: object.review_slate,
-          sponsored_review: object.sponsored_review,
-          reviewed_at: object.reviewed_at,
-          review_has_spoilers: object.review_has_spoilers,
-          ..insert_user_book::UserBookCreateInput::default()
-        },
+    let res = InsertUserBook::send_request(insert_user_book::Variables {
+      object: insert_user_book::UserBookCreateInput {
+        book_id: book.id,
+        edition_id: Some(edition_id),
+        status_id: object.status_id,
+        rating: object.rating,
+        review_slate: object.review_slate,
+        sponsored_review: object.sponsored_review,
+        reviewed_at: object.reviewed_at,
+        review_has_spoilers: object.review_has_spoilers,
+        ..insert_user_book::UserBookCreateInput::default()
       },
-    ))
+    })
     .await?;
-
-    if let Some(error) = res.insert_user_book.as_ref().and_then(|res| res.error.clone()) {
-      return Err(error);
-    }
 
     let user_book = res
       .insert_user_book

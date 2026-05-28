@@ -2,17 +2,19 @@ use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 use serde_json::{Value, json};
 
+use macros::{AggregateErrors, SendRequest};
+
 use crate::commands::getuser::get_user;
-use crate::hardcover::{bigint, jsonb, send_request, timestamptz};
+use crate::hardcover::{bigint, jsonb, timestamptz};
 use crate::isbn::get_isbn;
 use crate::utils::{VERSION, log};
 
-#[derive(GraphQLQuery)]
+#[derive(GraphQLQuery, SendRequest)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/query.graphql",
-  response_derives = "Serialize,Debug",
-  variables_derives = "Deserialize,Debug"
+  response_derives = "Debug,AggregateErrors",
+  variables_derives = "Debug"
 )]
 struct GetReadingJournal;
 
@@ -49,15 +51,13 @@ pub async fn run(args: ListJournal) -> Result<(), String> {
 
   let user_id = get_user().await?.id;
 
-  let journals = send_request::<get_reading_journal::Variables, get_reading_journal::ResponseData>(
-    GetReadingJournal::build_query(get_reading_journal::Variables {
-      isbn,
-      book_id,
-      user_id,
-      limit: args.limit,
-      offset: args.offset,
-    }),
-  )
+  let journals = GetReadingJournal::send_request(get_reading_journal::Variables {
+    isbn,
+    book_id,
+    user_id,
+    limit: args.limit,
+    offset: args.offset,
+  })
   .await?
   .reading_journals
   .iter()

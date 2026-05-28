@@ -60,6 +60,7 @@ impl<'de> Deserialize<'de> for JournalPrivacy {
 }
 
 #[derive(Serialize, PartialEq, Debug)]
+#[serde(rename_all = "lowercase")]
 pub enum SyncOnClose {
   Always,
   Never,

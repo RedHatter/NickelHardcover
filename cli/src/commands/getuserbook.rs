@@ -1,9 +1,8 @@
 use argh::FromArgs;
-use graphql_client::GraphQLQuery;
 use serde_json::json;
 
 use crate::commands::getuser::get_user;
-use crate::hardcover::{GetEdition, get_edition, send_request};
+use crate::hardcover::{GetEdition, get_edition};
 use crate::isbn::get_isbn;
 use crate::utils::{VERSION, log};
 
@@ -34,10 +33,7 @@ pub async fn run(args: GetUserBook) -> Result<(), String> {
 
   let all_isbns = isbn.join(", ");
 
-  let res = send_request::<get_edition::Variables, get_edition::ResponseData>(GetEdition::build_query(
-    get_edition::Variables { isbn, book_id, user_id },
-  ))
-  .await?;
+  let res = GetEdition::send_request(get_edition::Variables { isbn, book_id, user_id }).await?;
 
   let user_book = res
     .editions
