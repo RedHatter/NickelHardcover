@@ -1,4 +1,4 @@
-use chrono::NaiveDate;
+use chrono::{DateTime, Utc};
 use rusqlite::{Connection, OpenFlags};
 
 use crate::config::CONFIG;
@@ -6,13 +6,14 @@ use crate::utils::report;
 
 #[derive(Debug)]
 pub struct Bookmark {
+  pub id: String,
   pub text: String,
   pub annotation: Option<String>,
-  pub date_created: String,
+  pub date_created: DateTime<Utc>,
   pub location: Option<f64>,
 }
 
-pub fn get_bookmarks(content_id: String, after_datetime: Option<&String>) -> Result<Vec<Bookmark>, String> {
+pub fn get_bookmarks(content_id: String) -> Result<Vec<Bookmark>, String> {
   let connection =
     Connection::open_with_flags(&CONFIG.sqlite_path, OpenFlags::SQLITE_OPEN_READ_ONLY).map_err(report(&format!(
       "Failed to connect to the database <i>{}</i>",
@@ -21,7 +22,7 @@ pub fn get_bookmarks(content_id: String, after_datetime: Option<&String>) -> Res
 
   let total_word_count: Option<f64> = connection
     .prepare("SELECT SUM(WordCount) FROM content WHERE BookId = (?1) AND WordCount > 0")
-    .map_err(report("Failed to parpare total word count query"))?
+    .map_err(report("Failed to prepare total word count query"))?
     .query_map([&content_id], |row| row.get(0))
     .map_err(report("Failed to run total word count query"))?
     .next()
@@ -31,6 +32,7 @@ pub fn get_bookmarks(content_id: String, after_datetime: Option<&String>) -> Res
   connection
     .prepare(
       "SELECT
+        BookmarkID,
         Text,
         Annotation,
         Bookmark.DateCreated,
@@ -46,44 +48,31 @@ pub fn get_bookmarks(content_id: String, after_datetime: Option<&String>) -> Res
         AND before.WordCount > 0
         AND before.VolumeIndex < chapter.VolumeIndex
       WHERE VolumeID = (?1)
-      AND Bookmark.DateModified > (?2)
       AND Hidden = 'false'
       AND bookmark.Text != ''
       GROUP BY Bookmark.BookmarkID;",
     )
-    .map_err(report("Failed to parpare bookmark query"))?
-    .query_map(
-      [
-        &content_id,
-        after_datetime.unwrap_or(
-          &NaiveDate::from_yo_opt(2000, 1)
-            .ok_or("Failed to construct NaiveDate")?
-            .and_hms_opt(1, 0, 0)
-            .ok_or("Failed to construct NaiveDateTime")?
-            .and_utc()
-            .to_rfc3339(),
-        ),
-      ],
-      |row| {
-        let chapter_progress: Option<f64> = row.get(3)?;
-        let chapter_word_count: Option<f64> = row.get(4)?;
-        let bookmark_word_count: Option<f64> = row.get(5)?;
-        Ok(Bookmark {
-          text: row.get(0)?,
-          annotation: row.get(1)?,
-          date_created: row.get(2)?,
-          location: if let Some(chapter_progress) = chapter_progress
-            && let Some(chapter_word_count) = chapter_word_count
-            && let Some(total_word_count) = total_word_count
-            && total_word_count > 0.0
-          {
-            Some((bookmark_word_count.unwrap_or(0.0) + chapter_word_count * chapter_progress) / total_word_count)
-          } else {
-            None
-          },
-        })
-      },
-    )
+    .map_err(report("Failed to prepare bookmark query"))?
+    .query_map([&content_id], |row| {
+      let chapter_progress: Option<f64> = row.get(4)?;
+      let chapter_word_count: Option<f64> = row.get(5)?;
+      let bookmark_word_count: Option<f64> = row.get(6)?;
+      Ok(Bookmark {
+        id: row.get(0)?,
+        text: row.get(1)?,
+        annotation: row.get(2)?,
+        date_created: row.get(3)?,
+        location: if let Some(chapter_progress) = chapter_progress
+          && let Some(chapter_word_count) = chapter_word_count
+          && let Some(total_word_count) = total_word_count
+          && total_word_count > 0.0
+        {
+          Some((bookmark_word_count.unwrap_or(0.0) + chapter_word_count * chapter_progress) / total_word_count)
+        } else {
+          None
+        },
+      })
+    })
     .map_err(report("Failed to run bookmark query"))?
     .map(|row| row.map_err(report("Failed to map bookmark query result")))
     .collect()

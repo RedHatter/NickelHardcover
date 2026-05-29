@@ -9,10 +9,10 @@ edition = "2024"
 
 [dependencies]
 argh = "0.1.13"
-chrono = "0.4.41"
+chrono = { version = "0.4.41", features = ["serde"] }
 graphql_client = "0.14.0"
 quick-xml = "0.38.0"
-rusqlite = { version = "0.34.0", features = ["bundled"] }
+rusqlite = { version = "0.34.0", features = ["bundled", "chrono"] }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 serini = "0.2.0"
@@ -20,6 +20,7 @@ tokio = { version = "1.45.0", features = ["full"] }
 tokio-retry = { version = "0.3.1", default-features = false }
 zip = "4.3.0"
 macros = { path = "./macros" }
+itertools = "0.14.0"
 
 [dependencies.reqwest]
 version = "0.12.15"

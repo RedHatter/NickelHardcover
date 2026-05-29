@@ -62,14 +62,11 @@ pub async fn run(args: InsertJournal) -> Result<(), String> {
     privacy_setting_id: args.privacy.unwrap_or(CONFIG.journal_privacy) as i64,
     entry: args.text,
     action_at: None,
-    metadata: match json!({
+    metadata: Some(json!({
       "page": (pages as f64 * (args.percentage / 100.0)).round() as i64,
       "possible": pages,
       "percent": args.percentage,
-    }) {
-      serde_json::Value::Object(obj) => Some(obj),
-      _ => None,
-    },
+    })),
   })
   .await?;
 

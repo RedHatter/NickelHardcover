@@ -92,7 +92,6 @@ void SyncQueue::run(QString contentId, bool manual) {
 }
 
 void SyncQueue::success() {
-  Settings::getInstance()->setLastSynced(contentId, QDateTime::currentDateTimeUtc().toString(Qt::ISODate));
   finished();
 
   if (dialog == nullptr)

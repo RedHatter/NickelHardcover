@@ -65,10 +65,6 @@ void Settings::setLastProgress(QString contentId, int value) { setValue(contentI
 
 int Settings::getLastProgress(QString contentId) { return getValue(contentId, "progress").toInt(); }
 
-void Settings::setLastSynced(QString contentId, QString value) { setValue(contentId, "lastSynced", value); }
-
-QString Settings::getLastSynced(QString contentId) { return getValue(contentId, "lastSynced").toString(); }
-
 void Settings::setSyncDaily(int value) { config->setValue("sync_daily", value); }
 
 int Settings::getSyncDaily() {

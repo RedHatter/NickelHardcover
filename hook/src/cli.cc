@@ -67,11 +67,6 @@ CLI *CLI::update(QString contentId, int percentage, bool silent, bool icon) {
     arguments.append({"--book-id", linkedBook});
   }
 
-  QString lastSynced = Settings::getInstance()->getLastSynced(contentId);
-  if (!lastSynced.isEmpty()) {
-    arguments.append({"--after", lastSynced});
-  }
-
   return new CLI(arguments, silent, icon);
 }
 

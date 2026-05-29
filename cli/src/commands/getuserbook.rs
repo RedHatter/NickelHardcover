@@ -55,7 +55,7 @@ pub async fn run(args: GetUserBook) -> Result<(), String> {
         "rating": user_book.rating,
         "review_has_spoilers": user_book.review_has_spoilers,
         "review_raw": user_book.review_raw,
-        "reviewed_at": user_book.reviewed_at.clone(),
+        "reviewed_at": user_book.reviewed_at,
         "sponsored_review": user_book.sponsored_review,
       })
     })

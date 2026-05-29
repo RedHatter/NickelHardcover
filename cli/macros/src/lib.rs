@@ -11,12 +11,20 @@ pub fn derive_send_request(input: TokenStream) -> TokenStream {
     Data::Struct(_) => {
       quote! {
         impl #name {
-          pub fn send_request(
+          pub async fn send_request(
             variables: <Self as GraphQLQuery>::Variables,
-          ) -> impl Future<Output = Result<<Self as GraphQLQuery>::ResponseData, String>> {
-            crate::hardcover::send_request::<Self>(Self::build_query(variables))
+          ) -> Result<<Self as GraphQLQuery>::ResponseData, String> {
+            let body = Self::build_query(variables);
+            crate::utils::debug_log(&format!("{}, {:?}", body.operation_name, body.variables))?;
+            crate::hardcover::send_request::<_, graphql_client::Response<<Self as GraphQLQuery>::ResponseData>>(
+              body.operation_name,
+              &body,
+            )
+            .await?
+            .data
+            .ok_or(format!("{} response is None", body.operation_name))
           }
-        },
+        }
       }
     }
     _ => quote! {},

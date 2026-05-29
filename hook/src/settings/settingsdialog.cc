@@ -316,11 +316,7 @@ QFrame *SettingsDialog::buildInformation() {
   layout->addWidget(row);
 
   int progress = Settings::getInstance()->getLastProgress(ctl->contentId);
-  QString time = Settings::getInstance()->getLastSynced(ctl->contentId);
-  QString lastSynced = progress <= 0 ? "" : QString::number(progress).append("% at ");
-  lastSynced =
-      lastSynced.append(time.isEmpty() ? "Never" : QDateTime::fromString(time, Qt::ISODate).toLocalTime().toString());
-  row = new StaticRow("Last synced", lastSynced, true);
+  row = new StaticRow("Last synced", progress <= 0 ? "Never" : QString::number(progress).append("%"), true);
   layout->addWidget(row);
   QObject::connect(row, &StaticRow::clear, this, &SettingsDialog::clearLastSynced);
 
@@ -366,13 +362,11 @@ void SettingsDialog::setPageThreshold(QVariant value) { Settings::getInstance()-
 void SettingsDialog::clearLastSynced() {
   QString contentId = SyncController::getInstance()->contentId;
   Settings *settings = Settings::getInstance();
-  settings->setLastSynced(contentId, QString());
   settings->setLastProgress(contentId, 0);
 
   StaticRow *row = qobject_cast<StaticRow *>(sender());
-  QString lastSynced = settings->getLastSynced(contentId);
-  lastSynced = lastSynced.isEmpty() ? "Never" : QDateTime::fromString(lastSynced, Qt::ISODate).toLocalTime().toString();
-  row->setValue(QString::number(settings->getLastProgress(contentId)).append("% at ").append(lastSynced));
+  int progress = settings->getLastProgress(contentId);
+  row->setValue(progress <= 0 ? "Never" : QString::number(progress).append("%"));
 }
 
 void SettingsDialog::setDebug(bool value) { Settings::getInstance()->setDebug(value); }

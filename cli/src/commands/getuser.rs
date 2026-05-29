@@ -13,7 +13,7 @@ use crate::utils::{VERSION, log};
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/queries/getuserid.graphql",
-  response_derives = "Debug,AggregateErrors,Clone,Serialize",
+  response_derives = "Debug,AggregateErrors,Serialize",
   variables_derives = "Debug"
 )]
 pub struct GetUserId;
@@ -25,12 +25,16 @@ pub async fn get_user() -> Result<&'static get_user_id::GetUserIdMe, String> {
     return Ok(user);
   }
 
-  let res = GetUserId::send_request(get_user_id::Variables {}).await?;
-  let user = res.me.first().ok_or("Failed to find Hardcover.app user")?;
+  let user = GetUserId::send_request(get_user_id::Variables {})
+    .await?
+    .me
+    .into_iter()
+    .next()
+    .ok_or("Failed to find Hardcover.app user")?;
 
   log(format!("user {}", user.id))?;
 
-  Ok(USER.get_or_init(|| user.to_owned()))
+  Ok(USER.get_or_init(|| user))
 }
 
 /// Retrieve authenticated user.

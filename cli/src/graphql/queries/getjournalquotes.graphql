@@ -1,0 +1,14 @@
+query GetJournalQuotes($book_id: Int!, $user_id: Int!) {
+  reading_journals(
+    where: {
+      event: { _eq: "quote" }
+      book_id: { _eq: $book_id }
+      user_id: { _eq: $user_id }
+    }
+  ) {
+    entry
+    event
+    id
+    action_at
+  }
+}

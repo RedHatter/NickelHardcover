@@ -2,9 +2,12 @@
 
 use std::{fmt::Debug, sync::LazyLock};
 
-use graphql_client::{GraphQLQuery, QueryBody};
+use chrono::{DateTime, Utc};
+use graphql_client::GraphQLQuery;
+use itertools::Itertools;
 use reqwest::{Client, StatusCode};
 use serde::Serialize;
+use serde::de::DeserializeOwned;
 use tokio::time::sleep;
 use tokio_retry::{Retry, strategy::ExponentialBackoff};
 
@@ -16,11 +19,11 @@ use crate::utils::{AggregateErrors, VERSION, debug_log, log, report};
 
 pub type date = String;
 pub type citext = String;
-pub type jsonb = serde_json::Map<String, serde_json::Value>;
+pub type jsonb = serde_json::Value;
 pub type numeric = f32;
 pub type bigint = i64;
 pub type timestamp = String;
-pub type timestamptz = String;
+pub type timestamptz = DateTime<Utc>;
 
 impl<Data: AggregateErrors> AggregateErrors for graphql_client::Response<Data> {
   fn errors<'a>(&'a self) -> impl Iterator<Item = &'a str> {
@@ -33,6 +36,12 @@ impl<Data: AggregateErrors> AggregateErrors for graphql_client::Response<Data> {
   }
 }
 
+impl<T: AggregateErrors> AggregateErrors for Vec<T> {
+  fn errors<'a>(&'a self) -> impl Iterator<Item = &'a str> {
+    self.iter().flat_map(AggregateErrors::errors)
+  }
+}
+
 static CLIENT: LazyLock<Result<Client, String>> = LazyLock::new(|| {
   Client::builder()
     .user_agent(format!("{}/{}", env!("CARGO_PKG_NAME"), &*VERSION))
@@ -40,7 +49,7 @@ static CLIENT: LazyLock<Result<Client, String>> = LazyLock::new(|| {
     .map_err(report("Failed to construct http client"))
 });
 
-async fn try_request<T: Serialize>(request_body: &QueryBody<T>) -> Result<reqwest::Response, String> {
+async fn try_request<T: Serialize>(request_body: &T) -> Result<reqwest::Response, String> {
   let res = CLIENT
     .as_ref()?
     .post("https://api.hardcover.app/v1/graphql")
@@ -48,10 +57,7 @@ async fn try_request<T: Serialize>(request_body: &QueryBody<T>) -> Result<reqwes
     .json(&request_body)
     .send()
     .await
-    .map_err(report(&format!(
-      "Failed to send request {}",
-      request_body.operation_name
-    )))?;
+    .map_err(report("Failed to send request"))?;
 
   if res.status() == StatusCode::TOO_MANY_REQUESTS {
     let timestamp = res
@@ -71,60 +77,44 @@ async fn try_request<T: Serialize>(request_body: &QueryBody<T>) -> Result<reqwes
     sleep(duration).await;
   }
 
-  res
-    .error_for_status()
-    .map_err(report(&format!("{} request failed", request_body.operation_name)))
+  res.error_for_status().map_err(report("request failed"))
 }
 
-pub async fn send_request<Q: graphql_client::GraphQLQuery>(
-  request_body: QueryBody<Q::Variables>,
-) -> Result<Q::ResponseData, String>
-where
-  <Q as GraphQLQuery>::Variables: Debug,
-  <Q as GraphQLQuery>::ResponseData: Debug + AggregateErrors,
-{
+pub async fn send_request<T: Serialize, R: DeserializeOwned + Debug + AggregateErrors>(
+  operation_name: &str,
+  request_body: T,
+) -> Result<R, String> {
   assert!(
     !CONFIG.authorization.is_empty(),
     "Please set the Hardcover.app authorization token in `.adds/nickelpagesync/config.ini`"
   );
 
-  debug_log(&format!(
-    "{}, {:?}",
-    request_body.operation_name, request_body.variables
-  ))?;
-
   let res = Retry::spawn(ExponentialBackoff::from_millis(10).take(3), async || {
     try_request(&request_body).await
   })
-  .await?;
+  .await
+  .map_err(|e| format!("{operation_name}: {e}"))?;
 
-  let obj: graphql_client::Response<Q::ResponseData> = res.json().await.map_err(report(&format!(
-    "Failed to parse {} response",
-    request_body.operation_name
-  )))?;
+  let data: R = res
+    .json()
+    .await
+    .map_err(report(&format!("Failed to parse {operation_name} response")))?;
 
-  debug_log(&format!("{:?}", obj))?;
+  debug_log(&format!("{:?}", data))?;
 
-  let errors = obj.errors().collect::<Vec<_>>();
+  let errors = data.errors().join("<br>>");
   if !errors.is_empty() {
-    return Err(format!(
-      "{} has errors<br>{}",
-      request_body.operation_name,
-      errors.join("<br>>")
-    ));
+    return Err(format!("{operation_name} has errors<br>{errors}"));
   }
 
-  match obj.data {
-    Some(data) => Ok(data),
-    None => Err(format!("Empty response for {}: {:?}", request_body.operation_name, obj)),
-  }
+  Ok(data)
 }
 
 #[derive(GraphQLQuery, SendRequest)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/queries/getedition.graphql",
-  response_derives = "Debug,AggregateErrors,Clone",
+  response_derives = "Debug,AggregateErrors",
   variables_derives = "Debug"
 )]
 pub struct GetEdition;
@@ -182,11 +172,11 @@ pub async fn get_book(
   let all_isbns = isbn.join(", ");
 
   // retrieve book, edition and maybe user book and user book read
-  let res = GetEdition::send_request(get_edition::Variables { isbn, book_id, user_id }).await?;
-
-  let book = res
+  let book = GetEdition::send_request(get_edition::Variables { isbn, book_id, user_id })
+    .await?
     .editions
-    .first()
+    .into_iter()
+    .next()
     .expect(&if book_id != 0 {
       format!("Unable to find book id <i>{book_id}</i> on Hardcover.app. Please manually un-link and re-link book.")
     } else {
@@ -194,8 +184,7 @@ pub async fn get_book(
         "Unable to find a book edition on Hardcover.app with ISBN/ASIN <i>{all_isbns}</i>. Please manually link book."
       )
     })
-    .book
-    .clone();
+    .book;
 
   let edition_id = book
     .user_books
@@ -254,7 +243,7 @@ pub async fn update_or_insert_user_book(
 ) -> Result<UserBookResult, String> {
   let (book, edition_id, pages, user_id) = get_book(isbn, book_id).await?;
 
-  let (user_book_id, user_read_id, started_at) = if let Some(user_book) = book.user_books.first() {
+  let (user_book_id, user_read_id, started_at) = if let Some(user_book) = book.user_books.into_iter().next() {
     if object.review_slate.is_some()
       || (object.rating.is_some() && object.rating != user_book.rating)
       || object
@@ -269,30 +258,28 @@ pub async fn update_or_insert_user_book(
     {
       log(format!("Update user book `{}`", user_book.id))?;
 
-      let res = UpdateUserBook::send_request(update_user_book::Variables {
+      UpdateUserBook::send_request(update_user_book::Variables {
         user_book_id: user_book.id,
         object,
       })
-      .await?;
-
-      let updated_user_book = res
-        .update_user_book
-        .and_then(|update| update.user_book)
-        .ok_or(format!("Failed to find updated user book <i>{}</i>", user_book.id))?;
-      let read = updated_user_book.user_book_reads.first();
-
-      (
-        user_book.id,
-        read.map(|read| read.id),
-        read.and_then(|read| read.started_at.clone()),
-      )
+      .await?
+      .update_user_book
+      .and_then(|update| update.user_book)
+      .ok_or(format!("Failed to find updated user book <i>{}</i>", user_book.id))?
+      .user_book_reads
+      .into_iter()
+      .next()
+      .map_or((user_book.id, None, None), |read| {
+        (user_book.id, Some(read.id), read.started_at)
+      })
     } else {
-      let read = user_book.user_book_reads.first();
-      (
-        user_book.id,
-        read.map(|read| read.id),
-        read.and_then(|read| read.started_at.clone()),
-      )
+      user_book
+        .user_book_reads
+        .into_iter()
+        .next()
+        .map_or((user_book.id, None, None), |read| {
+          (user_book.id, Some(read.id), read.started_at)
+        })
     }
   } else {
     // Insert new user book
@@ -301,7 +288,7 @@ pub async fn update_or_insert_user_book(
       book.id
     ))?;
 
-    let res = InsertUserBook::send_request(insert_user_book::Variables {
+    let user_book = InsertUserBook::send_request(insert_user_book::Variables {
       object: insert_user_book::UserBookCreateInput {
         book_id: book.id,
         edition_id: Some(edition_id),
@@ -314,19 +301,17 @@ pub async fn update_or_insert_user_book(
         ..insert_user_book::UserBookCreateInput::default()
       },
     })
-    .await?;
-
-    let user_book = res
-      .insert_user_book
-      .and_then(|update| update.user_book)
-      .ok_or("Failed to find inserted user book")?;
-    let read = user_book.user_book_reads.first();
-
-    (
-      user_book.id,
-      read.map(|read| read.id),
-      read.and_then(|read| read.started_at.clone()),
-    )
+    .await?
+    .insert_user_book
+    .and_then(|update| update.user_book)
+    .ok_or("Failed to find inserted user book")?;
+    user_book
+      .user_book_reads
+      .into_iter()
+      .next()
+      .map_or((user_book.id, None, None), |read| {
+        (user_book.id, Some(read.id), read.started_at)
+      })
   };
 
   if let Some(id) = user_read_id {

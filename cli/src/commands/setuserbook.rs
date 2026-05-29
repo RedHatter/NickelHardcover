@@ -49,48 +49,38 @@ pub async fn run(args: SetUserBook) -> Result<(), String> {
   }
 
   update_or_insert_user_book(
-    args.content_id.map(|id| get_isbn(&id)).unwrap_or(Vec::new()),
+    args.content_id.iter().flat_map(|id| get_isbn(&id)).collect::<Vec<_>>(),
     args.book_id.unwrap_or(0),
     UserBookUpdateInput {
       status_id: args.status,
       review_has_spoilers: args.spoilers,
       sponsored_review: args.sponsored,
       rating: args.rating,
-      reviewed_at: if args.text.is_some() {
-        Some(Local::now().format("%Y-%m-%d").to_string())
-      } else {
-        None
-      },
-      review_slate: args
-        .text
-        .map(|text| {
-          serde_json::json!({
-            "document": {
-              "object": "document",
-              "children": text
-                .split('\n')
-                .filter(|str| !str.is_empty())
-                .map(|str| {
-                  serde_json::json!({
-                    "data": {},
-                    "type": "paragraph",
-                    "object": "block",
-                    "children": [
-                      {
-                        "text": str,
-                        "object": "text"
-                      }
-                    ]
-                  })
+      reviewed_at: args.text.as_ref().map(|_| Local::now().format("%Y-%m-%d").to_string()),
+      review_slate: args.text.map(|text| {
+        serde_json::json!({
+          "document": {
+            "object": "document",
+            "children": text
+              .split('\n')
+              .filter(|s| !s.is_empty())
+              .map(|s| {
+                serde_json::json!({
+                  "data": {},
+                  "type": "paragraph",
+                  "object": "block",
+                  "children": [
+                    {
+                      "text": s,
+                      "object": "text"
+                    }
+                  ]
                 })
-                .collect::<Vec<_>>()
-            }
-          })
-          .as_object()
-          .map(|obj| obj.clone())
-          .ok_or("Failed to generate slate json")
+              })
+              .collect::<Vec<_>>()
+          }
         })
-        .transpose()?,
+      }),
       ..UserBookUpdateInput::default()
     },
   )

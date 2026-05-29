@@ -20,9 +20,6 @@ public:
   void setLastProgress(QString contentId, int value);
   int getLastProgress(QString contentId);
 
-  void setLastSynced(QString contentId, QString value);
-  QString getLastSynced(QString contentId);
-
   void setAutoSyncDefault(bool value);
   bool getAutoSyncDefault();
 
