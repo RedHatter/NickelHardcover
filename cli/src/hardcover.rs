@@ -7,8 +7,7 @@ use chrono::{DateTime, Utc};
 use graphql_client::GraphQLQuery;
 use itertools::Itertools;
 use reqwest::{Client, StatusCode};
-use serde::Serialize;
-use serde::de::DeserializeOwned;
+use serde::{Serialize, de::DeserializeOwned};
 use tokio::time::sleep;
 use tokio_retry::{Retry, strategy::ExponentialBackoff};
 

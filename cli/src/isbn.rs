@@ -3,8 +3,8 @@ use std::{fs::File, path::Path};
 
 use anyhow::{Context, Result, bail};
 use itertools::Itertools;
-use quick_xml::Reader;
 use quick_xml::events::Event;
+use quick_xml::{Reader, XmlVersion};
 use rusqlite::{Connection, OpenFlags};
 use zip::ZipArchive;
 
@@ -13,6 +13,7 @@ use crate::log;
 
 fn get_oebps_path(manifest: &str) -> Result<String> {
   let mut reader = Reader::from_str(manifest);
+  let mut xml_version = XmlVersion::Implicit1_0;
 
   loop {
     match reader.read_event() {
@@ -23,6 +24,11 @@ fn get_oebps_path(manifest: &str) -> Result<String> {
         ))?;
       }
       Ok(Event::Eof) => break,
+      Ok(Event::Decl(e)) => {
+        if let Ok(version) = e.xml_version() {
+          xml_version = version;
+        }
+      }
       Ok(Event::Empty(e)) => {
         if e.name().as_ref() == b"rootfile" {
           let media_type = e
@@ -30,7 +36,7 @@ fn get_oebps_path(manifest: &str) -> Result<String> {
             .context("Failed to decode <i>media-type</i> attribute")?;
           if let Some(media_type) = media_type
             && media_type
-              .unescape_value()
+              .normalized_value(xml_version)
               .context("Failed to decode <i>media-type</i> attribute value")?
               == "application/oebps-package+xml"
           {
@@ -38,7 +44,7 @@ fn get_oebps_path(manifest: &str) -> Result<String> {
               e.try_get_attribute("full-path")
                 .context("Failed to decode <i>full-path</i> attribute")?
                 .context("Failed to find <i>full-path</i> attribute")?
-                .unescape_value()
+                .normalized_value(xml_version)
                 .context("Failed to decode <i>full-path</i> attribute value")?
                 .to_string(),
             );
