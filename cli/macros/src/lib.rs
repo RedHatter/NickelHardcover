@@ -13,16 +13,18 @@ pub fn derive_send_request(input: TokenStream) -> TokenStream {
         impl #name {
           pub async fn send_request(
             variables: <Self as GraphQLQuery>::Variables,
-          ) -> Result<<Self as GraphQLQuery>::ResponseData, String> {
+          ) -> anyhow::Result<<Self as GraphQLQuery>::ResponseData> {
             let body = Self::build_query(variables);
-            crate::utils::debug_log(&format!("{}, {:?}", body.operation_name, body.variables))?;
-            crate::hardcover::send_request::<_, graphql_client::Response<<Self as GraphQLQuery>::ResponseData>>(
-              body.operation_name,
-              &body,
+            crate::debug_log!("{}, {:?}", body.operation_name, body.variables);
+            anyhow::Context::context(
+              crate::hardcover::send_request::<_, graphql_client::Response<<Self as GraphQLQuery>::ResponseData>>(
+                body.operation_name,
+                &body,
+              )
+              .await?
+              .data,
+              format!("{} response is None", body.operation_name),
             )
-            .await?
-            .data
-            .ok_or(format!("{} response is None", body.operation_name))
           }
         }
       }

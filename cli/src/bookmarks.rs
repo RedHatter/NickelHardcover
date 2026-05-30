@@ -1,8 +1,8 @@
+use anyhow::{Context, Result};
 use chrono::{DateTime, Utc};
 use rusqlite::{Connection, OpenFlags};
 
 use crate::config::CONFIG;
-use crate::utils::report;
 
 #[derive(Debug)]
 pub struct Bookmark {
@@ -13,21 +13,19 @@ pub struct Bookmark {
   pub location: Option<f64>,
 }
 
-pub fn get_bookmarks(content_id: String) -> Result<Vec<Bookmark>, String> {
-  let connection =
-    Connection::open_with_flags(&CONFIG.sqlite_path, OpenFlags::SQLITE_OPEN_READ_ONLY).map_err(report(&format!(
-      "Failed to connect to the database <i>{}</i>",
-      &CONFIG.sqlite_path
-    )))?;
+pub fn get_bookmarks(content_id: String) -> Result<Vec<Bookmark>> {
+  let connection = Connection::open_with_flags(&CONFIG.sqlite_path, OpenFlags::SQLITE_OPEN_READ_ONLY).context(
+    format!("Failed to connect to the database <i>{}</i>", &CONFIG.sqlite_path),
+  )?;
 
   let total_word_count: Option<f64> = connection
     .prepare("SELECT SUM(WordCount) FROM content WHERE BookId = (?1) AND WordCount > 0")
-    .map_err(report("Failed to prepare total word count query"))?
+    .context("Failed to prepare total word count query")?
     .query_map([&content_id], |row| row.get(0))
-    .map_err(report("Failed to run total word count query"))?
+    .context("Failed to run total word count query")?
     .next()
-    .ok_or("Total word count query returned no results")?
-    .map_err(report("Failed to map total word count query result"))?;
+    .context("Total word count query returned no results")?
+    .context("Failed to map total word count query result")?;
 
   connection
     .prepare(
@@ -52,7 +50,7 @@ pub fn get_bookmarks(content_id: String) -> Result<Vec<Bookmark>, String> {
       AND bookmark.Text != ''
       GROUP BY Bookmark.BookmarkID;",
     )
-    .map_err(report("Failed to prepare bookmark query"))?
+    .context("Failed to prepare bookmark query")?
     .query_map([&content_id], |row| {
       let chapter_progress: Option<f64> = row.get(4)?;
       let chapter_word_count: Option<f64> = row.get(5)?;
@@ -73,7 +71,7 @@ pub fn get_bookmarks(content_id: String) -> Result<Vec<Bookmark>, String> {
         },
       })
     })
-    .map_err(report("Failed to run bookmark query"))?
-    .map(|row| row.map_err(report("Failed to map bookmark query result")))
-    .collect()
+    .context("Failed to run bookmark query")?
+    .collect::<Result<Vec<_>, _>>()
+    .context("Failed to map bookmark query result")
 }

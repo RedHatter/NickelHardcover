@@ -1,10 +1,12 @@
 use std::panic;
 
+use anyhow::Result;
 use chrono::Local;
 
 use crate::hardcover::{update_or_insert_user_book, update_user_book::UserBookUpdateInput};
 use crate::isbn::get_isbn;
-use crate::utils::{VERSION, log};
+use crate::log;
+use crate::utils::VERSION;
 
 use argh::FromArgs;
 
@@ -41,8 +43,8 @@ pub struct SetUserBook {
   spoilers: Option<bool>,
 }
 
-pub async fn run(args: SetUserBook) -> Result<(), String> {
-  log(format!("{} {:?}", &*VERSION, args))?;
+pub async fn run(args: SetUserBook) -> Result<()> {
+  log!("{} {:?}", &*VERSION, args);
 
   if args.content_id.is_none() && args.book_id.is_none() {
     panic!("One of --content-id or --book-id is required");

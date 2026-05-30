@@ -1,5 +1,6 @@
 use std::sync::OnceLock;
 
+use anyhow::{Context, Result};
 use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 use serde_json::json;
@@ -7,7 +8,8 @@ use serde_json::json;
 use macros::{AggregateErrors, SendRequest};
 
 use crate::hardcover::citext;
-use crate::utils::{VERSION, log};
+use crate::log;
+use crate::utils::VERSION;
 
 #[derive(GraphQLQuery, SendRequest)]
 #[graphql(
@@ -18,7 +20,7 @@ use crate::utils::{VERSION, log};
 )]
 pub struct GetUserId;
 
-pub async fn get_user() -> Result<&'static get_user_id::GetUserIdMe, String> {
+pub async fn get_user() -> Result<&'static get_user_id::GetUserIdMe> {
   static USER: OnceLock<get_user_id::GetUserIdMe> = OnceLock::new();
 
   if let Some(user) = USER.get() {
@@ -30,9 +32,9 @@ pub async fn get_user() -> Result<&'static get_user_id::GetUserIdMe, String> {
     .me
     .into_iter()
     .next()
-    .ok_or("Failed to find Hardcover.app user")?;
+    .context("Failed to find Hardcover.app user")?;
 
-  log(format!("user {}", user.id))?;
+  log!("user {}", user.id);
 
   Ok(USER.get_or_init(|| user))
 }
@@ -42,9 +44,9 @@ pub async fn get_user() -> Result<&'static get_user_id::GetUserIdMe, String> {
 #[argh(subcommand, name = "get-user")]
 pub struct GetUser {}
 
-pub async fn run(args: GetUser) -> Result<(), String> {
-  log(format!("{} {:?}", &*VERSION, args))?;
-  log(format!("BEGIN_JSON\n{}", json!(get_user().await?)))?;
+pub async fn run(args: GetUser) -> Result<()> {
+  log!("{} {:?}", &*VERSION, args);
+  log!("BEGIN_JSON\n{}", json!(get_user().await?));
 
   Ok(())
 }

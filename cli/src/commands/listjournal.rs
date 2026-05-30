@@ -1,3 +1,4 @@
+use anyhow::Result;
 use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 use serde_json::{Value, json};
@@ -7,7 +8,8 @@ use macros::{AggregateErrors, SendRequest};
 use crate::commands::getuser::get_user;
 use crate::hardcover::{bigint, jsonb, timestamptz};
 use crate::isbn::get_isbn;
-use crate::utils::{VERSION, log};
+use crate::log;
+use crate::utils::VERSION;
 
 #[derive(GraphQLQuery, SendRequest)]
 #[graphql(
@@ -39,8 +41,8 @@ pub struct ListJournal {
   offset: i64,
 }
 
-pub async fn run(args: ListJournal) -> Result<(), String> {
-  log(format!("{} {:?}", &*VERSION, args))?;
+pub async fn run(args: ListJournal) -> Result<()> {
+  log!("{} {:?}", &*VERSION, args);
 
   if args.content_id.is_none() && args.book_id.is_none() {
     panic!("One of --content-id or --book-id is required");
@@ -75,9 +77,9 @@ pub async fn run(args: ListJournal) -> Result<(), String> {
   })
   .collect::<Vec<_>>();
 
-  log(format!("Found {}", journals.len()))?;
+  log!("Found {}", journals.len());
 
-  log(format!("BEGIN_JSON\n{}", json!({ "reading_journals": journals})))?;
+  log!("BEGIN_JSON\n{}", json!({ "reading_journals": journals}));
 
   Ok(())
 }

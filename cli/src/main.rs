@@ -3,9 +3,7 @@ use std::panic;
 
 use crate::commands::{getuser, getuserbook, insertjournal, listjournal, search, setuserbook, update};
 use crate::config::CONFIG;
-use crate::utils::VERSION;
-use crate::utils::debug_log;
-use crate::utils::write_logfile;
+use crate::utils::{VERSION, write_logfile};
 
 mod commands;
 mod hardcover;
@@ -16,6 +14,7 @@ mod isbn;
 mod utils;
 
 use argh::FromArgs;
+use itertools::Itertools;
 
 /// The CLI for NickelHardcover.
 #[derive(FromArgs, PartialEq, Debug)]
@@ -44,23 +43,10 @@ enum Commands {
 async fn main() {
   if env::var("RUST_BACKTRACE").is_err() {
     panic::set_hook(Box::new(|info| {
-      let msg = if let Some(s) = info.payload().downcast_ref::<&str>() {
-        s
-      } else if let Some(s) = info.payload().downcast_ref::<String>() {
-        s
-      } else {
-        "An unknown error occurred"
-      };
-
+      let msg = info.payload_as_str().unwrap_or("An unknown error occurred");
       eprintln!("{}", msg);
-
-      if let Err(e) = debug_log(msg) {
-        eprintln!("{}", e);
-      }
-
-      if let Err(e) = write_logfile() {
-        eprintln!("{}", e);
-      }
+      debug_log!("{}", msg);
+      write_logfile();
     }));
   }
 
@@ -85,12 +71,13 @@ async fn main() {
   };
 
   if let Err(e) = res {
-    panic!("Encountered an unexpeced error. Please report this.<br><br>{e}");
+    panic!(
+      "Encountered an unexpected error. Please report this.<br><br>{:#}",
+      e.chain().join("<br>> ")
+    );
   }
 
-  if CONFIG.debug
-    && let Err(e) = write_logfile()
-  {
-    eprintln!("{}", e);
+  if CONFIG.debug {
+    write_logfile();
   }
 }

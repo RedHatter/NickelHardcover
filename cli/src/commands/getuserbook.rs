@@ -1,10 +1,12 @@
+use anyhow::Result;
 use argh::FromArgs;
 use serde_json::json;
 
 use crate::commands::getuser::get_user;
 use crate::hardcover::{GetEdition, get_edition};
 use crate::isbn::get_isbn;
-use crate::utils::{VERSION, log};
+use crate::log;
+use crate::utils::VERSION;
 
 /// Retrieve user book including review.
 #[derive(FromArgs, PartialEq, Debug)]
@@ -19,8 +21,8 @@ pub struct GetUserBook {
   book_id: Option<i64>,
 }
 
-pub async fn run(args: GetUserBook) -> Result<(), String> {
-  log(format!("{} {:?}", &*VERSION, args))?;
+pub async fn run(args: GetUserBook) -> Result<()> {
+  log!("{} {:?}", &*VERSION, args);
 
   if args.content_id.is_none() && args.book_id.is_none() {
     panic!("One of --content-id or --book-id is required");
@@ -61,7 +63,7 @@ pub async fn run(args: GetUserBook) -> Result<(), String> {
     })
     .unwrap_or(json!({}));
 
-  log(format!("BEGIN_JSON\n{user_book}"))?;
+  log!("BEGIN_JSON\n{user_book}");
 
   Ok(())
 }

@@ -21,6 +21,7 @@ tokio-retry = { version = "0.3.1", default-features = false }
 zip = "4.3.0"
 macros = { path = "./macros" }
 itertools = "0.14.0"
+anyhow = "1.0.102"
 
 [dependencies.reqwest]
 version = "0.12.15"

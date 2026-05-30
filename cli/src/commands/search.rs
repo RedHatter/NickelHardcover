@@ -1,3 +1,4 @@
+use anyhow::{Context, Result};
 use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 use serde_json::{Value, json};
@@ -5,7 +6,8 @@ use serde_json::{Value, json};
 use macros::{AggregateErrors, SendRequest};
 
 use crate::hardcover::jsonb;
-use crate::utils::{VERSION, log};
+use crate::log;
+use crate::utils::VERSION;
 
 #[derive(GraphQLQuery, SendRequest)]
 #[graphql(
@@ -33,8 +35,8 @@ pub struct Search {
   query: String,
 }
 
-pub async fn run(args: Search) -> Result<(), String> {
-  log(format!("{} {:?}", &*VERSION, args))?;
+pub async fn run(args: Search) -> Result<()> {
+  log!("{} {:?}", &*VERSION, args);
 
   let results = SearchBooks::send_request(search_books::Variables {
     query: args.query,
@@ -43,14 +45,14 @@ pub async fn run(args: Search) -> Result<(), String> {
   })
   .await?
   .search
-  .ok_or("Failed to find field <i>search</i> in Hardcover.app results")?
+  .context("Failed to find field <i>search</i> in Hardcover.app results")?
   .results
-  .ok_or("Failed to find field <i>results</i> in Hardcover.app results")?;
+  .context("Failed to find field <i>results</i> in Hardcover.app results")?;
 
   let hits = results
     .get("hits")
     .and_then(Value::as_array)
-    .ok_or("Failed to find field <i>hits</i> in Hardcover.app results")?
+    .context("Failed to find field <i>hits</i> in Hardcover.app results")?
     .iter()
     .map(|hit| {
       hit.get("document").map(|doc| {
@@ -79,7 +81,7 @@ pub async fn run(args: Search) -> Result<(), String> {
     })
     .collect::<Vec<_>>();
 
-  log(format!(
+  log!(
     "BEGIN_JSON\n{}",
     json!({
       "results": hits,
@@ -91,7 +93,7 @@ pub async fn run(args: Search) -> Result<(), String> {
       }
     })
     .to_string()
-  ))?;
+  );
 
   Ok(())
 }

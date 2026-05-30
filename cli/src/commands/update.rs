@@ -1,6 +1,7 @@
 use std::convert::identity;
 use std::ops::Sub;
 
+use anyhow::Result;
 use argh::FromArgs;
 use chrono::{Local, Utc};
 use graphql_client::GraphQLQuery;
@@ -16,7 +17,8 @@ use crate::hardcover::{
   bigint, date, jsonb, timestamptz, update_or_insert_user_book, update_user_book::UserBookUpdateInput,
 };
 use crate::isbn::get_isbn;
-use crate::utils::{VERSION, debug_log, log};
+use crate::utils::VERSION;
+use crate::{debug_log, log};
 
 #[derive(GraphQLQuery, SendRequest)]
 #[graphql(
@@ -80,8 +82,8 @@ pub struct Update {
   value: i64,
 }
 
-pub async fn run(args: Update) -> Result<(), String> {
-  log(format!("{} {:?}", &*VERSION, args))?;
+pub async fn run(args: Update) -> Result<()> {
+  log!("{} {:?}", &*VERSION, args);
 
   let isbn = if args.book_id.is_none() {
     get_isbn(&args.content_id)
@@ -102,10 +104,10 @@ pub async fn run(args: Update) -> Result<(), String> {
   let progress_pages = (result.pages * args.value) / 100;
 
   if let Some(user_read_id) = result.user_read_id {
-    log(format!(
+    log!(
       "Update read `{user_read_id}` for edition `{}` to page `{progress_pages}`",
       result.edition_id
-    ))?;
+    );
 
     UpdateRead::send_request(update_read::Variables {
       id: user_read_id,
@@ -115,10 +117,10 @@ pub async fn run(args: Update) -> Result<(), String> {
     })
     .await?;
   } else {
-    log(format!(
+    log!(
       "Insert new read for edition `{}` at page `{progress_pages}`",
       result.edition_id
-    ))?;
+    );
 
     InsertRead::send_request(insert_read::Variables {
       user_book_id: result.user_book_id,
@@ -137,13 +139,13 @@ pub async fn run(args: Update) -> Result<(), String> {
 
   let mut bookmarks = get_bookmarks(args.content_id)?;
 
-  log(format!("{} bookmarks", bookmarks.len()))?;
+  log!("{} bookmarks", bookmarks.len());
 
   if bookmarks.is_empty() {
     return Ok(());
   }
 
-  debug_log(&format!("{:?}", bookmarks))?;
+  debug_log!("{:?}", bookmarks);
 
   let reading_journals = GetJournalQuotes::send_request(get_journal_quotes::Variables {
     book_id: result.book_id,
@@ -218,12 +220,12 @@ pub async fn run(args: Update) -> Result<(), String> {
     .collect::<Vec<_>>();
 
   if !insert_body.is_empty() {
-    log(format!(
+    log!(
       "Insert {} quotes for book `{}` and edition `{}`",
       insert_body.len(),
       result.book_id,
       result.edition_id,
-    ))?;
+    );
     send_request::<_, Vec<graphql_client::Response<insert_reading_journal::ResponseData>>>(
       insert_reading_journal::OPERATION_NAME,
       insert_body,
@@ -238,10 +240,10 @@ pub async fn run(args: Update) -> Result<(), String> {
     .collect::<Vec<_>>();
 
   if !update_body.is_empty() {
-    log(format!(
+    log!(
       "Update quotes `{}`",
       update_body.iter().map(|q| q.variables.journal_id).join(", ")
-    ))?;
+    );
     send_request::<_, Vec<graphql_client::Response<update_journal::ResponseData>>>(
       update_journal::OPERATION_NAME,
       update_body,

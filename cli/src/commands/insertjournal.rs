@@ -1,3 +1,4 @@
+use anyhow::Result;
 use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 use serde_json::json;
@@ -7,7 +8,8 @@ use macros::{AggregateErrors, SendRequest};
 use crate::config::{CONFIG, JournalPrivacy};
 use crate::hardcover::{date, get_book, jsonb};
 use crate::isbn::get_isbn;
-use crate::utils::{VERSION, log};
+use crate::log;
+use crate::utils::VERSION;
 
 #[derive(GraphQLQuery, SendRequest)]
 #[graphql(
@@ -43,8 +45,8 @@ pub struct InsertJournal {
   privacy: Option<JournalPrivacy>,
 }
 
-pub async fn run(args: InsertJournal) -> Result<(), String> {
-  log(format!("{} {:?}", &*VERSION, args))?;
+pub async fn run(args: InsertJournal) -> Result<()> {
+  log!("{} {:?}", &*VERSION, args);
 
   if args.content_id.is_none() && args.book_id.is_none() {
     panic!("One of --content-id or --book-id is required");

@@ -2,6 +2,7 @@
 
 use std::{fmt::Debug, sync::LazyLock};
 
+use anyhow::{Context, Result, bail};
 use chrono::{DateTime, Utc};
 use graphql_client::GraphQLQuery;
 use itertools::Itertools;
@@ -15,7 +16,8 @@ use macros::{AggregateErrors, SendRequest};
 
 use crate::commands::getuser::get_user;
 use crate::config::CONFIG;
-use crate::utils::{AggregateErrors, VERSION, debug_log, log, report};
+use crate::utils::{AggregateErrors, VERSION};
+use crate::{debug_log, log};
 
 pub type date = String;
 pub type citext = String;
@@ -25,65 +27,48 @@ pub type bigint = i64;
 pub type timestamp = String;
 pub type timestamptz = DateTime<Utc>;
 
-impl<Data: AggregateErrors> AggregateErrors for graphql_client::Response<Data> {
-  fn errors<'a>(&'a self) -> impl Iterator<Item = &'a str> {
-    self
-      .errors
-      .iter()
-      .flatten()
-      .map(|e| e.message.as_str())
-      .chain(self.data.iter().flat_map(AggregateErrors::errors))
-  }
-}
-
-impl<T: AggregateErrors> AggregateErrors for Vec<T> {
-  fn errors<'a>(&'a self) -> impl Iterator<Item = &'a str> {
-    self.iter().flat_map(AggregateErrors::errors)
-  }
-}
-
-static CLIENT: LazyLock<Result<Client, String>> = LazyLock::new(|| {
+static CLIENT: LazyLock<Result<Client, reqwest::Error>> = LazyLock::new(|| {
   Client::builder()
     .user_agent(format!("{}/{}", env!("CARGO_PKG_NAME"), &*VERSION))
     .build()
-    .map_err(report("Failed to construct http client"))
 });
 
-async fn try_request<T: Serialize>(request_body: &T) -> Result<reqwest::Response, String> {
+async fn try_request<T: Serialize>(request_body: &T) -> Result<reqwest::Response> {
   let res = CLIENT
-    .as_ref()?
+    .as_ref()
+    .context("Failed to construct http client")?
     .post("https://api.hardcover.app/v1/graphql")
     .header("authorization", &CONFIG.authorization)
     .json(&request_body)
     .send()
     .await
-    .map_err(report("Failed to send request"))?;
+    .context("Failed to send request")?;
 
   if res.status() == StatusCode::TOO_MANY_REQUESTS {
     let timestamp = res
       .headers()
       .get("ratelimit-reset")
-      .ok_or("Failed to get `ratelimit-reset` header from http 429")?
+      .context("Failed to get <i>ratelimit-reset</i> header from http 429")?
       .to_str()
-      .map_err(report("Failed to get `ratelimit-reset` header value"))?
+      .context("Failed to get <i>ratelimit-reset</i> header value")?
       .parse::<i64>()
-      .map_err(report("Failed to parse `ratelimit-reset` header"))?;
+      .context("Failed to parse <i>ratelimit-reset</i> header")?;
     let duration = chrono::DateTime::from_timestamp(timestamp, 0)
-      .ok_or(format!("Failed to create DateTime from timestamp `{timestamp}`"))?
+      .context(format!("Failed to create DateTime from timestamp <i>{timestamp}</i>"))?
       .signed_duration_since(chrono::Utc::now())
       .to_std()
-      .map_err(report("Timestamp is in the past"))?;
-    log(format!("Encountered http 429 sleeping for {}", duration.as_secs()))?;
+      .context("Timestamp is in the past")?;
+    log!("Encountered http 429 sleeping for {}", duration.as_secs());
     sleep(duration).await;
   }
 
-  res.error_for_status().map_err(report("request failed"))
+  Ok(res.error_for_status()?)
 }
 
 pub async fn send_request<T: Serialize, R: DeserializeOwned + Debug + AggregateErrors>(
   operation_name: &str,
   request_body: T,
-) -> Result<R, String> {
+) -> Result<R> {
   assert!(
     !CONFIG.authorization.is_empty(),
     "Please set the Hardcover.app authorization token in `.adds/nickelpagesync/config.ini`"
@@ -93,18 +78,18 @@ pub async fn send_request<T: Serialize, R: DeserializeOwned + Debug + AggregateE
     try_request(&request_body).await
   })
   .await
-  .map_err(|e| format!("{operation_name}: {e}"))?;
+  .context(format!("<i>{operation_name}</i> request failed"))?;
 
   let data: R = res
     .json()
     .await
-    .map_err(report(&format!("Failed to parse {operation_name} response")))?;
+    .context(format!("Failed to parse <i>{operation_name}</i> response"))?;
 
-  debug_log(&format!("{:?}", data))?;
+  debug_log!("{:?}", data);
 
   let errors = data.errors().join("<br>>");
   if !errors.is_empty() {
-    return Err(format!("{operation_name} has errors<br>{errors}"));
+    bail!("{operation_name} has errors<br>{errors}");
   }
 
   Ok(data)
@@ -161,13 +146,8 @@ fn map_pages(edition: &get_edition::Edition) -> Option<i64> {
   }
 }
 
-pub async fn get_book(
-  isbn: Vec<String>,
-  book_id: i64,
-) -> Result<(get_edition::GetEditionEditionsBook, i64, i64, i64), String> {
+pub async fn get_book(isbn: Vec<String>, book_id: i64) -> Result<(get_edition::GetEditionEditionsBook, i64, i64, i64)> {
   let user_id = get_user().await?.id;
-
-  log(format!("user {user_id}"))?;
 
   let all_isbns = isbn.join(", ");
 
@@ -240,7 +220,7 @@ pub async fn update_or_insert_user_book(
   isbn: Vec<String>,
   book_id: i64,
   object: update_user_book::UserBookUpdateInput,
-) -> Result<UserBookResult, String> {
+) -> Result<UserBookResult> {
   let (book, edition_id, pages, user_id) = get_book(isbn, book_id).await?;
 
   let (user_book_id, user_read_id, started_at) = if let Some(user_book) = book.user_books.into_iter().next() {
@@ -256,7 +236,7 @@ pub async fn update_or_insert_user_book(
         .status_id
         .is_some_and(|status_id| status_id != user_book.status_id)
     {
-      log(format!("Update user book `{}`", user_book.id))?;
+      log!("Update user book `{}`", user_book.id);
 
       UpdateUserBook::send_request(update_user_book::Variables {
         user_book_id: user_book.id,
@@ -265,7 +245,7 @@ pub async fn update_or_insert_user_book(
       .await?
       .update_user_book
       .and_then(|update| update.user_book)
-      .ok_or(format!("Failed to find updated user book <i>{}</i>", user_book.id))?
+      .context(format!("Failed to find updated user book <i>{}</i>", user_book.id))?
       .user_book_reads
       .into_iter()
       .next()
@@ -283,10 +263,7 @@ pub async fn update_or_insert_user_book(
     }
   } else {
     // Insert new user book
-    log(format!(
-      "Insert user book for book `{}` and edition `{edition_id}`",
-      book.id
-    ))?;
+    log!("Insert user book for book `{}` and edition `{edition_id}`", book.id);
 
     let user_book = InsertUserBook::send_request(insert_user_book::Variables {
       object: insert_user_book::UserBookCreateInput {
@@ -304,7 +281,7 @@ pub async fn update_or_insert_user_book(
     .await?
     .insert_user_book
     .and_then(|update| update.user_book)
-    .ok_or("Failed to find inserted user book")?;
+    .context("Failed to find inserted user book")?;
     user_book
       .user_book_reads
       .into_iter()
@@ -315,7 +292,7 @@ pub async fn update_or_insert_user_book(
   };
 
   if let Some(id) = user_read_id {
-    log(format!("user read `{id}`"))?;
+    log!("user read `{id}`");
   }
 
   Ok(UserBookResult {
