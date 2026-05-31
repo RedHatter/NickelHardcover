@@ -1,6 +1,7 @@
 use std::env;
 use std::panic;
 
+use crate::commands::updatejournal;
 use crate::commands::{getuser, getuserbook, insertjournal, listjournal, search, setuserbook, update};
 use crate::config::CONFIG;
 use crate::utils::{VERSION, write_logfile};
@@ -37,6 +38,7 @@ enum Commands {
   Search(search::Search),
   SetUserBook(setuserbook::SetUserBook),
   Update(update::Update),
+  UpdateJournal(updatejournal::UpdateJournal),
 }
 
 #[tokio::main]
@@ -68,6 +70,7 @@ async fn main() {
     Commands::Search(args) => search::run(args).await,
     Commands::SetUserBook(args) => setuserbook::run(args).await,
     Commands::Update(args) => update::run(args).await,
+    Commands::UpdateJournal(args) => updatejournal::run(args).await,
   };
 
   if let Err(e) = res {

@@ -127,7 +127,6 @@ pub struct UserBookResult {
   pub book_id: i64,
   pub edition_id: i64,
   pub pages: i64,
-  pub user_id: i64,
   pub user_book_id: i64,
   pub user_read_id: Option<i64>,
   pub started_at: Option<String>,
@@ -145,7 +144,7 @@ fn map_pages(edition: &get_edition::Edition) -> Option<i64> {
   }
 }
 
-pub async fn get_book(isbn: Vec<String>, book_id: i64) -> Result<(get_edition::GetEditionEditionsBook, i64, i64, i64)> {
+pub async fn get_book(isbn: Vec<String>, book_id: i64) -> Result<(get_edition::GetEditionEditionsBook, i64, i64)> {
   let user_id = get_user().await?.id;
 
   let all_isbns = isbn.join(", ");
@@ -212,7 +211,7 @@ pub async fn get_book(isbn: Vec<String>, book_id: i64) -> Result<(get_edition::G
         book.id)
       );
 
-  Ok((book, edition_id, pages, user_id))
+  Ok((book, edition_id, pages))
 }
 
 pub async fn update_or_insert_user_book(
@@ -220,7 +219,7 @@ pub async fn update_or_insert_user_book(
   book_id: i64,
   object: update_user_book::UserBookUpdateInput,
 ) -> Result<UserBookResult> {
-  let (book, edition_id, pages, user_id) = get_book(isbn, book_id).await?;
+  let (book, edition_id, pages) = get_book(isbn, book_id).await?;
 
   let (user_book_id, user_read_id, started_at) = if let Some(user_book) = book.user_books.into_iter().next() {
     if object.review_slate.is_some()
@@ -298,7 +297,6 @@ pub async fn update_or_insert_user_book(
     book_id: book.id,
     edition_id,
     pages,
-    user_id,
     user_book_id,
     user_read_id,
     started_at,

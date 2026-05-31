@@ -13,7 +13,7 @@ pub struct Bookmark {
   pub location: Option<f64>,
 }
 
-pub fn get_bookmarks(content_id: String) -> Result<Vec<Bookmark>> {
+pub fn get_bookmarks(content_id: &str) -> Result<Vec<Bookmark>> {
   let connection = Connection::open_with_flags(&CONFIG.sqlite_path, OpenFlags::SQLITE_OPEN_READ_ONLY).context(
     format!("Failed to connect to the database <i>{}</i>", &CONFIG.sqlite_path),
   )?;
@@ -21,7 +21,7 @@ pub fn get_bookmarks(content_id: String) -> Result<Vec<Bookmark>> {
   let total_word_count: Option<f64> = connection
     .prepare("SELECT SUM(WordCount) FROM content WHERE BookId = (?1) AND WordCount > 0")
     .context("Failed to prepare total word count query")?
-    .query_map([&content_id], |row| row.get(0))
+    .query_map([content_id], |row| row.get(0))
     .context("Failed to run total word count query")?
     .next()
     .context("Total word count query returned no results")?
@@ -51,7 +51,7 @@ pub fn get_bookmarks(content_id: String) -> Result<Vec<Bookmark>> {
       GROUP BY Bookmark.BookmarkID;",
     )
     .context("Failed to prepare bookmark query")?
-    .query_map([&content_id], |row| {
+    .query_map([content_id], |row| {
       let chapter_progress: Option<f64> = row.get(4)?;
       let chapter_word_count: Option<f64> = row.get(5)?;
       let bookmark_word_count: Option<f64> = row.get(6)?;

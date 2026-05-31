@@ -1,12 +1,9 @@
-use std::panic;
-
 use anyhow::Result;
 use chrono::Local;
 
 use crate::hardcover::{update_or_insert_user_book, update_user_book::UserBookUpdateInput};
-use crate::isbn::get_isbn;
 use crate::log;
-use crate::utils::VERSION;
+use crate::utils::{VERSION, normalize_identifiers};
 
 use argh::FromArgs;
 
@@ -46,13 +43,11 @@ pub struct SetUserBook {
 pub async fn run(args: SetUserBook) -> Result<()> {
   log!("{} {:?}", &*VERSION, args);
 
-  if args.content_id.is_none() && args.book_id.is_none() {
-    panic!("One of --content-id or --book-id is required");
-  }
+  let (book_id, isbn) = normalize_identifiers(args.book_id, args.content_id.as_deref());
 
   update_or_insert_user_book(
-    args.content_id.iter().flat_map(|id| get_isbn(&id)).collect::<Vec<_>>(),
-    args.book_id.unwrap_or(0),
+    isbn,
+    book_id,
     UserBookUpdateInput {
       status_id: args.status,
       review_has_spoilers: args.spoilers,

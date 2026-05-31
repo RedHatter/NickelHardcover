@@ -7,9 +7,8 @@ use macros::{AggregateErrors, SendRequest};
 
 use crate::config::{CONFIG, JournalPrivacy};
 use crate::hardcover::{date, get_book, jsonb};
-use crate::isbn::get_isbn;
 use crate::log;
-use crate::utils::VERSION;
+use crate::utils::{VERSION, normalize_identifiers};
 
 #[derive(GraphQLQuery, SendRequest)]
 #[graphql(
@@ -48,14 +47,8 @@ pub struct InsertJournal {
 pub async fn run(args: InsertJournal) -> Result<()> {
   log!("{} {:?}", &*VERSION, args);
 
-  if args.content_id.is_none() && args.book_id.is_none() {
-    panic!("One of --content-id or --book-id is required");
-  }
-
-  let isbn = args.content_id.map(|id| get_isbn(&id)).unwrap_or(Vec::new());
-  let book_id = args.book_id.unwrap_or(0);
-
-  let (book, edition_id, pages, _) = get_book(isbn, book_id).await?;
+  let (book_id, isbn) = normalize_identifiers(args.book_id, args.content_id.as_deref());
+  let (book, edition_id, pages) = get_book(isbn, book_id).await?;
 
   InsertReadingJournal::send_request(insert_reading_journal::Variables {
     book_id: book.id,

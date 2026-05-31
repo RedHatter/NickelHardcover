@@ -4,9 +4,8 @@ use serde_json::json;
 
 use crate::commands::getuser::get_user;
 use crate::hardcover::{GetEdition, get_edition};
-use crate::isbn::get_isbn;
 use crate::log;
-use crate::utils::VERSION;
+use crate::utils::{VERSION, normalize_identifiers};
 
 /// Retrieve user book including review.
 #[derive(FromArgs, PartialEq, Debug)]
@@ -24,27 +23,18 @@ pub struct GetUserBook {
 pub async fn run(args: GetUserBook) -> Result<()> {
   log!("{} {:?}", &*VERSION, args);
 
-  if args.content_id.is_none() && args.book_id.is_none() {
-    panic!("One of --content-id or --book-id is required");
-  }
-
-  let isbn = args.content_id.map(|id| get_isbn(&id)).unwrap_or(Vec::new());
-  let book_id = args.book_id.unwrap_or(0);
-
+  let (book_id, isbn) = normalize_identifiers(args.book_id, args.content_id.as_deref());
+  let isbn_display = isbn.join(", ");
   let user_id = get_user().await?.id;
 
-  let all_isbns = isbn.join(", ");
-
-  let res = GetEdition::send_request(get_edition::Variables { isbn, book_id, user_id }).await?;
-
-  let user_book = res
+  let user_book = GetEdition::send_request(get_edition::Variables { isbn, book_id, user_id }).await?
     .editions
     .first()
     .expect(&if book_id != 0 {
       format!("Unable to find book id <i>{book_id}</i> on Hardcover.app. Please manually un-link and re-link book.")
     } else {
       format!(
-        "Unable to find a book edition on Hardcover.app with ISBN/ASIN <i>{all_isbns}</i>. Please manually link book."
+        "Unable to find a book edition on Hardcover.app with ISBN/ASIN <i>{isbn_display}</i>. Please manually link book."
       )
     })
     .book

@@ -5,6 +5,8 @@ use anyhow::{Context, Result};
 use chrono::Local;
 use itertools::Itertools;
 
+use crate::isbn::get_isbn;
+
 #[macro_export]
 macro_rules! debug_log {
   ($($t:tt)*) => {{
@@ -51,6 +53,14 @@ pub fn write_logfile() {
       "Encountered an unexpected error. Please report this.<br><br>{:#}",
       e.chain().join("<br>> ")
     );
+  }
+}
+
+pub fn normalize_identifiers(book_id: Option<i64>, content_id: Option<&str>) -> (i64, Vec<String>) {
+  match (book_id, content_id) {
+    (Some(book_id), _) => (book_id, Vec::new()),
+    (None, Some(content_id)) => (0, get_isbn(&content_id)),
+    (None, None) => panic!("One of --content-id or --book-id is required"),
   }
 }
 

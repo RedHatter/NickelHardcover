@@ -7,9 +7,8 @@ use macros::{AggregateErrors, SendRequest};
 
 use crate::commands::getuser::get_user;
 use crate::hardcover::{bigint, jsonb, timestamptz};
-use crate::isbn::get_isbn;
 use crate::log;
-use crate::utils::VERSION;
+use crate::utils::{VERSION, normalize_identifiers};
 
 #[derive(GraphQLQuery, SendRequest)]
 #[graphql(
@@ -44,13 +43,7 @@ pub struct ListJournal {
 pub async fn run(args: ListJournal) -> Result<()> {
   log!("{} {:?}", &*VERSION, args);
 
-  if args.content_id.is_none() && args.book_id.is_none() {
-    panic!("One of --content-id or --book-id is required");
-  }
-
-  let isbn = args.content_id.map(|id| get_isbn(&id)).unwrap_or(Vec::new());
-  let book_id = args.book_id.unwrap_or(0);
-
+  let (book_id, isbn) = normalize_identifiers(args.book_id, args.content_id.as_deref());
   let user_id = get_user().await?.id;
 
   let journals = GetReadingJournal::send_request(get_reading_journal::Variables {
@@ -78,7 +71,6 @@ pub async fn run(args: ListJournal) -> Result<()> {
   .collect::<Vec<_>>();
 
   log!("Found {}", journals.len());
-
   log!("BEGIN_JSON\n{}", json!({ "reading_journals": journals}));
 
   Ok(())
@@ -86,7 +78,7 @@ pub async fn run(args: ListJournal) -> Result<()> {
 
 pub fn reduce_slate(data: &Value) -> String {
   return match data {
-    Value::Array(array) => array.iter().map(reduce_slate).collect::<Vec<_>>().join(""),
+    Value::Array(array) => array.iter().map(reduce_slate).collect::<String>(),
     Value::Object(map) => {
       let mut str = match map.get("type").and_then(Value::as_str) {
         Some("paragraph") => "\n\n".into(),
@@ -95,14 +87,10 @@ pub fn reduce_slate(data: &Value) -> String {
 
       let value = match map.get("object").and_then(Value::as_str) {
         Some("text") => map.get("text").and_then(Value::as_str).unwrap_or("").into(),
-        _ => map
-          .iter()
-          .map(|(_, value)| reduce_slate(value))
-          .collect::<Vec<_>>()
-          .join(""),
+        _ => map.iter().map(|(_, value)| reduce_slate(value)).collect::<String>(),
       };
 
-      str.push_str(&value);
+      str += &value;
       str
     }
     _ => String::new(),
