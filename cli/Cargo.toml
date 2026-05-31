@@ -15,6 +15,7 @@ graphql_client = "0.16.0"
 itertools = "0.14.0"
 macros = { path = "./macros" }
 quick-xml = "0.40.1"
+regex = "1.12.3"
 rusqlite = { version = "0.40.0", features = ["bundled", "chrono"] }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
