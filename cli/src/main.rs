@@ -1,6 +1,7 @@
 use std::env;
 use std::panic;
 
+use crate::commands::listbookmarks;
 use crate::commands::updatejournal;
 use crate::commands::{getuser, getuserbook, insertjournal, listjournal, search, setuserbook, update};
 use crate::config::CONFIG;
@@ -34,6 +35,7 @@ enum Commands {
   GetUser(getuser::GetUser),
   GetUserBook(getuserbook::GetUserBook),
   InsertJournal(insertjournal::InsertJournal),
+  ListBookmarks(listbookmarks::ListBookmarks),
   ListJournal(listjournal::ListJournal),
   Search(search::Search),
   SetUserBook(setuserbook::SetUserBook),
@@ -66,6 +68,7 @@ async fn main() {
     Commands::GetUser(args) => getuser::run(args).await,
     Commands::GetUserBook(args) => getuserbook::run(args).await,
     Commands::InsertJournal(args) => insertjournal::run(args).await,
+    Commands::ListBookmarks(args) => listbookmarks::run(args).await,
     Commands::ListJournal(args) => listjournal::run(args).await,
     Commands::Search(args) => search::run(args).await,
     Commands::SetUserBook(args) => setuserbook::run(args).await,
