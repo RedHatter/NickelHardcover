@@ -6,7 +6,7 @@ use anyhow::{Context, Result, bail};
 use chrono::{DateTime, Utc};
 use graphql_client::GraphQLQuery;
 use itertools::Itertools;
-use reqwest::{Client, StatusCode};
+use reqwest::{Certificate, Client, StatusCode};
 use serde::{Serialize, de::DeserializeOwned};
 use tokio::time::sleep;
 use tokio_retry::{Retry, strategy::ExponentialBackoff};
@@ -26,13 +26,19 @@ pub type bigint = i64;
 pub type timestamp = String;
 pub type timestamptz = DateTime<Utc>;
 
-static CLIENT: LazyLock<Result<Client, reqwest::Error>> = LazyLock::new(|| {
-  Client::builder()
-    .user_agent(format!("{}/{}", env!("CARGO_PKG_NAME"), &*VERSION))
-    .build()
-});
-
 async fn try_request<T: Serialize>(request_body: &T) -> Result<reqwest::Response> {
+  static CLIENT: LazyLock<Result<Client, reqwest::Error>> = LazyLock::new(|| {
+    Client::builder()
+      .user_agent(format!("{}/{}", env!("CARGO_PKG_NAME"), &*VERSION))
+      .tls_certs_only(
+        webpki_root_certs::TLS_SERVER_ROOT_CERTS
+          .iter()
+          .map(|cert| Certificate::from_der(cert))
+          .collect::<Result<Vec<_>, _>>()?,
+      )
+      .build()
+  });
+
   let res = CLIENT
     .as_ref()
     .context("Failed to construct http client")?
