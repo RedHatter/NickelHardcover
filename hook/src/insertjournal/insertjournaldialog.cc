@@ -16,8 +16,15 @@ void InsertJournalDialog::show() { new InsertJournalDialog(); }
 InsertJournalDialog::InsertJournalDialog() : Dialog("Add New Journal Entry") {
   QVBoxLayout *layout = new QVBoxLayout(this);
 
-  privacy = new ButtonGroup({{"Public", "public"}, {"Follows", "follows"}, {"Private", "private"}},
-                            Settings::getInstance()->getJournalPrivacy(), "Privacy");
+  QString journalPrivacy = Settings::getInstance()->getJournalPrivacy();
+
+  if (journalPrivacy == "account") {
+    CLI *cli = CLI::getUser(true);
+    QObject::connect(cli, &CLI::response, this, &InsertJournalDialog::setPrivacy);
+  }
+
+  privacy = new ButtonGroup({{"Public", "public"}, {"Follows", "follows"}, {"Private", "private"}}, journalPrivacy,
+                            "Privacy");
   layout->addWidget(privacy, 0, Qt::AlignLeft);
 
   TouchTextEdit *touchText = construct_TouchTextEdit(this);
@@ -38,4 +45,10 @@ void InsertJournalDialog::commit() {
                                 privacy->value().toString());
   QObject::connect(cli, &CLI::success, dialog, &QDialog::deleteLater);
   QObject::connect(cli, &CLI::failure, dialog, &QDialog::deleteLater);
+}
+
+void InsertJournalDialog::setPrivacy(QJsonObject response) {
+  if (privacy->value().toString() == "account") {
+    privacy->setValue(response["account_privacy_setting"].toString());
+  }
 }

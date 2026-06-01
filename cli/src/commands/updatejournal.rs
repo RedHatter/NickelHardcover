@@ -93,6 +93,8 @@ pub async fn update_journal(content_id: &str, book_id: i64, edition_id: i64, pag
     }
   }
 
+  let privacy_setting_id = CONFIG.journal_privacy.get_value().await?;
+
   let (insert_bookmarks, update_bookmarks): (Vec<_>, Vec<_>) = bookmarks.iter().partition_map(|bookmark| {
     let note = bookmark.annotation.as_deref().map(str::trim);
     let quote = bookmark.text.trim();
@@ -121,7 +123,7 @@ pub async fn update_journal(content_id: &str, book_id: i64, edition_id: i64, pag
         book_id,
         edition_id,
         event: "quote".into(),
-        privacy_setting_id: CONFIG.journal_privacy as i64,
+        privacy_setting_id,
         entry,
         action_at: Some(
           match CONFIG.sync_bookmarks {

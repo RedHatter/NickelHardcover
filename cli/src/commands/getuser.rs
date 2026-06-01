@@ -7,6 +7,7 @@ use serde_json::json;
 
 use macros::{AggregateErrors, SendRequest};
 
+use crate::config::JournalPrivacy;
 use crate::hardcover::citext;
 use crate::log;
 use crate::utils::VERSION;
@@ -14,20 +15,20 @@ use crate::utils::VERSION;
 #[derive(GraphQLQuery, SendRequest)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
-  query_path = "src/graphql/queries/getuserid.graphql",
+  query_path = "src/graphql/queries/getme.graphql",
   response_derives = "Debug,AggregateErrors,Serialize",
   variables_derives = "Debug"
 )]
-pub struct GetUserId;
+pub struct GetMe;
 
-pub async fn get_user() -> Result<&'static get_user_id::GetUserIdMe> {
-  static USER: OnceLock<get_user_id::GetUserIdMe> = OnceLock::new();
+pub async fn get_user() -> Result<&'static get_me::GetMeMe> {
+  static USER: OnceLock<get_me::GetMeMe> = OnceLock::new();
 
   if let Some(user) = USER.get() {
     return Ok(user);
   }
 
-  let user = GetUserId::send_request(get_user_id::Variables {})
+  let user = GetMe::send_request(get_me::Variables {})
     .await?
     .me
     .into_iter()
@@ -46,7 +47,19 @@ pub struct GetUser {}
 
 pub async fn run(args: GetUser) -> Result<()> {
   log!("{} {:?}", &*VERSION, args);
-  log!("BEGIN_JSON\n{}", json!(get_user().await?));
+
+  let user = get_user().await?;
+
+  log!(
+    "BEGIN_JSON\n{}",
+    json!({
+      "id": user.id,
+      "username": user.username,
+      "account_privacy_setting_id": user.account_privacy_setting_id,
+      "account_privacy_setting": JournalPrivacy::try_from(user.account_privacy_setting_id)
+        .context("Failed to parse <i>account_privacy_setting_id</i>")?,
+    })
+  );
 
   Ok(())
 }

@@ -17,4 +17,6 @@ private:
   InsertJournalDialog();
 
   ButtonGroup *privacy;
+
+  void setPrivacy(QJsonObject response);
 };

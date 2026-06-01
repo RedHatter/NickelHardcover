@@ -231,9 +231,10 @@ QFrame *SettingsDialog::buildGeneral() {
   QObject::connect(menuRow, &MenuRow::triggered, this, &SettingsDialog::setSyncBookmarks);
   layout->addWidget(menuRow);
 
-  menuRow = new MenuRow("Reading journal privacy", MenuRowType::Menu,
-                        {{"Public", "public"}, {"Follows", "follows"}, {"Private", "private"}}, {},
-                        Settings::getInstance()->getJournalPrivacy());
+  menuRow = new MenuRow(
+      "Reading journal privacy", MenuRowType::Menu,
+      {{"Account default", "account"}, {"Public", "public"}, {"Follows", "follows"}, {"Private", "private"}}, {},
+      Settings::getInstance()->getJournalPrivacy());
   QObject::connect(menuRow, &MenuRow::triggered, this, &SettingsDialog::setJournalPrivacy);
   layout->addWidget(menuRow);
 

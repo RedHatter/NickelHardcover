@@ -54,7 +54,7 @@ pub async fn run(args: InsertJournal) -> Result<()> {
     book_id: book.id,
     edition_id,
     event: "note".into(),
-    privacy_setting_id: args.privacy.unwrap_or(CONFIG.journal_privacy) as i64,
+    privacy_setting_id: args.privacy.unwrap_or(CONFIG.journal_privacy).get_value().await?,
     entry: args.text,
     action_at: None,
     metadata: Some(json!({

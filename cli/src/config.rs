@@ -2,10 +2,12 @@ use std::fs;
 use std::str::FromStr;
 use std::sync::LazyLock;
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, anyhow};
 use itertools::Itertools;
 use serde::Serialize;
 use serde::{Deserialize, Deserializer, de};
+
+use crate::commands::getuser::get_user;
 
 #[derive(Serialize, PartialEq, Debug)]
 #[serde(rename_all = "lowercase")]
@@ -34,9 +36,33 @@ impl<'de> Deserialize<'de> for SyncBookmarks {
 #[derive(Clone, Copy, Serialize, PartialEq, Debug)]
 #[serde(rename_all = "lowercase")]
 pub enum JournalPrivacy {
-  Public = 1,
+  Account,
+  Public,
   Follows,
   Private,
+}
+
+impl JournalPrivacy {
+  pub async fn get_value(self) -> Result<i64> {
+    match self {
+      JournalPrivacy::Account => Ok(get_user().await?.account_privacy_setting_id),
+      _ => Ok(self as i64),
+    }
+  }
+}
+
+impl TryFrom<i64> for JournalPrivacy {
+  type Error = anyhow::Error;
+
+  fn try_from(value: i64) -> Result<Self> {
+    match value {
+      0 => Ok(JournalPrivacy::Account),
+      1 => Ok(JournalPrivacy::Public),
+      2 => Ok(JournalPrivacy::Follows),
+      3 => Ok(JournalPrivacy::Private),
+      _ => Err(anyhow!("<i>{value}</i> is not a valid <i>journal_privacy</i> value")),
+    }
+  }
 }
 
 impl FromStr for JournalPrivacy {
@@ -44,6 +70,7 @@ impl FromStr for JournalPrivacy {
 
   fn from_str(value: &str) -> Result<Self, Self::Err> {
     match value {
+      s if s.eq_ignore_ascii_case("Account") => Ok(JournalPrivacy::Account),
       s if s.eq_ignore_ascii_case("Public") => Ok(JournalPrivacy::Public),
       s if s.eq_ignore_ascii_case("Follows") => Ok(JournalPrivacy::Follows),
       s if s.eq_ignore_ascii_case("Private") => Ok(JournalPrivacy::Private),
@@ -113,7 +140,7 @@ impl Default for Config {
       authorization: String::new(),
       auto_sync_default: false,
       debug: false,
-      journal_privacy: JournalPrivacy::Public,
+      journal_privacy: JournalPrivacy::Account,
       sqlite_path: "/mnt/onboard/.kobo/KoboReader.sqlite".into(),
       sync_bookmarks: SyncBookmarks::Never,
       sync_daily: 0,
