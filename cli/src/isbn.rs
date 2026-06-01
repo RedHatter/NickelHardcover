@@ -12,6 +12,7 @@ use zip::ZipArchive;
 
 use crate::config::CONFIG;
 use crate::log;
+use crate::utils::book_not_found;
 
 fn isbn_13_check_digit(digits: &[u32]) -> u32 {
   let mut sum = 0;
@@ -296,7 +297,7 @@ fn read_epub_isbn(content_id: &str) -> Result<Vec<String>> {
   }
 
   if isbn.is_empty() {
-    panic!("Couldn't find an ISBN in the EPUB metadata. Please link book manually.");
+    book_not_found("Couldn't find an ISBN in the EPUB metadata. Please link book manually.")
   }
 
   isbn.sort();
@@ -307,8 +308,8 @@ fn read_epub_isbn(content_id: &str) -> Result<Vec<String>> {
   Ok(isbn)
 }
 
-fn read_sqlite_isbn(content_id: &str) -> Result<String> {
-  let maybe_isbn: Option<String> = Connection::open_with_flags(&CONFIG.sqlite_path, OpenFlags::SQLITE_OPEN_READ_ONLY)
+fn read_sqlite_isbn(content_id: &str) -> Result<Vec<String>> {
+  let isbn = Connection::open_with_flags(&CONFIG.sqlite_path, OpenFlags::SQLITE_OPEN_READ_ONLY)
     .context(format!(
       "Failed to connect to the database <i>{}</i>",
       &CONFIG.sqlite_path
@@ -321,30 +322,34 @@ fn read_sqlite_isbn(content_id: &str) -> Result<String> {
       LIMIT 1;",
     )
     .context("Failed to prepare query")?
-    .query_map([&content_id], |row| row.get(0))
+    .query_map([&content_id], |row| row.get::<_, Option<String>>(0))
     .context("Failed to run query")?
     .next()
     .context("Query returned no results")?
-    .context("Failed to map query result")?;
+    .context("Failed to map query result")?
+    .and_then(|isbn| normalize_isbn(&isbn));
 
-  let isbn = maybe_isbn.expect("Couldn't find an ISBN in the database. Please link book manually.");
-  log!("ISBN from database `{isbn}`");
-
-  Ok(isbn)
+  match isbn {
+    Some(isbn) => {
+      log!("ISBN from database `{}`", isbn.join(", "));
+      Ok(isbn)
+    }
+    None => book_not_found("Couldn't find an ISBN in the database. Please link book manually."),
+  }
 }
 
 pub fn get_isbn(content_id: &str) -> Vec<String> {
   let res = if content_id.starts_with("file://") {
     read_epub_isbn(content_id)
   } else {
-    read_sqlite_isbn(content_id).map(|isbn| vec![isbn])
+    read_sqlite_isbn(content_id)
   };
 
   match res {
-    Err(e) => panic!(
+    Ok(isbn) => isbn,
+    Err(e) => book_not_found(&format!(
       "Encountered an unexpected error while finding ISBN. Please link book manually.<br><br>{:#}",
       e.chain().join("<br>> ")
-    ),
-    Ok(isbn) => isbn,
+    )),
   }
 }

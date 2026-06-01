@@ -4,6 +4,7 @@
 
 #include <NickelHook.h>
 
+#include "search/searchdialog.h"
 #include "cli.h"
 #include "files.h"
 #include "settings.h"
@@ -169,14 +170,13 @@ void CLI::networkConnected() {
 
 void CLI::processFinished(int exitCode) {
   QProcess *process = qobject_cast<QProcess *>(sender());
-  deleteLater();
 
   QByteArray stdout = process->readAllStandardOutput();
 
   int index = stdout.indexOf("BEGIN_JSON");
 
   QByteArray bytes = stdout;
-  if (index > -1) {
+  if (index >= 0) {
     bytes = stdout.left(index);
   }
 
@@ -193,13 +193,48 @@ void CLI::processFinished(int exitCode) {
     nh_log("Error from command line \"%s\"", qPrintable(stderr));
     ConfirmationDialogFactory__showErrorDialog("Hardcover.app", QString(stderr));
     failure();
+    deleteLater();
     return;
   }
 
-  if (index > -1) {
+  if (index >= 0) {
     QByteArray json = stdout.right(stdout.size() - index - 10);
-    response(QJsonDocument::fromJson(json).object());
+    QJsonObject obj = QJsonDocument::fromJson(json).object();
+
+    if (obj.value("error_code").toString() == "BOOK_NOT_FOUND") {
+      ConfirmationDialog *dialog = ConfirmationDialogFactory__getConfirmationDialog(nullptr);
+      ConfirmationDialog__setAcceptButtonText(
+          dialog, Settings::getInstance()->getLinkedBook(SyncController::getInstance()->contentId).isEmpty()
+                      ? "Link book"
+                      : "Unlink book");
+      ConfirmationDialog__setRejectButtonText(dialog, "Cancel");
+      ConfirmationDialog__setTitle(dialog, "Hardcover.app");
+      ConfirmationDialog__setText(dialog, obj.value("message").toString());
+
+      QObject::connect(dialog, &QDialog::accepted, this, &CLI::linkBook);
+      dialog->open();
+
+      failure();
+      return;
+    }
+
+    response(obj);
   }
 
   success();
+  deleteLater();
+}
+
+void CLI::linkBook() {
+  nh_log("CLI::linkBook()");
+
+  SyncController *ctl = SyncController::getInstance();
+
+  if (Settings::getInstance()->getLinkedBook(ctl->contentId).isEmpty()) {
+    SearchDialog::show(ctl->title + " " + ctl->author);
+  } else {
+    Settings::getInstance()->setLinkedBook(ctl->contentId, QString());
+  }
+
+  deleteLater();
 }

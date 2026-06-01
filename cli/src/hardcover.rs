@@ -15,7 +15,7 @@ use macros::{AggregateErrors, SendRequest};
 
 use crate::commands::getuser::get_user;
 use crate::config::CONFIG;
-use crate::utils::{AggregateErrors, VERSION};
+use crate::utils::{AggregateErrors, VERSION, book_not_found};
 use crate::{debug_log, log};
 
 pub type date = String;
@@ -152,23 +152,24 @@ fn map_pages(edition: &get_edition::Edition) -> Option<i64> {
 
 pub async fn get_book(isbn: Vec<String>, book_id: i64) -> Result<(get_edition::GetEditionEditionsBook, i64, i64)> {
   let user_id = get_user().await?.id;
-
-  let all_isbns = isbn.join(", ");
+  let isbn_display = isbn.join(", ");
 
   // retrieve book, edition and maybe user book and user book read
-  let book = GetEdition::send_request(get_edition::Variables { isbn, book_id, user_id })
+  let book = match GetEdition::send_request(get_edition::Variables { isbn, book_id, user_id })
     .await?
     .editions
     .into_iter()
     .next()
-    .expect(&if book_id != 0 {
+  {
+    Some(edition) => edition.book,
+    None => book_not_found(&if book_id != 0 {
       format!("Unable to find book id <i>{book_id}</i> on Hardcover.app. Please manually un-link and re-link book.")
     } else {
       format!(
-        "Unable to find a book edition on Hardcover.app with ISBN/ASIN <i>{all_isbns}</i>. Please manually link book."
+        "Unable to find a book edition on Hardcover.app with ISBN/ASIN <i>{isbn_display}</i>. Please manually link book."
       )
-    })
-    .book;
+    }),
+  };
 
   let edition_id = book
     .user_books

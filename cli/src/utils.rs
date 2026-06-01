@@ -4,7 +4,9 @@ use std::sync::{LazyLock, Mutex};
 use anyhow::{Context, Result};
 use chrono::Local;
 use itertools::Itertools;
+use serde_json::json;
 
+use crate::config::CONFIG;
 use crate::isbn::get_isbn;
 
 #[macro_export]
@@ -62,6 +64,19 @@ pub fn normalize_identifiers(book_id: Option<i64>, content_id: Option<&str>) -> 
     (None, Some(content_id)) => (0, get_isbn(&content_id)),
     (None, None) => panic!("One of --content-id or --book-id is required"),
   }
+}
+
+pub fn book_not_found(msg: &str) -> ! {
+  log!(
+    "BEGIN_JSON\n{}",
+    json!({ "error_code": "BOOK_NOT_FOUND", "message": msg })
+  );
+
+  if CONFIG.debug {
+    write_logfile();
+  }
+
+  std::process::exit(0);
 }
 
 pub trait AggregateErrors {

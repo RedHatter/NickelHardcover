@@ -21,6 +21,7 @@ public Q_SLOTS:
   void networkConnected();
   void connectingFailed();
   void processFinished(int exitCode);
+  void linkBook();
 
 Q_SIGNALS:
   void response(QJsonObject doc);
