@@ -20,13 +20,15 @@ extern void (*ConfirmationDialogFactory__showErrorDialog)(QString const &title, 
 extern ConfirmationDialog *(*ConfirmationDialogFactory__getConfirmationDialog)(QWidget *parent);
 extern void (*ConfirmationDialog__setTitle)(ConfirmationDialog *_this, QString const &);
 extern void (*ConfirmationDialog__setText)(ConfirmationDialog *_this, QString const &);
+extern void (*ConfirmationDialog__setAcceptButtonText)(ConfirmationDialog *_this, QString const &);
+extern void (*ConfirmationDialog__setRejectButtonText)(ConfirmationDialog *_this, QString const &);
+extern void (*ConfirmationDialog__showCloseButton)(ConfirmationDialog *_this, bool enabled);
 
 typedef QObject WirelessWorkflowManager;
 extern WirelessWorkflowManager *(*WirelessWorkflowManager__sharedInstance)();
 extern bool (*WirelessWorkflowManager__isInternetAccessible)(WirelessWorkflowManager *);
 extern void (*WirelessWorkflowManager__connectWirelessSilently)(WirelessWorkflowManager *);
 extern void (*WirelessWorkflowManager__connectWireless)(WirelessWorkflowManager *_this, bool, bool);
-extern void (*ConfirmationDialog__showCloseButton)(ConfirmationDialog *_this, bool enabled);
 
 typedef QObject WirelessManager;
 extern WirelessManager *(*WirelessManager__sharedInstance)();

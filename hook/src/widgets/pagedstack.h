@@ -21,6 +21,7 @@ public:
   int getAvailableHeight();
   int countPages();
   void setTotal(int value);
+  void setStatusText(const QString &text);
 
   void setFooterHeight(int value);
   int footerHeight() const;
@@ -44,6 +45,7 @@ protected:
 private:
   int total = 0;
   int current = 0;
+  QLabel *status = nullptr;
   QLabel *label = nullptr;
   TouchLabel *nextButton = nullptr;
   TouchLabel *prevButton = nullptr;

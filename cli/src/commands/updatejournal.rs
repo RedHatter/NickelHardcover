@@ -97,13 +97,13 @@ pub async fn update_journal(content_id: &str, book_id: i64, edition_id: i64, pag
 
   let (insert_bookmarks, update_bookmarks): (Vec<_>, Vec<_>) = bookmarks.iter().partition_map(|bookmark| {
     let note = bookmark.annotation.as_deref().map(str::trim);
-    let quote = bookmark.text.trim();
+    let highlight = bookmark.text.trim();
     let entry = if let Some(note) = note
       && !note.is_empty()
     {
-      format!("{quote}\n━━━\n{note}")
+      format!("{highlight}\n━━━\n{note}")
     } else {
-      quote.to_string()
+      highlight.to_string()
     };
 
     if let Some(journal) = reading_journals

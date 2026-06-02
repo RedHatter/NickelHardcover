@@ -19,7 +19,10 @@ InsertJournalDialog::InsertJournalDialog() : Dialog("Add New Journal Entry") {
   QString journalPrivacy = Settings::getInstance()->getJournalPrivacy();
 
   if (journalPrivacy == "account") {
-    CLI *cli = CLI::getUser(true);
+    CLI::Options options;
+    options.silent = true;
+
+    CLI *cli = CLI::getUser(options);
     QObject::connect(cli, &CLI::response, this, &InsertJournalDialog::setPrivacy);
   }
 

@@ -30,6 +30,8 @@ void (*ConfirmationDialogFactory__showErrorDialog)(QString const &title, QString
 ConfirmationDialog *(*ConfirmationDialogFactory__getConfirmationDialog)(QWidget *parent);
 void (*ConfirmationDialog__setTitle)(ConfirmationDialog *_this, QString const &);
 void (*ConfirmationDialog__setText)(ConfirmationDialog *_this, QString const &);
+void (*ConfirmationDialog__setAcceptButtonText)(ConfirmationDialog *_this, QString const &);
+void (*ConfirmationDialog__setRejectButtonText)(ConfirmationDialog *_this, QString const &);
 void (*ConfirmationDialog__showCloseButton)(ConfirmationDialog *_this, bool enabled);
 
 int (*ReadingView__getCalculatedReadProgress)(QWidget *_this);
@@ -180,6 +182,8 @@ static struct nh_dlsym NickelHardcoverDlsym[] = {
   { .name = "_ZN25ConfirmationDialogFactory21getConfirmationDialogEP7QWidget", .out = nh_symoutptr(ConfirmationDialogFactory__getConfirmationDialog) },
   { .name = "_ZN18ConfirmationDialog8setTitleERK7QString",                     .out = nh_symoutptr(ConfirmationDialog__setTitle) },
   { .name = "_ZN18ConfirmationDialog7setTextERK7QString",                      .out = nh_symoutptr(ConfirmationDialog__setText) },
+  { .name = "_ZN18ConfirmationDialog19setAcceptButtonTextERK7QString",         .out = nh_symoutptr(ConfirmationDialog__setAcceptButtonText) },
+  { .name = "_ZN18ConfirmationDialog19setRejectButtonTextERK7QString",         .out = nh_symoutptr(ConfirmationDialog__setRejectButtonText) },
   { .name = "_ZN18ConfirmationDialog15showCloseButtonEb",                      .out = nh_symoutptr(ConfirmationDialog__showCloseButton) },
 
   { .name = "_ZN23WirelessWorkflowManager14sharedInstanceEv",                  .out = nh_symoutptr(WirelessWorkflowManager__sharedInstance) },

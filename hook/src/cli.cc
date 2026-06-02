@@ -4,40 +4,53 @@
 
 #include <NickelHook.h>
 
-#include "search/searchdialog.h"
 #include "cli.h"
 #include "files.h"
+#include "search/searchdialog.h"
 #include "settings.h"
 #include "synccontroller.h"
 
-CLI *CLI::listJournal(int limit, int offset, bool silent, bool icon) {
+CLI *CLI::listBookmarks(Options options) { return new CLI({"list-bookmarks"}, options); }
+
+CLI *CLI::listJournal(int limit, int offset, Options options) {
   QStringList arguments = {"list-journal", "--limit", QString::number(limit), "--offset", QString::number(offset)};
   arguments.append(getIdentifier());
-  return new CLI(arguments, silent, icon);
+  return new CLI(arguments, options);
 }
 
-CLI *CLI::insertJournal(QString text, int percentage, QString privacy, bool silent, bool icon) {
+CLI *CLI::insertJournal(QString text, int percentage, QString privacy, Options options) {
   QStringList arguments = {"insert-journal", "--text", text, "--percentage", QString::number(percentage),
                            "--privacy",      privacy};
   arguments.append(getIdentifier());
-  return new CLI(arguments, silent, icon);
+  return new CLI(arguments, options);
 }
 
-CLI *CLI::getUser(bool silent, bool icon) { return new CLI({"get-user"}, silent, icon); }
+CLI *CLI::updateJournal(QString contentId, Options options) {
+  QStringList arguments = {"update-journal", "--content-id", contentId};
 
-CLI *CLI::getUserBook(bool silent, bool icon) {
+  QString linkedBook = Settings::getInstance()->getLinkedBook(contentId);
+  if (!linkedBook.isEmpty()) {
+    arguments.append({"--book-id", linkedBook});
+  }
+
+  return new CLI(arguments, options);
+}
+
+CLI *CLI::getUser(Options options) { return new CLI({"get-user"}, options); }
+
+CLI *CLI::getUserBook(Options options) {
   QStringList arguments = {"get-user-book"};
   arguments.append(getIdentifier());
-  return new CLI(arguments, silent, icon);
+  return new CLI(arguments, options);
 }
 
-CLI *CLI::setUserBook(int status, bool silent, bool icon) {
+CLI *CLI::setUserBook(int status, Options options) {
   QStringList arguments = {"set-user-book", "--status", QString::number(status)};
   arguments.append(getIdentifier());
-  return new CLI(arguments, silent, icon);
+  return new CLI(arguments, options);
 }
 
-CLI *CLI::setUserBook(float rating, QString text, bool spoilers, bool sponsored, bool silent, bool icon) {
+CLI *CLI::setUserBook(float rating, QString text, bool spoilers, bool sponsored, Options options) {
   QStringList arguments = {"set-user-book"};
 
   arguments.append(getIdentifier());
@@ -52,15 +65,15 @@ CLI *CLI::setUserBook(float rating, QString text, bool spoilers, bool sponsored,
     arguments.append({"--text", text});
   }
 
-  return new CLI(arguments, silent, icon);
+  return new CLI(arguments, options);
 }
 
-CLI *CLI::search(QString query, int limit, int page, bool silent, bool icon) {
+CLI *CLI::search(QString query, int limit, int page, Options options) {
   return new CLI({"search", "--limit", QString::number(limit), "--page", QString::number(page), "--query", query},
-                 silent, icon);
+                 options);
 }
 
-CLI *CLI::update(QString contentId, int percentage, bool silent, bool icon) {
+CLI *CLI::update(QString contentId, int percentage, Options options) {
   QStringList arguments = {"update", "--content-id", contentId, "--value", QString::number(percentage)};
 
   QString linkedBook = Settings::getInstance()->getLinkedBook(contentId);
@@ -68,7 +81,7 @@ CLI *CLI::update(QString contentId, int percentage, bool silent, bool icon) {
     arguments.append({"--book-id", linkedBook});
   }
 
-  return new CLI(arguments, silent, icon);
+  return new CLI(arguments, options);
 }
 
 QStringList CLI::getIdentifier() {
@@ -81,8 +94,8 @@ QStringList CLI::getIdentifier() {
   }
 }
 
-CLI::CLI(QStringList arguments, bool silent, bool icon, QObject *parent)
-    : QObject(parent), arguments(arguments), silent(silent), icon(icon) {
+CLI::CLI(QStringList arguments, Options options, QObject *parent)
+    : QObject(parent), arguments(arguments), options(options) {
 
   WirelessWorkflowManager *wfm = WirelessWorkflowManager__sharedInstance();
 
@@ -102,10 +115,10 @@ CLI::CLI(QStringList arguments, bool silent, bool icon, QObject *parent)
     QObject::connect(wm, SIGNAL(networkConnected()), this, SLOT(networkConnected()));
 
     // Yield to caller so signals can be setup before a possible connectingFailed() is triggered
-    QTimer::singleShot(0, this, [silent] {
+    QTimer::singleShot(0, this, [options] {
       WirelessWorkflowManager *wfm = WirelessWorkflowManager__sharedInstance();
 
-      if (silent) {
+      if (options.silent) {
         WirelessWorkflowManager__connectWirelessSilently(wfm);
       } else {
         WirelessWorkflowManager__connectWireless(wfm, false, false);
@@ -115,15 +128,15 @@ CLI::CLI(QStringList arguments, bool silent, bool icon, QObject *parent)
 }
 
 CLI::~CLI() {
-  if (iconLabel != nullptr) {
-    iconLabel->deleteLater();
+  if (icon != nullptr) {
+    icon->deleteLater();
   }
 }
 
 void CLI::connectingFailed() {
   nh_log("CLI::connectingFailed()");
 
-  if (!silent) {
+  if (!options.silent) {
     ConfirmationDialogFactory__showErrorDialog("Hardcover.app", "Failed to connect to WIFI.");
   }
 
@@ -138,22 +151,22 @@ void CLI::connectingFailed() {
 }
 
 void CLI::showIcon(const char *path) {
-  if (iconLabel == nullptr) {
+  if (icon == nullptr) {
     MainWindowController *mwc = MainWindowController__sharedInstance();
     QWidget *window = MainWindowController__currentView(mwc)->window();
-    iconLabel = new QLabel(window);
-    iconLabel->resize(90, 90);
-    iconLabel->move(window->width() - 144, window->height() - 144);
+    icon = new QLabel(window);
+    icon->resize(90, 90);
+    icon->move(window->width() - 144, window->height() - 144);
   }
 
-  iconLabel->setPixmap(QPixmap(path));
-  iconLabel->show();
+  icon->setPixmap(QPixmap(path));
+  icon->show();
 }
 
 void CLI::networkConnected() {
   nh_log("CLI::networkConnected()");
 
-  if (icon) {
+  if (options.icon) {
     showIcon(Files::icon);
   }
 
@@ -212,6 +225,7 @@ void CLI::processFinished(int exitCode) {
       ConfirmationDialog__setText(dialog, obj.value("message").toString());
 
       QObject::connect(dialog, &QDialog::accepted, this, &CLI::linkBook);
+      QObject::connect(dialog, &QDialog::rejected, this, &CLI::deleteLater);
       dialog->open();
 
       failure();
@@ -228,12 +242,14 @@ void CLI::processFinished(int exitCode) {
 void CLI::linkBook() {
   nh_log("CLI::linkBook()");
 
-  SyncController *ctl = SyncController::getInstance();
+  QString contentId = options.contentId.isEmpty() ? SyncController::getInstance()->contentId : options.contentId;
 
-  if (Settings::getInstance()->getLinkedBook(ctl->contentId).isEmpty()) {
-    SearchDialog::show(ctl->title + " " + ctl->author);
+  if (Settings::getInstance()->getLinkedBook(contentId).isEmpty()) {
+    SearchDialog::show(options.query.isEmpty()
+                           ? SyncController::getInstance()->title + " " + SyncController::getInstance()->author
+                           : options.query);
   } else {
-    Settings::getInstance()->setLinkedBook(ctl->contentId, QString());
+    Settings::getInstance()->setLinkedBook(contentId, QString());
   }
 
   deleteLater();

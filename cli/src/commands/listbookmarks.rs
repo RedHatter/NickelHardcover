@@ -32,7 +32,8 @@ pub async fn run(args: ListBookmarks) -> Result<()> {
         ON content.ContentId = VolumeID AND BookTitle is null
       WHERE Hidden = 'false'
       AND bookmark.Text != ''
-      GROUP BY VolumeID;",
+      GROUP BY VolumeID
+      ORDER BY Bookmark.DateModified DESC;",
     )
     .context("Failed to prepare list bookmarks query")?
     .query_map([], |row| {

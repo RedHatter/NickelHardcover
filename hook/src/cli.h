@@ -7,15 +7,26 @@ class CLI : public QObject {
   Q_OBJECT
 
 public:
-  static CLI *listJournal(int limit, int offset, bool silent = false, bool icon = false);
-  static CLI *insertJournal(QString text, int percentage, QString privacy, bool silent = false, bool icon = false);
-  static CLI *getUser(bool silent = false, bool icon = false);
-  static CLI *getUserBook(bool silent = false, bool icon = false);
-  static CLI *setUserBook(int status, bool silent = false, bool icon = false);
-  static CLI *setUserBook(float rating, QString text, bool spoilers, bool sponsored, bool silent = false,
-                          bool icon = false);
-  static CLI *search(QString query, int limit, int page, bool silent = false, bool icon = false);
-  static CLI *update(QString contentId, int percentage, bool silent = false, bool icon = false);
+  struct Options {
+    bool silent = false;
+    bool icon = false;
+
+    QString contentId = QString();
+    QString query = QString();
+
+    Options() {};
+  };
+
+  static CLI *listBookmarks(Options options = Options());
+  static CLI *listJournal(int limit, int offset, Options options = Options());
+  static CLI *insertJournal(QString text, int percentage, QString privacy, Options options = Options());
+  static CLI *updateJournal(QString contentId, Options options = Options());
+  static CLI *getUser(Options options = Options());
+  static CLI *getUserBook(Options options = Options());
+  static CLI *setUserBook(int status, Options options = Options());
+  static CLI *setUserBook(float rating, QString text, bool spoilers, bool sponsored, Options options = Options());
+  static CLI *search(QString query, int limit, int page, Options options = Options());
+  static CLI *update(QString contentId, int percentage, Options options = Options());
 
 public Q_SLOTS:
   void networkConnected();
@@ -31,15 +42,14 @@ Q_SIGNALS:
 private:
   static QStringList getIdentifier();
 
-  CLI(QStringList arguments, bool silent = false, bool icon = false, QObject *parent = nullptr);
+  CLI(QStringList arguments, Options options = Options(), QObject *parent = nullptr);
 
   ~CLI();
 
   void showIcon(const char *path);
 
-  QLabel *iconLabel = nullptr;
+  QLabel *icon = nullptr;
   QTimer *timer = nullptr;
   QStringList arguments;
-  bool silent;
-  bool icon;
+  Options options;
 };

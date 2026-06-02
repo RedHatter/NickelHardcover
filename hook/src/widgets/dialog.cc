@@ -13,44 +13,20 @@ Dialog::Dialog(QString title) : QFrame() {
   dialog = N3DialogFactory__getDialog(this, true);
   N3Dialog__setTitle(dialog, title);
   dialog->setStyleSheet(dialog->styleSheet().append(R"(
-    QLabel#empty {
-      qproperty-alignment: AlignCenter;
-      qproperty-text: "No results.";
-    }
-
-    QLabel#loading {
-      qproperty-alignment: AlignCenter;
-      qproperty-text: "Loading. Please wait...";
-    }
-
-    [qApp_deviceIsTrilogy=true] QLabel#empty,
-    [qApp_deviceIsTrilogy=true] QLabel#loading,
     [qApp_deviceIsTrilogy=true] #small {
       font-size: 17px;
     }
-    [qApp_deviceIsPhoenix=true] QLabel#empty,
-    [qApp_deviceIsPhoenix=true] QLabel#loading,
     [qApp_deviceIsPhoenix=true] #small {
       font-size: 22px;
     }
-    [qApp_deviceIsDragon=true] QLabel#empty,
-    [qApp_deviceIsDragon=true] QLabel#loading,
     [qApp_deviceIsDragon=true] #small {
       font-size: 26px;
     }
-    [qApp_deviceIsAlyssum=true] QLabel#empty,
-    [qApp_deviceIsAlyssum=true] QLabel#loading,
     [qApp_deviceIsAlyssum=true] #small,
-    [qApp_deviceIsNova=true] QLabel#empty,
-    [qApp_deviceIsNova=true] QLabel#loading,
     [qApp_deviceIsNova=true] #small,
-    [qApp_deviceIsStorm=true] QLabel#empty,
-    [qApp_deviceIsStorm=true] QLabel#loading,
     [qApp_deviceIsStorm=true] #small {
       font-size: 30px;
     }
-    [qApp_deviceIsDaylight=true] QLabel#empty,
-    [qApp_deviceIsDaylight=true] QLabel#loading,
     [qApp_deviceIsDaylight=true] #small {
       font-size: 34px;
     }

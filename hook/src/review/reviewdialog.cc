@@ -51,7 +51,9 @@ ReviewDialog::ReviewDialog() : Dialog("Write your review") {
   QVBoxLayout *layout = new QVBoxLayout(this);
   layout->setContentsMargins(0, 0, 0, 0);
   QLabel *loading = new QLabel();
-  loading->setObjectName("loading");
+  loading->setObjectName("small");
+  loading->setAlignment(Qt::AlignCenter);
+  loading->setText("Loading. Please wait...");
   layout->addWidget(loading, 1);
 
   CLI *cli = CLI::getUserBook();

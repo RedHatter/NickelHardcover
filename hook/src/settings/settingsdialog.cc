@@ -217,7 +217,10 @@ QFrame *SettingsDialog::buildGeneral() {
   username = new StaticRow("Authorized user", "Unknown", false);
   layout->addWidget(username);
 
-  CLI *cli = CLI::getUser(true);
+  CLI::Options options;
+  options.silent = true;
+
+  CLI *cli = CLI::getUser(options);
   QObject::connect(cli, &CLI::response, this, &SettingsDialog::setUsername);
 
   CheckboxRow *checkboxRow =

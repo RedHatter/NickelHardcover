@@ -70,9 +70,12 @@ PagedStack::PagedStack(QWidget *parent) : QWidget(parent) {
   nextButton->hide();
   QWidget::connect(nextButton, SIGNAL(tapped(bool)), this, SLOT(next()));
 
-  QLabel *loading = new QLabel();
-  loading->setObjectName("loading");
-  stack->addWidget(loading);
+  status = new QLabel();
+  status->setObjectName("small");
+  status->setAlignment(Qt::AlignCenter);
+  status->setText("Loading. Please wait...");
+
+  stack->addWidget(status);
 }
 
 void PagedStack::setCurrent(int value) {
@@ -142,12 +145,20 @@ void PagedStack::clear() {
     delete item;
   }
 
+  status->setText("Loading. Please wait...");
+  setTotal(0);
   setCurrent(0);
 }
 
 int PagedStack::getAvailableHeight() { return stack->contentsRect().height(); }
 
 int PagedStack::countPages() { return stack->count() - 1; }
+
+void PagedStack::setStatusText(const QString &text) {
+  if (status) {
+    status->setText(text);
+  }
+}
 
 void PagedStack::resizeEvent(QResizeEvent *event) {
   afterLayout();

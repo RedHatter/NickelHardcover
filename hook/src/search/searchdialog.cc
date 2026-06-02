@@ -83,17 +83,15 @@ void SearchDialog::requestPage(int index) {
 }
 
 void SearchDialog::response(QJsonObject doc) {
-  pages->setTotal(doc.value("total").toInt(1));
-
   QJsonArray resultsArray = doc.value("results").toArray();
   int length = resultsArray.size();
 
   if (length < 1) {
-    QLabel *loading = new QLabel();
-    loading->setObjectName("empty");
-    pages->addPage(loading);
+    pages->setStatusText("No results found.");
     return;
   }
+
+  pages->setTotal(doc.value("total").toInt(1));
 
   QWidget *box = new QWidget(pages);
   QVBoxLayout *results = new QVBoxLayout(box);
@@ -102,8 +100,9 @@ void SearchDialog::response(QJsonObject doc) {
 
   for (int i = 0; i < length; i++) {
     BookRow *row = new BookRow(resultsArray.at(i).toObject());
-    if (i == 0)
+    if (i == 0) {
       row->setObjectName("first");
+    }
 
     results->addWidget(row);
     QObject::connect(row, &BookRow::tapped, this, &SearchDialog::tapped);

@@ -85,7 +85,12 @@ void SyncQueue::run(QString contentId, bool manual) {
 
   Settings::getInstance()->setLastProgress(contentId, progress);
 
-  CLI *cli = CLI::update(contentId, progress, !manual, true);
+  CLI::Options options;
+  options.silent = !manual;
+  options.icon = true;
+  options.contentId = contentId;
+
+  CLI *cli = CLI::update(contentId, progress, options);
   QObject::connect(cli, &CLI::success, this, &SyncQueue::success);
   QObject::connect(cli, &CLI::failure, this, &SyncQueue::closeDialog);
   QObject::connect(cli, &CLI::failure, this, &SyncQueue::finished);

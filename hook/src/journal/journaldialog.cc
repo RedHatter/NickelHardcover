@@ -3,6 +3,7 @@
 
 #include <NickelHook.h>
 
+#include "../annotations/annotationsdialog.h"
 #include "../cli.h"
 #include "../insertjournal/insertjournaldialog.h"
 #include "journaldialog.h"
@@ -34,10 +35,20 @@ JournalDialog::JournalDialog() : Dialog("Reading Journal") {
   QVBoxLayout *layout = new QVBoxLayout(this);
   layout->setContentsMargins(0, 0, 0, 0);
 
+  QHBoxLayout *hbox = new QHBoxLayout();
+  layout->addLayout(hbox);
+  hbox->addStretch(1);
+
   N3ButtonLabel *button = construct_N3ButtonLabel(this);
   button->setProperty("primaryButton", true);
+  button->setText("Annotations");
+  hbox->addWidget(button, 0);
+  QObject::connect(button, SIGNAL(tapped(bool)), this, SLOT(annotations()));
+
+  button = construct_N3ButtonLabel(this);
+  button->setProperty("primaryButton", true);
   button->setText("+ New entry");
-  layout->addWidget(button, 0, Qt::AlignRight);
+  hbox->addWidget(button, 0);
   QObject::connect(button, SIGNAL(tapped(bool)), this, SLOT(newEntry()));
 
   pages = new PagedStack(this);
@@ -45,6 +56,13 @@ JournalDialog::JournalDialog() : Dialog("Reading Journal") {
   QObject::connect(pages, &PagedStack::requestPage, this, &JournalDialog::requestPage);
 
   pages->next();
+}
+
+void JournalDialog::annotations() {
+  nh_log("JournalDialog::annotations()");
+
+  AnnotationsDialog::show();
+  dialog->deleteLater();
 }
 
 void JournalDialog::newEntry() {
