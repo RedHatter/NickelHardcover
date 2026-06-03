@@ -285,14 +285,27 @@ fn read_epub_isbn(content_id: &str) -> Result<Vec<String>> {
 
   if isbn.is_empty() {
     let opf_dir = Path::new(&opf_path).parent().unwrap_or(Path::new("/"));
-    for href in items {
+
+    for n in 0..items.len() {
+      let i = if n < 3 {
+        n
+      } else if n < 6 {
+        items.len() - 1 - (n - 3)
+      } else {
+        n - 3
+      };
+
       buf.clear();
       archive
-        .by_path(opf_dir.join(&href))
-        .context(format!("Failed to open OEBPS root file <i>{href}</i>"))?
+        .by_path(opf_dir.join(&items[i]))
+        .context(format!("Failed to open OEBPS root file <i>{}</i>", &items[i]))?
         .read_to_string(&mut buf)
         .context("Failed to read OEBPS root file")?;
-      isbn.extend(read_item(&buf)?);
+      isbn = read_item(&buf)?;
+
+      if !isbn.is_empty() {
+        break;
+      }
     }
   }
 
