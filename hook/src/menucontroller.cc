@@ -16,193 +16,176 @@
 #include "settings/settingsdialog.h"
 #include "synccontroller.h"
 
+NickelTouchMenu *MenuController::showMenu(QList<Item> items, QWidget *anchor, int offset, bool checkable,
+                                          bool decorated) {
+  NickelTouchMenu *menu = construct_NickelTouchMenu(anchor);
+  NickelTouchMenu__showDecoration(menu, decorated);
+
+  QWidget::connect(menu, &QMenu::aboutToHide, menu, &QWidget::deleteLater);
+
+  for (Item item : items) {
+    MenuTextItem *menuItem = construct_MenuTextItem(menu, checkable, true);
+    MenuTextItem__setText(menuItem, item.text);
+    MenuTextItem__registerForTapGestures(menuItem);
+
+    if (item.checked) {
+      MenuTextItem__setSelected(menuItem, true);
+    }
+
+    QWidgetAction *action = new QWidgetAction(menu);
+    action->setDefaultWidget(menuItem);
+    action->setEnabled(true);
+    action->setData(item.value);
+    menu->addAction(action);
+
+    QObject::connect(action, &QAction::triggered, menu, &QMenu::hide);
+    QObject::connect(menuItem, SIGNAL(tapped(bool)), action, SIGNAL(triggered()));
+
+    menu->addSeparator();
+  }
+
+  menu->ensurePolished();
+  menu->popup(anchor->parentWidget()->mapToGlobal(anchor->geometry().bottomLeft()) + QPoint(0, offset));
+
+  return menu;
+}
+
 MenuController::MenuController(int iconHeight, QWidget *parent) : QWidget(parent), iconHeight(iconHeight) {
   icon = construct_TouchLabel(parent);
   TouchLabel__setHitStateEnabled(icon, false);
   setSelected(false);
 
-  QWidget::connect(icon, SIGNAL(tapped(bool)), this, SLOT(showMainMenu(bool)));
+  QWidget::connect(icon, SIGNAL(tapped(bool)), this, SLOT(showMainMenu()));
 };
 
 void MenuController::setSelected(bool selected) {
   icon->setPixmap(QPixmap(selected ? Files::icon_hit : Files::icon).scaledToHeight(iconHeight));
 }
 
-void MenuController::showMainMenu(bool checked) {
-  nh_log("MenuController::showMainMenu(%s)", checked ? "true" : "false");
+enum MenuOption {
+  BACK,
+  WANT_TO_READ = 1,
+  CURRENTLY_READING = 2,
+  READ = 3,
+  DID_NOT_FINISH = 5,
+  SYNC_NOW,
+  TOGGLE_ENABLED,
+  LINK,
+  BOOK_STATUS,
+  JOURNAL,
+  REVIEW,
+  SETTINGS,
+};
+
+void MenuController::showMainMenu() {
+  nh_log("MenuController::showMainMenu()");
 
   setSelected(true);
 
-  NickelTouchMenu *menu = construct_NickelTouchMenu(icon);
-  NickelTouchMenu__showDecoration(menu, true);
-  QWidget::connect(menu, &QMenu::aboutToHide, menu, &QWidget::deleteLater);
+  QString contentId = SyncController::getInstance()->contentId;
+  Settings *settings = Settings::getInstance();
+
+  NickelTouchMenu *menu = showMenu(
+      {
+          {"Sync now", MenuOption::SYNC_NOW},
+          {settings->isEnabled(contentId) ? "Disable auto-sync" : "Enable auto-sync", MenuOption::TOGGLE_ENABLED},
+          {settings->getLinkedId(contentId).isEmpty() ? "Manually link book" : "Unlink book", MenuOption::LINK},
+          {"Update book status", MenuOption::BOOK_STATUS},
+          {"Open reading journal", MenuOption::JOURNAL},
+          {"Write a review", MenuOption::REVIEW},
+          {"Settings", MenuOption::SETTINGS},
+      },
+      icon, 6);
   QWidget::connect(menu, &QMenu::aboutToHide, icon, [this] { setSelected(false); });
+  QWidget::connect(menu, &QMenu::triggered, this, &MenuController::triggered);
 
-  QWidgetAction *action = addMenuItem(menu, "Sync now");
-  QObject::connect(action, &QAction::triggered, this, &MenuController::syncNow);
-
-  menu->addSeparator();
-
-  QString contentId = SyncController::getInstance()->contentId;
-
-  action = addMenuItem(menu, Settings::getInstance()->isEnabled(contentId) ? "Disable auto-sync" : "Enable auto-sync");
-  QObject::connect(action, &QAction::triggered, this, &MenuController::toggleEnabled);
-
-  menu->addSeparator();
-
-  action = addMenuItem(menu, Settings::getInstance()->getLinkedBook(contentId).isEmpty() ? "Manually link book"
-                                                                                         : "Unlink book");
-  QObject::connect(action, &QAction::triggered, this, &MenuController::linkBook);
-
-  menu->addSeparator();
-
-  action = addMenuItem(menu, "Update book status");
-  QObject::connect(action, &QAction::triggered, this, &MenuController::setBookStatus);
-
-  QLabel *extraField = action->defaultWidget()->findChild<QLabel *>("extraField");
-  if (extraField) {
-    extraField->setPixmap(QPixmap(Files::arrow_right));
+  QList<QLabel *> extraField = menu->findChildren<QLabel *>("extraField");
+  if (extraField[3]) {
+    extraField[3]->setPixmap(QPixmap(Files::arrow_right));
   }
-
-  menu->addSeparator();
-
-  action = addMenuItem(menu, "Open reading journal");
-  QObject::connect(action, &QAction::triggered, this, &MenuController::openJournal);
-
-  menu->addSeparator();
-
-  action = addMenuItem(menu, "Write a review");
-  QObject::connect(action, &QAction::triggered, this, &MenuController::review);
-
-  menu->addSeparator();
-
-  action = addMenuItem(menu, "Settings");
-  QObject::connect(action, &QAction::triggered, this, &MenuController::openSettings);
-
-  menu->ensurePolished();
-  menu->popup(icon->mapToGlobal(icon->geometry().bottomRight()) + QPoint(0, 6));
-}
-
-QWidgetAction *MenuController::addMenuItem(NickelTouchMenu *menu, QString label, bool checkable, bool checked) {
-  MenuTextItem *item = construct_MenuTextItem(menu, checkable, true);
-  MenuTextItem__setText(item, label);
-  MenuTextItem__registerForTapGestures(item);
-
-  if (checked) {
-    MenuTextItem__setSelected(item, true);
-  }
-
-  QWidgetAction *action = new QWidgetAction(menu);
-  action->setDefaultWidget(item);
-  action->setEnabled(true);
-  menu->addAction(action);
-
-  QObject::connect(action, &QAction::triggered, menu, &QMenu::hide);
-  QObject::connect(item, SIGNAL(tapped(bool)), action, SIGNAL(triggered()));
-
-  return action;
-}
-
-void MenuController::syncNow(bool checked) {
-  nh_log("MenuController::syncNow(%s)", checked ? "true" : "false");
-
-  SyncController::getInstance()->manualSync();
-}
-
-void MenuController::toggleEnabled(bool checked) {
-  nh_log("MenuController::toggleEnabled(%s)", checked ? "true" : "false");
-
-  QString contentId = SyncController::getInstance()->contentId;
-  Settings::getInstance()->setEnabled(contentId, !Settings::getInstance()->isEnabled(contentId));
-}
-
-void MenuController::linkBook(bool checked) {
-  nh_log("MenuController::linkBook(%s)", checked ? "true" : "false");
-
-  SyncController *ctl = SyncController::getInstance();
-
-  if (Settings::getInstance()->getLinkedBook(ctl->contentId).isEmpty()) {
-    SearchDialog::show(ctl->title + " " + ctl->author);
-  } else {
-    Settings::getInstance()->setLinkedBook(ctl->contentId, QString());
-  }
-}
-
-void MenuController::review(bool checked) {
-  nh_log("MenuController::review(%s)", checked ? "true" : "false");
-
-  ReviewDialog::show();
-}
-
-void MenuController::openJournal(bool checked) {
-  nh_log("MenuController::openJournal(%s)", checked ? "true" : "false");
-
-  JournalDialog::show();
-}
-
-void MenuController::openSettings(bool checked) {
-  nh_log("MenuController::openSettings(%s)", checked ? "true" : "false");
-
-  SettingsDialog::show();
-}
-
-void MenuController::setBookStatus(bool checked) {
-  nh_log("MenuController::setBookStatus(%s)", checked ? "true" : "false");
-
-  CLI *cli = CLI::getUserBook();
-  QObject::connect(cli, &CLI::response, this, &MenuController::showStatusMenu);
 }
 
 void MenuController::showStatusMenu(QJsonObject doc) {
-  nh_log("MenuController::showStatusMenu()");
+  int status = doc.value("status_id").toInt(0);
+  nh_log("MenuController::showStatusMenu(%d)", status);
 
   setSelected(true);
 
-  NickelTouchMenu *menu = construct_NickelTouchMenu(icon);
+  NickelTouchMenu *menu = showMenu(
+      {
+          {"Back", MenuOption::BACK, true},
+          {"Want to Read", MenuOption::WANT_TO_READ, status == MenuOption::WANT_TO_READ},
+          {"Currently Reading", MenuOption::CURRENTLY_READING, status == MenuOption::CURRENTLY_READING},
+          {"Read", MenuOption::READ, status == MenuOption::READ},
+          {"Did Not Finish", MenuOption::DID_NOT_FINISH, status == MenuOption::DID_NOT_FINISH},
+      },
+      icon, 6, true);
   NickelTouchMenu__showDecoration(menu, true);
 
-  QWidget::connect(menu, &QMenu::aboutToHide, menu, &QWidget::deleteLater);
   QWidget::connect(menu, &QMenu::aboutToHide, icon, [this] { setSelected(false); });
-  QWidget::connect(menu, &QMenu::triggered, this, &MenuController::statusSelected);
+  QWidget::connect(menu, &QMenu::triggered, this, &MenuController::triggered);
 
-  QWidgetAction *action = addMenuItem(menu, "Back", true, true);
-  QWidget::connect(action, SIGNAL(triggered(bool)), icon, SIGNAL(tapped(bool)));
-
-  QLabel *check = action->defaultWidget()->findChild<QLabel *>("check");
+  QLabel *check = menu->findChild<QLabel *>("check");
   if (check) {
     check->setPixmap(QPixmap(Files::arrow_left));
   }
-
-  menu->addSeparator();
-
-  int status = doc.value("status_id").toInt(0);
-
-  action = addMenuItem(menu, "Want to Read", true, status == 1);
-  action->setData(1);
-  menu->addSeparator();
-
-  action = addMenuItem(menu, "Currently Reading", true, status == 2);
-  action->setData(2);
-  menu->addSeparator();
-
-  action = addMenuItem(menu, "Read", true, status == 3);
-  action->setData(3);
-  menu->addSeparator();
-
-  action = addMenuItem(menu, "Did Not Finish", true, status == 5);
-  action->setData(5);
-
-  menu->ensurePolished();
-  menu->popup(icon->mapToGlobal(icon->geometry().bottomRight()) + QPoint(0, 6));
 }
 
-void MenuController::statusSelected(QAction *action) {
-  int status = action->data().toInt();
-  nh_log("MenuController::statusSelected(%i)", status);
+void MenuController::triggered(QAction *action) {
+  int value = action->data().toInt();
+  nh_log("MenuController::triggered(%d)", value);
 
-  if (status == 0)
-    return;
+  switch (value) {
+  case MenuOption::BACK:
+    showMainMenu();
+    break;
 
-  CLI *cli = CLI::setUserBook(status);
-  QObject::connect(cli, &CLI::response, this, &MenuController::showStatusMenu);
+  case MenuOption::WANT_TO_READ:
+  case MenuOption::CURRENTLY_READING:
+  case MenuOption::READ:
+  case MenuOption::DID_NOT_FINISH: {
+    CLI *cli = CLI::setUserBook(value);
+    QObject::connect(cli, &CLI::response, this, &MenuController::showStatusMenu);
+    break;
+  }
+
+  case MenuOption::SYNC_NOW:
+    SyncController::getInstance()->manualSync();
+    break;
+
+  case MenuOption::TOGGLE_ENABLED: {
+    QString contentId = SyncController::getInstance()->contentId;
+    Settings::getInstance()->setEnabled(contentId, !Settings::getInstance()->isEnabled(contentId));
+    break;
+  }
+
+  case MenuOption::LINK: {
+    SyncController *ctl = SyncController::getInstance();
+
+    if (Settings::getInstance()->getLinkedId(ctl->contentId).isEmpty()) {
+      SearchDialog::show(ctl->contentId, ctl->title + " " + ctl->author);
+    } else {
+      Settings::getInstance()->setLinkedId(ctl->contentId, QString());
+    }
+    break;
+  }
+
+  case MenuOption::BOOK_STATUS: {
+    CLI *cli = CLI::getUserBook();
+    QObject::connect(cli, &CLI::response, this, &MenuController::showStatusMenu);
+    break;
+  }
+
+  case MenuOption::JOURNAL:
+    JournalDialog::show();
+    break;
+
+  case MenuOption::REVIEW:
+    ReviewDialog::show();
+    break;
+
+  case MenuOption::SETTINGS:
+    SettingsDialog::show();
+    break;
+  }
 }

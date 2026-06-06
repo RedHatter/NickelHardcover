@@ -5,6 +5,7 @@
 #include <NickelHook.h>
 
 #include "../files.h"
+#include "../menucontroller.h"
 #include "../widgets/label.h"
 #include "menurow.h"
 
@@ -62,11 +63,11 @@ void MenuRow::tapped() {
     break;
 
   case MenuRowType::Dialog:
-    openDialog();
+    showDialog();
     break;
 
   case MenuRowType::Menu:
-    openMenu();
+    showMenu();
     break;
   }
 }
@@ -78,7 +79,7 @@ void MenuRow::setItem(Item item) {
   triggered(item.value);
 }
 
-void MenuRow::openDialog() {
+void MenuRow::showDialog() {
   ConfirmationDialog *dialog = ConfirmationDialogFactory__getConfirmationDialog(this);
   QLabel *title = dialog->findChild<QLabel *>("title");
   title->setText("Enter a value");
@@ -161,38 +162,23 @@ void MenuRow::down() {
 
 void MenuRow::accept() { setItem(dialogItems.at(index)); }
 
-void MenuRow::openMenu() {
-  NickelTouchMenu *menu = construct_NickelTouchMenu(label);
-  NickelTouchMenu__showDecoration(menu, false);
-  QWidget::connect(menu, &QMenu::aboutToHide, menu, &QWidget::deleteLater);
+void MenuRow::showMenu() {
+  NickelTouchMenu *menu = MenuController::buildMenu(menuItems, label, -sizeHint().height(), false, false);
+  QWidget::connect(menu, &QMenu::triggered, this, &MenuRow::menuTriggered);
+}
 
-  for (int i = 0; i < menuItems.size(); ++i) {
-    if (i > 0) {
-      menu->addSeparator();
+void MenuRow::menuTriggered(QAction *action) {
+  QVariant value = action->data();
+
+  for (Item item : menuItems) {
+    if (item.value != value) {
+      continue;
     }
 
-    Item item = menuItems.at(i);
-
-    MenuTextItem *menuItem = construct_MenuTextItem(menu, false, true);
-    MenuTextItem__setText(menuItem, item.text);
-    MenuTextItem__registerForTapGestures(menuItem);
-
-    QWidgetAction *action = new QWidgetAction(menu);
-    action->setDefaultWidget(menuItem);
-    action->setEnabled(true);
-    menu->addAction(action);
-
-    QObject::connect(action, &QAction::triggered, menu, &QMenu::hide);
-    QObject::connect(menuItem, SIGNAL(tapped(bool)), action, SIGNAL(triggered()));
-    QObject::connect(action, &QAction::triggered, [this, item]() {
-      if (item.value == MenuRow::OPEN_DIALOG) {
-        openDialog();
-      } else {
-        setItem(item);
-      }
-    });
+    if (item.value == MenuRow::OPEN_DIALOG) {
+      showDialog();
+    } else {
+      setItem(item);
+    }
   }
-
-  menu->ensurePolished();
-  menu->popup(label->mapToGlobal(label->geometry().topRight() - QPoint(0, 56)));
 }

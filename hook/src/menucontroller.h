@@ -1,8 +1,16 @@
+#pragma once
+
 #include <QObject>
 #include <QSettings>
 #include <QWidgetAction>
 
 #include "nickelhardcover.h"
+
+struct Item {
+  QString text;
+  QVariant value;
+  bool checked;
+};
 
 class MenuController : public QWidget {
   Q_OBJECT
@@ -12,22 +20,14 @@ public:
   TouchLabel *icon = nullptr;
 
 public Q_SLOTS:
-  void showMainMenu(bool checked);
+  static NickelTouchMenu *showMenu(QList<Item> items, QWidget *anchor, int offset, bool checkable = false,
+                                   bool decorated = true);
 
-  void syncNow(bool checked);
-  void toggleEnabled(bool checked);
-  void linkBook(bool checked);
-  void review(bool checked);
-  void openJournal(bool checked);
-  void openSettings(bool checked);
-  void setBookStatus(bool checked);
-
+  void showMainMenu();
   void showStatusMenu(QJsonObject doc);
-  void statusSelected(QAction *action);
+  void triggered(QAction *action);
 
 private:
-  QWidgetAction *addMenuItem(NickelTouchMenu *menu, QString label, bool checkable = false, bool checked = false);
-
   void setSelected(bool selected);
 
   int iconHeight;

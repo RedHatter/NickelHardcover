@@ -4,17 +4,13 @@
 #include <QVariant>
 #include <QWidget>
 
+#include "../menucontroller.h"
 #include "../nickelhardcover.h"
 
 enum MenuRowType {
   Tap,
   Menu,
   Dialog,
-};
-
-struct Item {
-  QString text;
-  QVariant value;
 };
 
 class MenuRow : public QWidget {
@@ -31,6 +27,7 @@ public Q_SLOTS:
   void up();
   void down();
   void accept();
+  void menuTriggered(QAction *action);
 
 Q_SIGNALS:
   void triggered(QVariant value);
@@ -44,7 +41,7 @@ private:
   int index = 0;
   Item item;
 
-  void openMenu();
-  void openDialog();
+  void showMenu();
+  void showDialog();
   void setItem(Item item);
 };
