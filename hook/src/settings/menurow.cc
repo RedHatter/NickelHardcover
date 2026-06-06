@@ -5,6 +5,7 @@
 #include <NickelHook.h>
 
 #include "../files.h"
+#include "../widgets/label.h"
 #include "menurow.h"
 
 QVariant MenuRow::OPEN_DIALOG = QVariant("OPEN_DIALOG");
@@ -21,13 +22,10 @@ MenuRow::MenuRow(QString heading, MenuRowType type, QList<Item> menuItems, QList
 
   QHBoxLayout *rowLayout = new QHBoxLayout(row);
   rowLayout->setContentsMargins(0, 0, 0, 0);
-  QLabel *headingLabel = new QLabel(heading);
-  headingLabel->setObjectName("regular");
-  rowLayout->addWidget(headingLabel, 1);
+  rowLayout->addWidget(new Label(Label::Medium, heading), 1);
 
-  label = new QLabel("Unset");
-  label->setObjectName("regular");
-  label->setStyleSheet("font-style: italic;");
+  label = new Label(Label::Medium, "Unset");
+  label->setProperty("style", "italic");
   rowLayout->addWidget(label);
 
   QObject::connect(row, SIGNAL(tapped()), this, SLOT(tapped()));
@@ -107,8 +105,7 @@ void MenuRow::openDialog() {
   row->setSpacing(0);
   layout->addLayout(row);
 
-  dialogLabel = new QLabel(dialogItems.at(0).text);
-  dialogLabel->setObjectName("regular");
+  dialogLabel = new Label(Label::Medium, dialogItems.at(0).text);
   dialogLabel->setAlignment(Qt::AlignCenter);
   row->addWidget(dialogLabel, 1);
 

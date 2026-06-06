@@ -2,19 +2,17 @@
 
 #include "../files.h"
 #include "../nickelhardcover.h"
+#include "../widgets/label.h"
 #include "staticrow.h"
 
 StaticRow::StaticRow(QString heading, QString value, bool showClear, QWidget *parent) : QFrame(parent) {
   QHBoxLayout *rowLayout = new QHBoxLayout(this);
   rowLayout->setContentsMargins(0, 0, 0, 0);
 
-  label = new QLabel(heading);
-  label->setObjectName("regular");
-  rowLayout->addWidget(label, 1);
+  rowLayout->addWidget(new Label(Label::Medium, heading), 1);
 
-  label = new QLabel(value);
-  label->setObjectName("regular");
-  label->setStyleSheet("font-style: italic;");
+  label = new Label(Label::Medium, value);
+  label->setProperty("style", "italic");
   rowLayout->addWidget(label);
 
   if (!showClear)

@@ -72,7 +72,7 @@ void AnnotationsDialog::requestPage(int index) {
     AnnotationsRow *row = new AnnotationsRow(obj, this);
 
     if (isFirst) {
-      row->setObjectName("first");
+      row->setProperty("noBorder", true);
       isFirst = false;
     }
 

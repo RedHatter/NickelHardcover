@@ -94,7 +94,7 @@ void JournalDialog::response(QJsonObject doc) {
     QJsonObject obj = results.at(i).toObject();
     JournalEntry *entry = new JournalEntry(obj, pages);
     if (i == 0) {
-      entry->setObjectName("first");
+      entry->setProperty("noBorder", true);
     }
 
     availableHeight -= entry->sizeHint().height();

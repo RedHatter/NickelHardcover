@@ -101,7 +101,7 @@ void SearchDialog::response(QJsonObject doc) {
   for (int i = 0; i < length; i++) {
     BookRow *row = new BookRow(resultsArray.at(i).toObject());
     if (i == 0) {
-      row->setObjectName("first");
+      row->setProperty("noBorder", true);
     }
 
     results->addWidget(row);

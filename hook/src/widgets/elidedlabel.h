@@ -1,10 +1,13 @@
 #include <QFrame>
 
+#include "label.h"
+
 class ElidedLabel : public QFrame {
   Q_OBJECT
+  Q_PROPERTY(QString textSize MEMBER textSize)
 
 public:
-  explicit ElidedLabel(const QString &text, int maxLines = 1, QWidget *parent = nullptr);
+  explicit ElidedLabel(const QString &textSize, const QString &text, int maxLines = 1, QWidget *parent = nullptr);
 
 protected:
   void paintEvent(QPaintEvent *event) override;
@@ -14,4 +17,5 @@ protected:
 private:
   QString text;
   int maxLines;
+  QString textSize;
 };

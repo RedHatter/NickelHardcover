@@ -1,8 +1,9 @@
-#include <NickelHook.h>
 #include <QDateTime>
 #include <QLabel>
 #include <QLocale>
 #include <QVBoxLayout>
+
+#include <NickelHook.h>
 
 #include "../files.h"
 #include "../widgets/elidedlabel.h"
@@ -26,29 +27,11 @@ JournalEntry::JournalEntry(QJsonObject doc, QWidget *parent) : QFrame(parent) {
       padding: 28px 0;
     }
 
-    [qApp_deviceIsTrilogy=true] QLabel#actionAt {
-      font-size: 14px;
-    }
-    [qApp_deviceIsPhoenix=true] QLabel#actionAt {
-      font-size: 18px;
-    }
-    [qApp_deviceIsDragon=true] QLabel#actionAt {
-      font-size: 21px;
-    }
-    [qApp_deviceIsAlyssum=true] QLabel#actionAt,
-    [qApp_deviceIsNova=true] QLabel#actionAt,
-    [qApp_deviceIsStorm=true] QLabel#actionAt {
-      font-size: 25px;
-    }
-    [qApp_deviceIsDaylight=true] QLabel#actionAt {
-      font-size: 28px;
-    }
-
     JournalEntry {
       border-top: 1px solid #666666;
     }
 
-    JournalEntry#first {
+    JournalEntry[noBorder=true] {
       border-top-width: 0;
     }
   )");
@@ -62,8 +45,7 @@ JournalEntry::JournalEntry(QJsonObject doc, QWidget *parent) : QFrame(parent) {
   layout->addLayout(line);
   QLabel *icon = new QLabel(this);
   line->addWidget(icon);
-  QLabel *label = new QLabel(this);
-  label->setObjectName("small");
+  Label *label = new Label(Label::Small, "");
   line->addWidget(label, 1);
 
   if (event == "status_want_to_read") {
@@ -103,32 +85,25 @@ JournalEntry::JournalEntry(QJsonObject doc, QWidget *parent) : QFrame(parent) {
     icon->setPixmap(QPixmap(Files::note));
     label->setText("Saved a Note");
 
-    ElidedLabel *text = new ElidedLabel(doc.value("entry").toString(), 5, this);
-    text->setObjectName("regular");
-    layout->addWidget(text);
+    layout->addWidget(new ElidedLabel(Label::Medium, doc.value("entry").toString(), 5, this));
   } else if (event == "quote") {
     icon->setPixmap(QPixmap(Files::quote));
     label->setText("Saved a Quote");
 
-    ElidedLabel *text = new ElidedLabel(doc.value("entry").toString(), 5, this);
-    text->setObjectName("regular");
-    layout->addWidget(text);
+    layout->addWidget(new ElidedLabel(Label::Medium, doc.value("entry").toString(), 5, this));
   } else if (event == "reviewed") {
     icon->setPixmap(QPixmap(Files::reviewed));
     label->setText("Reviewed");
 
     QJsonObject metadata = doc.value("metadata").toObject();
-    ElidedLabel *text = new ElidedLabel(metadata.value("review").toString(), 5, this);
-    text->setObjectName("regular");
-    layout->addWidget(text);
+    layout->addWidget(new ElidedLabel(Label::Medium, metadata.value("review").toString(), 5, this));
   } else {
     label->setText("Unknown journal type " + event);
   }
 
   QString actionAt = locale().toString(
       QDateTime::fromString(doc.value("action_at").toString(), Qt::ISODate).toLocalTime(), QLocale::ShortFormat);
-  QLabel *actionAtLabel = new QLabel(actionAt, this);
-  actionAtLabel->setObjectName("actionAt");
+  Label *actionAtLabel = new Label(Label::ExtraSmall, actionAt);
   layout->addWidget(actionAtLabel, 0, Qt::AlignRight);
   actionAtLabel->lower();
 }

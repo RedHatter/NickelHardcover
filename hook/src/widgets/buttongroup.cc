@@ -3,6 +3,7 @@
 #include <QStyle>
 
 #include "../nickelhardcover.h"
+#include "../widgets/label.h"
 #include "buttongroup.h"
 
 ButtonGroup::ButtonGroup(QList<Item> items, QVariant defaultValue, QString label, QWidget *parent)
@@ -24,9 +25,7 @@ ButtonGroup::ButtonGroup(QList<Item> items, QVariant defaultValue, QString label
   layout->setSpacing(2);
 
   if (label != nullptr) {
-    QLabel *widget = new QLabel(label);
-    widget->setObjectName("regular");
-    layout->addWidget(widget);
+    layout->addWidget(new Label(Label::Medium, label));
     layout->addSpacing(18);
   }
 

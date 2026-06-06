@@ -8,6 +8,7 @@
 
 #include "../cli.h"
 #include "../synccontroller.h"
+#include "../widgets/label.h"
 #include "../widgets/rating.h"
 #include "reviewdialog.h"
 
@@ -50,10 +51,9 @@ ReviewDialog::ReviewDialog() : Dialog("Write your review") {
 
   QVBoxLayout *layout = new QVBoxLayout(this);
   layout->setContentsMargins(0, 0, 0, 0);
-  QLabel *loading = new QLabel();
-  loading->setObjectName("small");
+
+  Label *loading = new Label(Label::Small, "Loading. Please wait...");
   loading->setAlignment(Qt::AlignCenter);
-  loading->setText("Loading. Please wait...");
   layout->addWidget(loading, 1);
 
   CLI *cli = CLI::getUserBook();
@@ -73,15 +73,11 @@ void ReviewDialog::response(QJsonObject doc) {
 
   // Title and author
   if (ctl->title != nullptr) {
-    QLabel *label = new QLabel(ctl->title);
-    label->setObjectName("large");
-    column->addWidget(label);
+    column->addWidget(new Label(Label::Large, ctl->title));
   }
 
   if (ctl->author != nullptr) {
-    QLabel *label = new QLabel("by " + ctl->author);
-    label->setObjectName("small");
-    column->addWidget(label);
+    column->addWidget(new Label(Label::Small, "by " + ctl->author));
   }
 
   // Rating

@@ -32,7 +32,7 @@ AnnotationsRow::AnnotationsRow(QJsonObject doc, QWidget *parent) : QFrame(parent
       border-top: 1px solid #666666;
     }
 
-    AnnotationsRow#first {
+    AnnotationsRow[noBorder=true] {
       border-top-width: 0;
     }
   )");
@@ -45,20 +45,14 @@ AnnotationsRow::AnnotationsRow(QJsonObject doc, QWidget *parent) : QFrame(parent
   vbox->setSpacing(0);
   hbox->addLayout(vbox, 1);
 
-  ElidedLabel *label = new ElidedLabel(doc.value("title").toString());
-  label->setObjectName("large");
-  vbox->addWidget(label);
+  vbox->addWidget(new ElidedLabel(Label::Large, doc.value("title").toString()));
 
-  label = new ElidedLabel(doc.value("attribution").toString());
-  label->setObjectName("small");
-  vbox->addWidget(label);
+  vbox->addWidget(new ElidedLabel(Label::Small, doc.value("attribution").toString()));
 
   vbox->addSpacing(10);
 
   int n = doc.value("count").toInt();
-  QLabel *count = new QLabel(n == 1 ? "1 annotation" : QString::number(n) + " annotations");
-  count->setObjectName("small");
-  vbox->addWidget(count);
+  vbox->addWidget(new Label(Label::Small, n == 1 ? "1 annotation" : QString::number(n) + " annotations"));
 
   N3ButtonLabel *button = construct_N3ButtonLabel(this);
   button->setText("Sync Now");

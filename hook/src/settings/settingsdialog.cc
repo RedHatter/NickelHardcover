@@ -6,6 +6,7 @@
 #include "../cli.h"
 #include "../settings.h"
 #include "../synccontroller.h"
+#include "../widgets/label.h"
 #include "checkboxrow.h"
 #include "menurow.h"
 #include "settingsdialog.h"
@@ -15,28 +16,19 @@ void SettingsDialog::show() { new SettingsDialog(); }
 
 SettingsDialog::SettingsDialog() : Dialog("Settings") {
   setStyleSheet(R"(
-    [qApp_deviceIsTrilogy=true] QLabel#title {
-      font-size: 30px;
+    [qApp_deviceIsTrilogy=true] Label[textSize="ExtraLarge"] {
       margin: 24px 36px 12px;
     }
-    [qApp_deviceIsPhoenix=true] QLabel#title {
-      font-size: 36px;
+    [qApp_deviceIsPhoenix=true] Label[textSize="ExtraLarge"] {
       margin: 32px 48px 16px;
     }
-    [qApp_deviceIsDragon=true] QLabel#title {
-      font-size: 46px;
+    [qApp_deviceIsDragon=true] Label[textSize="ExtraLarge"] {
       margin: 44px 66px 22px;
     }
-    [qApp_deviceIsAlyssum=true] QLabel#title,
-    [qApp_deviceIsNova=true] QLabel#title {
-      font-size: 50px;
-    }
-    [qApp_deviceIsStorm=true] QLabel#title {
-      font-size: 54px;
+    [qApp_deviceIsStorm=true] Label[textSize="ExtraLarge"] {
       margin: 50px 75px 25px;
     }
-    [qApp_deviceIsDaylight=true] QLabel#title {
-      font-size: 60px;
+    [qApp_deviceIsDaylight=true] Label[textSize="ExtraLarge"] {
       margin: 56px 84px 28px;
     }
 
@@ -56,27 +48,27 @@ SettingsDialog::SettingsDialog() : Dialog("Settings") {
       margin: 0 84px;
     }
 
-    [qApp_deviceIsTrilogy=true] QLabel#metaData,
+    [qApp_deviceIsTrilogy=true] Label[textSize="Avenir"],
     [qApp_deviceIsTrilogy=true] StaticRow {
       padding-left: 12px;
       padding-right: 12px;
     }
-    [qApp_deviceIsPhoenix=true] QLabel#metaData,
+    [qApp_deviceIsPhoenix=true] Label[textSize="Avenir"],
     [qApp_deviceIsPhoenix=true] StaticRow {
       padding-left: 16px;
       padding-right: 16px;
     }
-    [qApp_deviceIsDragon=true] QLabel#metaData,
+    [qApp_deviceIsDragon=true] Label[textSize="Avenir"],
     [qApp_deviceIsDragon=true] StaticRow{
       padding-left: 22px;
       padding-right: 22px;
     }
-    [qApp_deviceIsStorm=true] QLabel#metaData,
+    [qApp_deviceIsStorm=true] Label[textSize="Avenir"],
     [qApp_deviceIsStorm=true] StaticRow {
       padding-left: 25px;
       padding-right: 25px;
     }
-    [qApp_deviceIsDaylight=true] QLabel#metaData,
+    [qApp_deviceIsDaylight=true] Label[textSize="Avenir"],
     [qApp_deviceIsDaylight=true] StaticRow {
       padding-left: 28px;
       padding-right: 28px;
@@ -133,19 +125,19 @@ SettingsDialog::SettingsDialog() : Dialog("Settings") {
       padding: 0px;
     }
 
-    QLabel {
+    Label {
       qproperty-indent: 0;
     }
 
-    QLabel#header, SettingContainer, StaticRow {
+    Label[textSize="Avenir"], SettingContainer, StaticRow {
       border-top: 1px solid black;
     }
 
-    #first SettingContainer, StaticRow#first {
+    [noBorder=true] SettingContainer, StaticRow[noBorder=true] {
       border-top-width: 0px;
     }
 
-    QLabel#metaData {
+    Label[textSize="Avenir"] {
       padding-top: 5px;
       padding-bottom: 5px;
       background-color: #d9d9d9;
@@ -156,9 +148,7 @@ SettingsDialog::SettingsDialog() : Dialog("Settings") {
   layout->setContentsMargins(0, 0, 0, 0);
   layout->setSpacing(0);
 
-  QLabel *label = new QLabel("Settings");
-  label->setObjectName("title");
-  layout->addWidget(label);
+  layout->addWidget(new Label(Label::ExtraLarge, "Settings"));
 
   pages = new PagedStack();
   layout->addWidget(pages);
@@ -184,11 +174,12 @@ void SettingsDialog::buildPages() {
     if (pageHeight >= availableHeight) {
       rows->addStretch(1);
       pages->addPage(page);
+
+      pageHeight = height;
       page = new QWidget();
       rows = new QVBoxLayout(page);
       rows->setSpacing(0);
       rows->setContentsMargins(0, 0, 0, 0);
-      pageHeight = height;
     }
 
     rows->addWidget(section);
@@ -206,13 +197,11 @@ QFrame *SettingsDialog::buildGeneral() {
   layout->setSpacing(0);
   layout->setContentsMargins(0, 0, 0, 0);
 
-  QLabel *label = new QLabel("General");
-  label->setObjectName("metaData");
-  layout->addWidget(label);
+  layout->addWidget(new Label(Label::Avenir, "General"));
 
   StaticRow *row = new StaticRow("Version", NH_VERSION, false);
   layout->addWidget(row);
-  row->setObjectName("first");
+  row->setProperty("noBorder", true);
 
   username = new StaticRow("Authorized user", "Unknown", false);
   layout->addWidget(username);
@@ -250,9 +239,7 @@ QFrame *SettingsDialog::buildAutoSync() {
   layout->setSpacing(0);
   layout->setContentsMargins(0, 0, 0, 0);
 
-  QLabel *label = new QLabel("Auto-sync");
-  label->setObjectName("metaData");
-  layout->addWidget(label);
+  layout->addWidget(new Label(Label::Avenir, "Auto-sync"));
 
   QList<Item> hours;
   for (int hour = 1; hour <= 24; hour++) {
@@ -277,7 +264,7 @@ QFrame *SettingsDialog::buildAutoSync() {
                   settings->getSyncDaily());
   QObject::connect(menuRow, &MenuRow::triggered, this, &SettingsDialog::setSyncDaily);
   layout->addWidget(menuRow);
-  menuRow->setObjectName("first");
+  menuRow->setProperty("noBorder", true);
 
   QList<Item> thresholdItems;
   for (int i = 1; i < 100; i++) {
@@ -305,16 +292,14 @@ QFrame *SettingsDialog::buildInformation() {
   layout->setSpacing(0);
   layout->setContentsMargins(0, 0, 0, 0);
 
-  QLabel *label = new QLabel("Book information");
-  label->setObjectName("metaData");
-  layout->addWidget(label);
+  layout->addWidget(new Label(Label::Avenir, "Book information"));
 
   SyncController *ctl = SyncController::getInstance();
   QDateTime alarm = ctl->getAlarm();
   StaticRow *row =
       new StaticRow("Auto-sync scheduled for", alarm.isValid() ? alarm.toLocalTime().toString() : "Never", false);
   layout->addWidget(row);
-  row->setObjectName("first");
+  row->setProperty("noBorder", true);
 
   row = new StaticRow("Current progress", QString::number(ctl->getReadProgress()).append("%"), false);
   layout->addWidget(row);
@@ -333,14 +318,12 @@ QFrame *SettingsDialog::buildAdvanced() {
   layout->setSpacing(0);
   layout->setContentsMargins(0, 0, 0, 0);
 
-  QLabel *label = new QLabel("Advanced");
-  label->setObjectName("metaData");
-  layout->addWidget(label);
+  layout->addWidget(new Label(Label::Avenir, "Advanced"));
 
   CheckboxRow *checkboxRow = new CheckboxRow("Debug logs", Settings::getInstance()->getDebug());
   QObject::connect(checkboxRow, &CheckboxRow::triggered, this, &SettingsDialog::setDebug);
   layout->addWidget(checkboxRow);
-  checkboxRow->setObjectName("first");
+  checkboxRow->setProperty("noBorder", true);
 
   MenuRow *menuRow = new MenuRow("Save system logs", MenuRowType::Tap, {{"Save", true}}, {}, true);
   QObject::connect(menuRow, &MenuRow::triggered, this, &SettingsDialog::saveLogs);

@@ -1,3 +1,4 @@
+#include <QApplication>
 #include <QKeyEvent>
 #include <QSizePolicy>
 #include <QVBoxLayout>
@@ -6,12 +7,8 @@
 
 #include "../files.h"
 #include "../nickelhardcover.h"
+#include "label.h"
 #include "pagedstack.h"
-#include "qapplication.h"
-#include "qcoreevent.h"
-#include "qevent.h"
-#include "qlayoutitem.h"
-#include "qnamespace.h"
 
 PagedStack::PagedStack(QWidget *parent) : QWidget(parent) {
   QApplication::instance()->installEventFilter(new PagedStackFilter(this));
@@ -57,9 +54,8 @@ PagedStack::PagedStack(QWidget *parent) : QWidget(parent) {
   prevButton->hide();
   QWidget::connect(prevButton, SIGNAL(tapped(bool)), this, SLOT(prev()));
 
-  label = new QLabel();
-  label->setObjectName("small");
-  label->setStyleSheet("font-style: italic;");
+  label = new Label(Label::Small, "");
+  label->setProperty("style", "italic");
   layout->addWidget(label, 1, 1, Qt::AlignCenter);
   label->hide();
 
@@ -70,8 +66,7 @@ PagedStack::PagedStack(QWidget *parent) : QWidget(parent) {
   nextButton->hide();
   QWidget::connect(nextButton, SIGNAL(tapped(bool)), this, SLOT(next()));
 
-  status = new QLabel();
-  status->setObjectName("small");
+  status = new Label(Label::Small, "");
   status->setAlignment(Qt::AlignCenter);
   status->setText("Loading. Please wait...");
 
