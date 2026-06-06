@@ -27,9 +27,9 @@ pub struct InsertJournal {
   #[argh(option)]
   content_id: Option<String>,
 
-  /// hardcover.app book id
+  /// hardcover.app book or edition id
   #[argh(option)]
-  book_id: Option<i64>,
+  linked_id: Option<i64>,
 
   /// note text
   #[argh(option)]
@@ -47,8 +47,8 @@ pub struct InsertJournal {
 pub async fn run(args: InsertJournal) -> Result<()> {
   log!("{} {:?}", &*VERSION, args);
 
-  let (book_id, isbn) = normalize_identifiers(args.book_id, args.content_id.as_deref());
-  let (book, edition_id, pages) = get_book(isbn, book_id).await?;
+  let (linked_id, isbn) = normalize_identifiers(args.linked_id, args.content_id.as_deref());
+  let (book, edition_id, pages) = get_book(isbn, linked_id).await?;
 
   InsertReadingJournal::send_request(insert_reading_journal::Variables {
     book_id: book.id,

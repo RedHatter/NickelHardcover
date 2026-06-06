@@ -52,17 +52,17 @@ pub struct UpdateJournal {
   #[argh(option)]
   content_id: String,
 
-  /// hardcover.app book id
+  /// hardcover.app book or edition id
   #[argh(option)]
-  book_id: Option<i64>,
+  linked_id: Option<i64>,
 }
 
 pub async fn run(args: UpdateJournal) -> Result<()> {
   log!("{} {:?}", &*VERSION, args);
 
-  let (book_id, isbn) = normalize_identifiers(args.book_id, Some(&args.content_id));
-  let (_, edition_id, pages) = get_book(isbn, book_id).await?;
-  update_journal(&args.content_id, book_id, edition_id, pages).await?;
+  let (linked_id, isbn) = normalize_identifiers(args.linked_id, Some(&args.content_id));
+  let (book, edition_id, pages) = get_book(isbn, linked_id).await?;
+  update_journal(&args.content_id, book.id, edition_id, pages).await?;
 
   Ok(())
 }

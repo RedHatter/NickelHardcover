@@ -20,13 +20,13 @@ public:
   static CLI *listBookmarks(Options options = Options());
   static CLI *listJournal(int limit, int offset, Options options = Options());
   static CLI *insertJournal(QString text, int percentage, QString privacy, Options options = Options());
-  static CLI *updateJournal(QString contentId, Options options = Options());
+  static CLI *updateJournal(Options options = Options());
   static CLI *getUser(Options options = Options());
   static CLI *getUserBook(Options options = Options());
   static CLI *setUserBook(int status, Options options = Options());
   static CLI *setUserBook(float rating, QString text, bool spoilers, bool sponsored, Options options = Options());
   static CLI *search(QString query, int limit, int page, Options options = Options());
-  static CLI *update(QString contentId, int percentage, Options options = Options());
+  static CLI *update(int percentage, Options options = Options());
 
 public Q_SLOTS:
   void networkConnected();
@@ -40,7 +40,7 @@ Q_SIGNALS:
   void failure();
 
 private:
-  static QStringList getIdentifier();
+  static QStringList getIdentifier(Options options);
 
   CLI(QStringList arguments, Options options = Options(), QObject *parent = nullptr);
 

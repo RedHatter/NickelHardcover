@@ -9,7 +9,7 @@ class SearchDialog : public Dialog {
   Q_OBJECT
 
 public:
-  static void show(QString query);
+  static void show(QString contentId, QString query);
 
   void commit() override;
 
@@ -19,10 +19,11 @@ public Q_SLOTS:
   void tapped(QString id);
 
 private:
-  SearchDialog(QString query);
+  SearchDialog(QString contentId, QString query);
 
   PagedStack *pages = nullptr;
   TouchLineEdit *lineEdit = nullptr;
+  QString contentId;
 
   void clear();
 };

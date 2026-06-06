@@ -57,9 +57,9 @@ bool Settings::isEnabled(QString contentId) {
   return getValue(contentId, "enabled", defaultValue).toBool();
 }
 
-void Settings::setLinkedBook(QString contentId, QString value) { setValue(contentId, "linkedbook", value); }
+void Settings::setLinkedId(QString contentId, QString value) { setValue(contentId, "linkedbook", value); }
 
-QString Settings::getLinkedBook(QString contentId) { return getValue(contentId, "linkedbook").toString(); }
+QString Settings::getLinkedId(QString contentId) { return getValue(contentId, "linkedbook").toString(); }
 
 void Settings::setLastProgress(QString contentId, int value) { setValue(contentId, "progress", value); }
 

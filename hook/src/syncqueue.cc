@@ -90,7 +90,7 @@ void SyncQueue::run(QString contentId, bool manual) {
   options.icon = true;
   options.contentId = contentId;
 
-  CLI *cli = CLI::update(contentId, progress, options);
+  CLI *cli = CLI::update(progress, options);
   QObject::connect(cli, &CLI::success, this, &SyncQueue::success);
   QObject::connect(cli, &CLI::failure, this, &SyncQueue::closeDialog);
   QObject::connect(cli, &CLI::failure, this, &SyncQueue::finished);

@@ -14,8 +14,8 @@ public:
   void setEnabled(QString contentId, bool value);
   bool isEnabled(QString contentId);
 
-  void setLinkedBook(QString contentId, QString value);
-  QString getLinkedBook(QString contentId);
+  void setLinkedId(QString contentId, QString value);
+  QString getLinkedId(QString contentId);
 
   void setLastProgress(QString contentId, int value);
   int getLastProgress(QString contentId);

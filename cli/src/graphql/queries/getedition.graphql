@@ -4,14 +4,15 @@ fragment Edition on editions {
   reading_format_id
 }
 
-query GetEdition($isbn: [String!]!, $book_id: Int!, $user_id: Int!) {
+query GetEdition($isbn: [String!]!, $linked_id: Int!, $user_id: Int!) {
   editions(
     where: {
       _or: [
         { asin: { _in: $isbn } }
         { isbn_10: { _in: $isbn } }
         { isbn_13: { _in: $isbn } }
-        { book_id: { _eq: $book_id } }
+        { id: { _eq: $linked_id } }
+        { book_id: { _eq: $linked_id } }
       ]
     }
     limit: 1
@@ -23,6 +24,11 @@ query GetEdition($isbn: [String!]!, $book_id: Int!, $user_id: Int!) {
         ...Edition
       }
       default_cover_edition {
+        ...Edition
+      }
+      id_edition: editions(
+        where: { id: { _eq: $linked_id }, reading_format_id: { _neq: 2 } }
+      ) {
         ...Edition
       }
       isbn_edition: editions(

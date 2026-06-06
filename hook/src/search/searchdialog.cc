@@ -12,9 +12,9 @@
 #include "bookrow.h"
 #include "searchdialog.h"
 
-void SearchDialog::show(QString query) { new SearchDialog(query); }
+void SearchDialog::show(QString contentId, QString query) { new SearchDialog(contentId, query); }
 
-SearchDialog::SearchDialog(QString query) : Dialog("Manually link book") {
+SearchDialog::SearchDialog(QString contentId, QString query) : Dialog("Manually link book"), contentId(contentId) {
   setStyleSheet(R"(
     [qApp_deviceIsTrilogy=true] TouchLineEdit {
       margin: 0 20px;
@@ -114,6 +114,6 @@ void SearchDialog::response(QJsonObject doc) {
 
 void SearchDialog::tapped(QString id) {
   nh_log("SearchDialog::tapped(%s)", qPrintable(id));
-  Settings::getInstance()->setLinkedBook(SyncController::getInstance()->contentId, id);
+  Settings::getInstance()->setLinkedId(contentId, id);
   dialog->deleteLater();
 }

@@ -14,25 +14,20 @@ CLI *CLI::listBookmarks(Options options) { return new CLI({"list-bookmarks"}, op
 
 CLI *CLI::listJournal(int limit, int offset, Options options) {
   QStringList arguments = {"list-journal", "--limit", QString::number(limit), "--offset", QString::number(offset)};
-  arguments.append(getIdentifier());
+  arguments.append(getIdentifier(options));
   return new CLI(arguments, options);
 }
 
 CLI *CLI::insertJournal(QString text, int percentage, QString privacy, Options options) {
   QStringList arguments = {"insert-journal", "--text", text, "--percentage", QString::number(percentage),
                            "--privacy",      privacy};
-  arguments.append(getIdentifier());
+  arguments.append(getIdentifier(options));
   return new CLI(arguments, options);
 }
 
-CLI *CLI::updateJournal(QString contentId, Options options) {
-  QStringList arguments = {"update-journal", "--content-id", contentId};
-
-  QString linkedBook = Settings::getInstance()->getLinkedBook(contentId);
-  if (!linkedBook.isEmpty()) {
-    arguments.append({"--book-id", linkedBook});
-  }
-
+CLI *CLI::updateJournal(Options options) {
+  QStringList arguments = {"update-journal"};
+  arguments.append(getIdentifier(options));
   return new CLI(arguments, options);
 }
 
@@ -40,20 +35,20 @@ CLI *CLI::getUser(Options options) { return new CLI({"get-user"}, options); }
 
 CLI *CLI::getUserBook(Options options) {
   QStringList arguments = {"get-user-book"};
-  arguments.append(getIdentifier());
+  arguments.append(getIdentifier(options));
   return new CLI(arguments, options);
 }
 
 CLI *CLI::setUserBook(int status, Options options) {
   QStringList arguments = {"set-user-book", "--status", QString::number(status)};
-  arguments.append(getIdentifier());
+  arguments.append(getIdentifier(options));
   return new CLI(arguments, options);
 }
 
 CLI *CLI::setUserBook(float rating, QString text, bool spoilers, bool sponsored, Options options) {
   QStringList arguments = {"set-user-book"};
 
-  arguments.append(getIdentifier());
+  arguments.append(getIdentifier(options));
 
   if (rating > 0.0) {
     arguments.append({"--rating", QString::number(rating)});
@@ -73,25 +68,23 @@ CLI *CLI::search(QString query, int limit, int page, Options options) {
                  options);
 }
 
-CLI *CLI::update(QString contentId, int percentage, Options options) {
-  QStringList arguments = {"update", "--content-id", contentId, "--value", QString::number(percentage)};
-
-  QString linkedBook = Settings::getInstance()->getLinkedBook(contentId);
-  if (!linkedBook.isEmpty()) {
-    arguments.append({"--book-id", linkedBook});
-  }
+CLI *CLI::update(int percentage, Options options) {
+  QStringList arguments = {"update", "--value", QString::number(percentage)};
+  arguments.append(getIdentifier(options));
 
   return new CLI(arguments, options);
 }
 
-QStringList CLI::getIdentifier() {
-  SyncController *ctl = SyncController::getInstance();
-  QString linkedBook = Settings::getInstance()->getLinkedBook(ctl->contentId);
-  if (linkedBook.isEmpty()) {
-    return {"--content-id", ctl->contentId};
-  } else {
-    return {"--book-id", linkedBook};
+QStringList CLI::getIdentifier(Options options) {
+  QString contentId = options.contentId.isEmpty() ? SyncController::getInstance()->contentId : options.contentId;
+  QStringList identifiers = {"--content-id", contentId};
+
+  QString linkedId = Settings::getInstance()->getLinkedId(contentId);
+  if (!linkedId.isEmpty()) {
+    identifiers.append({"--linked-id", linkedId});
   }
+
+  return identifiers;
 }
 
 CLI::CLI(QStringList arguments, Options options, QObject *parent)
@@ -216,10 +209,9 @@ void CLI::processFinished(int exitCode) {
 
     if (obj.value("error_code").toString() == "BOOK_NOT_FOUND") {
       ConfirmationDialog *dialog = ConfirmationDialogFactory__getConfirmationDialog(nullptr);
+      QString contentId = options.contentId.isEmpty() ? SyncController::getInstance()->contentId : options.contentId;
       ConfirmationDialog__setAcceptButtonText(
-          dialog, Settings::getInstance()->getLinkedBook(SyncController::getInstance()->contentId).isEmpty()
-                      ? "Link book"
-                      : "Unlink book");
+          dialog, Settings::getInstance()->getLinkedId(contentId).isEmpty() ? "Link book" : "Unlink book");
       ConfirmationDialog__setRejectButtonText(dialog, "Cancel");
       ConfirmationDialog__setTitle(dialog, "Hardcover.app");
       ConfirmationDialog__setText(dialog, obj.value("message").toString());
@@ -242,14 +234,13 @@ void CLI::processFinished(int exitCode) {
 void CLI::linkBook() {
   nh_log("CLI::linkBook()");
 
-  QString contentId = options.contentId.isEmpty() ? SyncController::getInstance()->contentId : options.contentId;
+  SyncController *ctl = SyncController::getInstance();
+  QString contentId = options.contentId.isEmpty() ? ctl->contentId : options.contentId;
 
-  if (Settings::getInstance()->getLinkedBook(contentId).isEmpty()) {
-    SearchDialog::show(options.query.isEmpty()
-                           ? SyncController::getInstance()->title + " " + SyncController::getInstance()->author
-                           : options.query);
+  if (Settings::getInstance()->getLinkedId(contentId).isEmpty()) {
+    SearchDialog::show(contentId, options.query.isEmpty() ? ctl->title + " " + ctl->author : options.query);
   } else {
-    Settings::getInstance()->setLinkedBook(contentId, QString());
+    Settings::getInstance()->setLinkedId(contentId, QString());
   }
 
   deleteLater();

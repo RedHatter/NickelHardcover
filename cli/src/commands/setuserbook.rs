@@ -1,11 +1,35 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use chrono::Local;
+use graphql_client::GraphQLQuery;
 
-use crate::hardcover::{update_or_insert_user_book, update_user_book::UserBookUpdateInput};
+use macros::{AggregateErrors, SendRequest};
+
+use crate::hardcover::get_book;
+use crate::hardcover::{date, get_edition::GetEditionEditionsBook, jsonb, numeric};
 use crate::log;
 use crate::utils::{VERSION, normalize_identifiers};
 
 use argh::FromArgs;
+
+#[derive(GraphQLQuery, SendRequest)]
+#[graphql(
+  schema_path = "src/graphql/schema.graphql",
+  query_path = "src/graphql/mutations/insertuserbook.graphql",
+  response_derives = "Debug,AggregateErrors",
+  variables_derives = "Debug,Default",
+  skip_serializing_none
+)]
+struct InsertUserBook;
+
+#[derive(GraphQLQuery, SendRequest)]
+#[graphql(
+  schema_path = "src/graphql/schema.graphql",
+  query_path = "src/graphql/mutations/updateuserbook.graphql",
+  response_derives = "Debug,AggregateErrors",
+  variables_derives = "Debug,Default",
+  skip_serializing_none
+)]
+pub struct UpdateUserBook;
 
 /// Update user book.
 #[derive(FromArgs, PartialEq, Debug)]
@@ -15,9 +39,9 @@ pub struct SetUserBook {
   #[argh(option)]
   content_id: Option<String>,
 
-  /// hardcover.app book id
+  /// hardcover.app book or edition id
   #[argh(option)]
-  book_id: Option<i64>,
+  linked_id: Option<i64>,
 
   /// the status id
   #[argh(option)]
@@ -43,12 +67,13 @@ pub struct SetUserBook {
 pub async fn run(args: SetUserBook) -> Result<()> {
   log!("{} {:?}", &*VERSION, args);
 
-  let (book_id, isbn) = normalize_identifiers(args.book_id, args.content_id.as_deref());
+  let (linked_id, isbn) = normalize_identifiers(args.linked_id, args.content_id.as_deref());
+  let (book, edition_id, _) = get_book(isbn, linked_id).await?;
 
   update_or_insert_user_book(
-    isbn,
-    book_id,
-    UserBookUpdateInput {
+    book,
+    edition_id,
+    update_user_book::UserBookUpdateInput {
       status_id: args.status,
       review_has_spoilers: args.spoilers,
       sponsored_review: args.sponsored,
@@ -78,10 +103,90 @@ pub async fn run(args: SetUserBook) -> Result<()> {
           }
         })
       }),
-      ..UserBookUpdateInput::default()
+      ..update_user_book::UserBookUpdateInput::default()
     },
   )
   .await?;
 
   Ok(())
+}
+
+pub async fn update_or_insert_user_book(
+  book: GetEditionEditionsBook,
+  edition_id: i64,
+  object: update_user_book::UserBookUpdateInput,
+) -> Result<(i64, Option<i64>, Option<String>)> {
+  let (user_book_id, user_read_id, started_at) = if let Some(user_book) = book.user_books.into_iter().next() {
+    if object.review_slate.is_some()
+      || (object.rating.is_some() && object.rating != user_book.rating)
+      || object
+        .review_has_spoilers
+        .is_some_and(|review_has_spoilers| review_has_spoilers != user_book.review_has_spoilers)
+      || object
+        .sponsored_review
+        .is_some_and(|sponsored_review| sponsored_review != user_book.sponsored_review)
+      || object
+        .status_id
+        .is_some_and(|status_id| status_id != user_book.status_id)
+    {
+      log!("Update user book `{}`", user_book.id);
+
+      UpdateUserBook::send_request(update_user_book::Variables {
+        user_book_id: user_book.id,
+        object,
+      })
+      .await?
+      .update_user_book
+      .and_then(|update| update.user_book)
+      .context(format!("Failed to find updated user book <i>{}</i>", user_book.id))?
+      .user_book_reads
+      .into_iter()
+      .next()
+      .map_or((user_book.id, None, None), |read| {
+        (user_book.id, Some(read.id), read.started_at)
+      })
+    } else {
+      user_book
+        .user_book_reads
+        .into_iter()
+        .next()
+        .map_or((user_book.id, None, None), |read| {
+          (user_book.id, Some(read.id), read.started_at)
+        })
+    }
+  } else {
+    // Insert new user book
+    log!("Insert user book for book `{}` and edition `{edition_id}`", book.id);
+
+    let user_book = InsertUserBook::send_request(insert_user_book::Variables {
+      object: insert_user_book::UserBookCreateInput {
+        book_id: book.id,
+        edition_id: Some(edition_id),
+        status_id: object.status_id,
+        rating: object.rating,
+        review_slate: object.review_slate,
+        sponsored_review: object.sponsored_review,
+        reviewed_at: object.reviewed_at,
+        review_has_spoilers: object.review_has_spoilers,
+        ..insert_user_book::UserBookCreateInput::default()
+      },
+    })
+    .await?
+    .insert_user_book
+    .and_then(|update| update.user_book)
+    .context("Failed to find inserted user book")?;
+    user_book
+      .user_book_reads
+      .into_iter()
+      .next()
+      .map_or((user_book.id, None, None), |read| {
+        (user_book.id, Some(read.id), read.started_at)
+      })
+  };
+
+  if let Some(id) = user_read_id {
+    log!("user read `{id}`");
+  }
+
+  Ok((user_book_id, user_read_id, started_at))
 }

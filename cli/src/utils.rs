@@ -58,11 +58,11 @@ pub fn write_logfile() {
   }
 }
 
-pub fn normalize_identifiers(book_id: Option<i64>, content_id: Option<&str>) -> (i64, Vec<String>) {
-  match (book_id, content_id) {
-    (Some(book_id), _) => (book_id, Vec::new()),
-    (None, Some(content_id)) => (0, get_isbn(&content_id)),
-    (None, None) => panic!("One of --content-id or --book-id is required"),
+pub fn normalize_identifiers(linked_id: Option<i64>, content_id: Option<&str>) -> (i64, Vec<String>) {
+  match (linked_id, content_id) {
+    (Some(linked_id), _) => (linked_id, Vec::new()),
+    (_, Some(content_id)) => (0, get_isbn(&content_id)),
+    (None, None) => panic!("One of --content-id or --linked-id is required"),
   }
 }
 

@@ -27,9 +27,9 @@ pub struct ListJournal {
   #[argh(option)]
   content_id: Option<String>,
 
-  /// hardcover.app book id
+  /// hardcover.app book or edition id
   #[argh(option)]
-  book_id: Option<i64>,
+  linked_id: Option<i64>,
 
   /// how many results to return
   #[argh(option)]
@@ -43,12 +43,12 @@ pub struct ListJournal {
 pub async fn run(args: ListJournal) -> Result<()> {
   log!("{} {:?}", &*VERSION, args);
 
-  let (book_id, isbn) = normalize_identifiers(args.book_id, args.content_id.as_deref());
+  let (linked_id, isbn) = normalize_identifiers(args.linked_id, args.content_id.as_deref());
   let user_id = get_user().await?.id;
 
   let journals = GetReadingJournal::send_request(get_reading_journal::Variables {
     isbn,
-    book_id,
+    linked_id,
     user_id,
     limit: args.limit,
     offset: args.offset,

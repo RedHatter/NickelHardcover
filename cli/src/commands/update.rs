@@ -5,9 +5,10 @@ use graphql_client::GraphQLQuery;
 
 use macros::{AggregateErrors, SendRequest};
 
+use crate::commands::setuserbook::{update_or_insert_user_book, update_user_book::UserBookUpdateInput};
 use crate::commands::updatejournal::update_journal;
 use crate::config::{CONFIG, SyncBookmarks};
-use crate::hardcover::{date, update_or_insert_user_book, update_user_book::UserBookUpdateInput};
+use crate::hardcover::{date, get_book};
 use crate::log;
 use crate::utils::{VERSION, normalize_identifiers};
 
@@ -37,9 +38,9 @@ pub struct Update {
   #[argh(option)]
   content_id: String,
 
-  /// hardcover.app book id
+  /// hardcover.app book or edition id
   #[argh(option)]
-  book_id: Option<i64>,
+  linked_id: Option<i64>,
 
   /// read percentage
   #[argh(option)]
@@ -49,44 +50,40 @@ pub struct Update {
 pub async fn run(args: Update) -> Result<()> {
   log!("{} {:?}", &*VERSION, args);
 
-  let (book_id, isbn) = normalize_identifiers(args.book_id, Some(&args.content_id));
-
-  let result = update_or_insert_user_book(
-    isbn,
-    book_id,
+  let (linked_id, isbn) = normalize_identifiers(args.linked_id, Some(&args.content_id));
+  let (book, edition_id, pages) = get_book(isbn, linked_id).await?;
+  let book_id = book.id;
+  let (user_book_id, user_read_id, started_at) = update_or_insert_user_book(
+    book,
+    edition_id,
     UserBookUpdateInput {
       status_id: Some(2),
       ..UserBookUpdateInput::default()
     },
   )
   .await?;
+  let started_at = started_at.unwrap_or(Local::now().format("%Y-%m-%d").to_string());
 
-  let progress_pages = (result.pages * args.value) / 100;
+  let progress_pages = (pages * args.value) / 100;
 
-  if let Some(user_read_id) = result.user_read_id {
-    log!(
-      "Update read `{user_read_id}` for edition `{}` to page `{progress_pages}`",
-      result.edition_id
-    );
+  if let Some(user_read_id) = user_read_id {
+    log!("Update read `{user_read_id}` for edition `{edition_id}` to page `{progress_pages}`");
 
     UpdateRead::send_request(update_read::Variables {
       id: user_read_id,
       progress_pages,
-      edition_id: result.edition_id,
-      started_at: result.started_at.unwrap_or(Local::now().format("%Y-%m-%d").to_string()),
+      edition_id,
+      started_at,
     })
     .await?;
   } else {
-    log!(
-      "Insert new read for edition `{}` at page `{progress_pages}`",
-      result.edition_id
-    );
+    log!("Insert new read for edition `{edition_id}` at page `{progress_pages}`");
 
     InsertRead::send_request(insert_read::Variables {
-      user_book_id: result.user_book_id,
+      user_book_id,
       progress_pages,
-      edition_id: result.edition_id,
-      started_at: result.started_at.unwrap_or(Local::now().format("%Y-%m-%d").to_string()),
+      edition_id,
+      started_at,
     })
     .await?;
   }
@@ -97,7 +94,7 @@ pub async fn run(args: Update) -> Result<()> {
     return Ok(());
   }
 
-  update_journal(&args.content_id, result.book_id, result.edition_id, result.pages).await?;
+  update_journal(&args.content_id, book_id, edition_id, pages).await?;
 
   Ok(())
 }
