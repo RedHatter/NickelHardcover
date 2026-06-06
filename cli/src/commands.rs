@@ -2,6 +2,7 @@ pub mod getuser;
 pub mod getuserbook;
 pub mod insertjournal;
 pub mod listbookmarks;
+pub mod listeditions;
 pub mod listjournal;
 pub mod search;
 pub mod setuserbook;

@@ -12,6 +12,20 @@
 
 CLI *CLI::listBookmarks(Options options) { return new CLI({"list-bookmarks"}, options); }
 
+CLI *CLI::listEditions(QString bookId, int readingFormat, QString language, Options options) {
+  QStringList arguments = {"list-editions", "--book-id", bookId};
+
+  if (readingFormat != 0) {
+    arguments.append({"--reading-format", QString::number(readingFormat)});
+  }
+
+  if (!language.isEmpty()) {
+    arguments.append({"--language", language});
+  }
+
+  return new CLI(arguments, options);
+}
+
 CLI *CLI::listJournal(int limit, int offset, Options options) {
   QStringList arguments = {"list-journal", "--limit", QString::number(limit), "--offset", QString::number(offset)};
   arguments.append(getIdentifier(options));

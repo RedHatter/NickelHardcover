@@ -1,0 +1,75 @@
+fragment Edition on editions {
+  asin
+  contributions(where: { contribution: { _is_null: true } }) {
+    author {
+      name
+    }
+  }
+  country {
+    name
+  }
+  edition_format
+  edition_information
+  id
+  image {
+    url
+  }
+  isbn_10
+  isbn_13
+  language {
+    language
+  }
+  pages
+  publisher {
+    name
+  }
+  reading_format_id
+  release_date
+  score
+  subtitle
+  title
+  users_count
+}
+
+query GetEditions($book_id: Int!, $reading_format: [Int!]!) {
+  editions(
+    where: {
+      book_id: { _eq: $book_id }
+      reading_format_id: { _in: $reading_format }
+      canonical_id: { _is_null: true }
+    }
+    order_by: { users_count: desc }
+  ) {
+    ...Edition
+  }
+}
+
+query GetEditionsWithLang(
+  $book_id: Int!
+  $reading_format: [Int!]!
+  $language: String!
+) {
+  languages: editions(
+    where: {
+      book_id: { _eq: $book_id }
+      reading_format_id: { _in: $reading_format }
+      canonical_id: { _is_null: true }
+    }
+    distinct_on: [language_id]
+  ) {
+    language {
+      language
+    }
+  }
+  editions(
+    where: {
+      book_id: { _eq: $book_id }
+      reading_format_id: { _in: $reading_format }
+      language: { language: { _eq: $language } }
+      canonical_id: { _is_null: true }
+    }
+    order_by: { users_count: desc }
+  ) {
+    ...Edition
+  }
+}

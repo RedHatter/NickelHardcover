@@ -163,7 +163,7 @@ void MenuRow::down() {
 void MenuRow::accept() { setItem(dialogItems.at(index)); }
 
 void MenuRow::showMenu() {
-  NickelTouchMenu *menu = MenuController::buildMenu(menuItems, label, -sizeHint().height(), false, false);
+  NickelTouchMenu *menu = MenuController::showMenu(menuItems, label, -sizeHint().height(), false, false);
   QWidget::connect(menu, &QMenu::triggered, this, &MenuRow::menuTriggered);
 }
 
