@@ -76,7 +76,7 @@ pub async fn send_request<T: Serialize, R: DeserializeOwned + Debug + AggregateE
 ) -> Result<R> {
   assert!(
     !CONFIG.authorization.is_empty(),
-    "Please set the Hardcover.app authorization token in `.adds/nickelpagesync/config.ini`"
+    "Please set the Hardcover.app authorization token in `.adds/NickelHardcover/config.ini`"
   );
 
   let res = Retry::spawn(ExponentialBackoff::from_millis(10).take(3), async || {
