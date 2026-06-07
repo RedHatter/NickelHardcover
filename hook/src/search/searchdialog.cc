@@ -7,8 +7,8 @@
 #include <NickelHook.h>
 
 #include "../cli.h"
+#include "../editions/editionsdialog.h"
 #include "../settings.h"
-#include "../synccontroller.h"
 #include "bookrow.h"
 #include "searchdialog.h"
 
@@ -75,8 +75,9 @@ void SearchDialog::commit() {
 void SearchDialog::requestPage(int index) {
   QString query = lineEdit->text();
 
-  BookRow *dummy = new BookRow(QJsonObject());
+  BookRow *dummy = new BookRow(QJsonObject(), this);
   int limit = pages->getAvailableHeight() / dummy->sizeHint().height();
+  dummy->deleteLater();
 
   CLI *cli = CLI::search(query, limit, index);
   QObject::connect(cli, &CLI::response, this, &SearchDialog::response);
@@ -105,15 +106,25 @@ void SearchDialog::response(QJsonObject doc) {
     }
 
     results->addWidget(row);
-    QObject::connect(row, &BookRow::tapped, this, &SearchDialog::tapped);
+
+    QObject::connect(row, &BookRow::editions, this, &SearchDialog::editions);
+    QObject::connect(row, &BookRow::selected, this, &SearchDialog::selected);
   }
 
   results->addStretch(1);
   pages->addPage(box);
 }
 
-void SearchDialog::tapped(QString id) {
-  nh_log("SearchDialog::tapped(%s)", qPrintable(id));
+void SearchDialog::editions(QString id) {
+  nh_log("SearchDialog::editions(%s)", qPrintable(id));
+
+  EditionsDialog *editions = EditionsDialog::show(id);
+  QObject::connect(editions, &EditionsDialog::closed, dialog, &SearchDialog::deleteLater);
+  QObject::connect(editions, &EditionsDialog::selected, this, &SearchDialog::selected);
+}
+
+void SearchDialog::selected(QString id) {
+  nh_log("SearchDialog::selected(%s)", qPrintable(id));
   Settings::getInstance()->setLinkedId(contentId, id);
   dialog->deleteLater();
 }

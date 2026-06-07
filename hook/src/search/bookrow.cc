@@ -6,46 +6,27 @@
 #include <NickelHook.h>
 
 #include "../files.h"
+#include "../nickelhardcover.h"
 #include "../synccontroller.h"
 #include "../widgets/elidedlabel.h"
 #include "bookrow.h"
 
-BookRow::BookRow(QJsonObject json, QWidget *parent) : QWidget(parent), id(json.value("id").toString()) {
+BookRow::BookRow(QJsonObject json, QWidget *parent) : QFrame(parent), id(json.value("id").toString()) {
   setStyleSheet(R"(
-    [qApp_deviceIsTrilogy=true] SettingContainer {
-      qproperty-spacing: 12;
-      qproperty-topMargin: 12;
-      qproperty-rightMargin: 12;
-      qproperty-bottomMargin: 12;
-      qproperty-leftMargin: 12;
+    [qApp_deviceIsTrilogy=true] BookRow {
+      padding: 12px;
     }
-    [qApp_deviceIsPhoenix=true] SettingContainer {
-      qproperty-spacing: 15;
-      qproperty-topMargin: 15;
-      qproperty-rightMargin: 15;
-      qproperty-bottomMargin: 15;
-      qproperty-leftMargin: 15;
+    [qApp_deviceIsPhoenix=true] BookRow {
+      padding: 15px;
     }
-    [qApp_deviceIsDragon=true] SettingContainer {
-      qproperty-spacing: 20;
-      qproperty-topMargin: 20;
-      qproperty-rightMargin: 20;
-      qproperty-bottomMargin: 20;
-      qproperty-leftMargin: 20;
+    [qApp_deviceIsDragon=true] BookRow {
+      padding: 20px;
     }
-    [qApp_deviceIsStorm=true] SettingContainer {
-      qproperty-spacing: 22;
-      qproperty-topMargin: 22;
-      qproperty-rightMargin: 22;
-      qproperty-bottomMargin: 22;
-      qproperty-leftMargin: 22;
+    [qApp_deviceIsStorm=true] BookRow {
+      padding: 22px;
     }
-    [qApp_deviceIsDaylight=true] SettingContainer {
-      qproperty-spacing: 26;
-      qproperty-topMargin: 26;
-      qproperty-rightMargin: 26;
-      qproperty-bottomMargin: 26;
-      qproperty-leftMargin: 26;
+    [qApp_deviceIsDaylight=true] BookRow {
+      padding: 26px;
     }
 
     [qApp_deviceIsTrilogy=true] QLabel#cover {
@@ -83,33 +64,25 @@ BookRow::BookRow(QJsonObject json, QWidget *parent) : QWidget(parent), id(json.v
       background-color: #d9d9d9;
     }
 
-    SettingContainer {
+    BookRow {
       border-top: 1px solid #666666;
     }
 
-    BookRow[noBorder=true] SettingsContainer {
+    BookRow[noBorder=true] {
       border-top-width: 0;
     }
   )");
 
-  QVBoxLayout *layout = new QVBoxLayout(this);
+  QHBoxLayout *layout = new QHBoxLayout(this);
   layout->setContentsMargins(0, 0, 0, 0);
-  layout->setSpacing(0);
-
-  SettingContainer *row = construct_SettingContainer(nullptr);
-  layout->addWidget(row);
-  QObject::connect(row, SIGNAL(tapped()), this, SLOT(rowTapped()));
-
-  QHBoxLayout *rowLayout = new QHBoxLayout(row);
-  rowLayout->setContentsMargins(0, 0, 0, 0);
 
   cover = buildCover(json);
-  rowLayout->addWidget(cover);
+  layout->addWidget(cover);
 
   QVBoxLayout *textLayout = new QVBoxLayout();
   textLayout->setContentsMargins(0, 0, 0, 0);
   textLayout->setSpacing(1);
-  rowLayout->addLayout(textLayout, 1);
+  layout->addLayout(textLayout, 1);
   textLayout->addStretch(1);
 
   if (QWidget *widget = buildTitle(json)) {
@@ -129,6 +102,23 @@ BookRow::BookRow(QJsonObject json, QWidget *parent) : QWidget(parent), id(json.v
   }
 
   textLayout->addStretch(1);
+
+  QVBoxLayout *buttons = new QVBoxLayout();
+  buttons->setContentsMargins(0, 0, 0, 0);
+  layout->addLayout(buttons);
+
+  N3ButtonLabel *button = construct_N3ButtonLabel(this);
+  button->setProperty("borderedButton", true);
+  button->setText("Select book");
+  buttons->addWidget(button);
+  QObject::connect(button, SIGNAL(tapped(bool)), this, SLOT(selectTapped()));
+
+  button = construct_N3ButtonLabel(this);
+  button->setText("Editions");
+  buttons->addWidget(button);
+  QObject::connect(button, SIGNAL(tapped(bool)), this, SLOT(editionsTapped()));
+
+  buttons->addStretch(1);
 }
 
 QLabel *BookRow::buildCover(QJsonObject json) {
@@ -136,53 +126,50 @@ QLabel *BookRow::buildCover(QJsonObject json) {
   label->setObjectName("cover");
   label->setScaledContents(true);
 
-  QJsonValue imageUrl = json.value("image");
-  if (imageUrl.isString()) {
+  QString imageUrl = json.value("image").toString();
+  if (imageUrl.isEmpty()) {
+    label->setProperty("blank", true);
+  } else {
     label->setPixmap(QPixmap(Files::loading));
 
-    QNetworkReply *reply = SyncController::getInstance()->network->get(QNetworkRequest(QUrl(imageUrl.toString())));
+    QNetworkReply *reply = SyncController::getInstance()->network->get(QNetworkRequest(QUrl(imageUrl)));
     QObject::connect(reply, &QNetworkReply::finished, this, &BookRow::loadCover);
-  } else {
-    label->setProperty("blank", true);
   }
 
   return label;
 }
 
 QWidget *BookRow::buildTitle(QJsonObject json) {
-  QJsonValue title = json.value("title");
-  if (!title.isString())
+  QString title = json.value("title").toString();
+  if (title.isEmpty()) {
     return nullptr;
+  }
 
-  return new ElidedLabel(Label::Large, title.toString());
+  return new ElidedLabel(Label::Large, title);
 }
 
 QWidget *BookRow::buildSeries(QJsonObject json) {
   QJsonObject series = json.value("series").toObject();
-  QJsonValue seriesName = series.value("name");
-  if (!seriesName.isString())
+  QString seriesName = series.value("name").toString();
+  if (seriesName.isEmpty()) {
     return nullptr;
-
-  QString seriesString = seriesName.toString();
+  }
 
   QJsonValue seriesPosition = series.value("position");
   if (seriesPosition.isDouble()) {
-    seriesString.append(" - ").append(QString::number(seriesPosition.toDouble()));
+    seriesName.append(" - ").append(QString::number(seriesPosition.toDouble()));
   }
 
-  return new ElidedLabel(Label::Avenir, seriesString);
+  return new ElidedLabel(Label::Avenir, seriesName);
 }
 
 QWidget *BookRow::buildAuthor(QJsonObject json) {
-  QJsonValue author = json.value("authors");
-  if (!author.isArray())
+  QStringList author = json.value("authors").toVariant().toStringList();
+  if (author.isEmpty()) {
     return nullptr;
+  }
 
-  QStringList authorList = author.toVariant().toStringList();
-  if (authorList.isEmpty())
-    return nullptr;
-
-  return new ElidedLabel(Label::Small, authorList.join(", "));
+  return new ElidedLabel(Label::Small, author.join(", "));
 }
 
 QWidget *BookRow::buildMeta(QJsonObject json) {
@@ -193,14 +180,18 @@ QWidget *BookRow::buildMeta(QJsonObject json) {
     meta.append(QString::number(year.toDouble()));
   }
 
-  double usersCount = json.value("users_count").toDouble(0);
+  double usersCount = json.value("users_count").toDouble();
   if (usersCount > 0) {
     meta.append(QString::number(usersCount).append(" Readers"));
   }
 
-  double rating = json.value("rating").toDouble(0);
+  double rating = json.value("rating").toDouble();
   if (rating > 0) {
     meta.append(QString::number(rating, 'f', 1).append(" ★"));
+  }
+
+  if (meta.isEmpty()) {
+    return nullptr;
   }
 
   return new ElidedLabel(Label::Small, meta.join(" • "));
@@ -222,4 +213,6 @@ void BookRow::loadCover() {
   reply->deleteLater();
 }
 
-void BookRow::rowTapped() { tapped(id); }
+void BookRow::selectTapped() { selected(id); }
+
+void BookRow::editionsTapped() { editions(id); }

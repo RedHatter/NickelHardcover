@@ -16,7 +16,8 @@ public:
 public Q_SLOTS:
   void requestPage(int index);
   void response(QJsonObject doc);
-  void tapped(QString id);
+  void selected(QString id);
+  void editions(QString id);
 
 private:
   SearchDialog(QString contentId, QString query);

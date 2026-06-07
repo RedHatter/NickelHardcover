@@ -13,19 +13,19 @@
 AnnotationsRow::AnnotationsRow(QJsonObject doc, QWidget *parent) : QFrame(parent), doc(doc) {
   setStyleSheet(R"(
     [qApp_deviceIsTrilogy=true] AnnotationsRow {
-      padding: 12px 0;
+      padding: 12px;
     }
     [qApp_deviceIsPhoenix=true] AnnotationsRow {
-      padding: 16px 0;
+      padding: 16px;
     }
     [qApp_deviceIsDragon=true] AnnotationsRow {
-      padding: 22px 0;
+      padding: 22px;
     }
     [qApp_deviceIsStorm=true] AnnotationsRow {
-      padding: 25px 0;
+      padding: 25px;
     }
     [qApp_deviceIsDaylight=true] AnnotationsRow {
-      padding: 28px 0;
+      padding: 28px;
     }
 
     AnnotationsRow {

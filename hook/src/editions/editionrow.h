@@ -2,20 +2,18 @@
 #include <QJsonObject>
 #include <QLabel>
 
-class BookRow : public QFrame {
+class EditionRow : public QFrame {
   Q_OBJECT
 
 public:
-  BookRow(QJsonObject json, QWidget *parent = nullptr);
+  EditionRow(QJsonObject json, QWidget *parent = nullptr);
 
 public Q_SLOTS:
-  void selectTapped();
-  void editionsTapped();
+  void tapped();
   void loadCover();
 
 Q_SIGNALS:
   void selected(QString id);
-  void editions(QString id);
 
 private:
   QString id;
@@ -23,7 +21,7 @@ private:
 
   QLabel *buildCover(QJsonObject json);
   QWidget *buildTitle(QJsonObject json);
-  QWidget *buildSeries(QJsonObject json);
   QWidget *buildAuthor(QJsonObject json);
-  QWidget *buildMeta(QJsonObject json);
+  QWidget *buildPublisher(QJsonObject json);
+  QWidget *buildDetails(QJsonObject json);
 };
