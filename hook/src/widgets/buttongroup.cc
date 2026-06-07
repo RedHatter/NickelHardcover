@@ -7,7 +7,7 @@
 #include "buttongroup.h"
 
 ButtonGroup::ButtonGroup(QList<Item> items, QVariant defaultValue, QString label, QWidget *parent)
-    : QWidget(parent), m_value(defaultValue) {
+    : QFrame(parent), m_value(defaultValue) {
   setStyleSheet(R"(
     N3ButtonLabel {
       font-family: Avenir;
@@ -22,6 +22,7 @@ ButtonGroup::ButtonGroup(QList<Item> items, QVariant defaultValue, QString label
   )");
 
   QHBoxLayout *layout = new QHBoxLayout(this);
+  layout->setContentsMargins(0, 0, 0, 0);
   layout->setSpacing(2);
 
   if (label != nullptr) {

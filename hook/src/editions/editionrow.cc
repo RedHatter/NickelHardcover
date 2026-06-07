@@ -14,21 +14,29 @@
 
 EditionRow::EditionRow(QJsonObject json, QWidget *parent)
     : QFrame(parent), id(QString::number(json.value("id").toInt())) {
+  QGridLayout *layout = new QGridLayout(this);
+  layout->setContentsMargins(0, 0, 0, 0);
+
   setStyleSheet(R"(
     [qApp_deviceIsTrilogy=true] EditionRow {
       padding: 12px;
+      qproperty-verticalSpacing: 11;
     }
     [qApp_deviceIsPhoenix=true] EditionRow {
       padding: 15px;
+      qproperty-verticalSpacing: 13;
     }
     [qApp_deviceIsDragon=true] EditionRow {
       padding: 20px;
+      qproperty-verticalSpacing: 18;
     }
     [qApp_deviceIsStorm=true] EditionRow {
       padding: 22px;
+      qproperty-verticalSpacing: 21;
     }
     [qApp_deviceIsDaylight=true] EditionRow {
       padding: 26px;
+      qproperty-verticalSpacing: 23;
     }
 
     EditionRow {
@@ -40,30 +48,35 @@ EditionRow::EditionRow(QJsonObject json, QWidget *parent)
     }
 
     [qApp_deviceIsTrilogy=true] QLabel#cover {
+      margin-right: 12px;
       max-width: 36px;
       min-width: 36px;
       max-height: 55px;
       min-height: 55px;
     }
     [qApp_deviceIsPhoenix=true] QLabel#cover {
+      margin-right: 15px;
       max-width: 42px;
       min-width: 42px;
       max-height: 64px;
       min-height: 64px;
     }
     [qApp_deviceIsDragon=true] QLabel#cover {
+      margin-right: 20px;
       max-width: 65px;
       min-width: 65px;
       max-height: 100px;
       min-height: 100px;
     }
     [qApp_deviceIsStorm=true] QLabel#cover {
+      margin-right: 22px;
       max-width: 75px;
       min-width: 75px;
       max-height: 116px;
       min-height: 116px;
     }
     [qApp_deviceIsDaylight=true] QLabel#cover {
+      margin-right: 26px;
       max-width: 84px;
       min-width: 84px;
       max-height: 130px;
@@ -75,11 +88,9 @@ EditionRow::EditionRow(QJsonObject json, QWidget *parent)
     }
   )");
 
-  QGridLayout *layout = new QGridLayout(this);
-  layout->setContentsMargins(0, 0, 0, 0);
-
   QHBoxLayout *hbox = new QHBoxLayout();
   hbox->setContentsMargins(0, 0, 0, 0);
+  hbox->setSpacing(0);
   layout->addLayout(hbox, 0, 0, 1, -1);
 
   cover = buildCover(json);
@@ -91,23 +102,18 @@ EditionRow::EditionRow(QJsonObject json, QWidget *parent)
   hbox->addLayout(vbox, 1);
   vbox->addStretch(1);
 
-  if (QWidget *widget = buildTitle(json)) {
-    vbox->addWidget(widget);
-  }
+  vbox->addWidget(new ElidedLabel(Label::Medium, json.value("title").toString()));
+  vbox->addWidget(
+      new ElidedLabel(Label::ExtraSmall, json.value("contributions").toVariant().toStringList().join(", ")));
 
-  if (QWidget *widget = buildAuthor(json)) {
-    vbox->addWidget(widget);
-  }
-
-  if (QWidget *widget = buildPublisher(json)) {
-    vbox->addWidget(widget);
-  }
+  QString publisher = json.value("publisher").toString();
+  vbox->addWidget(new Label(Label::ExtraSmall, "<b>Publisher:</b> " + (publisher.isEmpty() ? "No data" : publisher)));
 
   vbox->addStretch(1);
 
   N3ButtonLabel *button = construct_N3ButtonLabel(this);
-  button->setProperty("borderedButton", true);
   button->setText("Select edition");
+  button->setProperty("borderedButton", true);
   hbox->addWidget(button);
   QObject::connect(button, SIGNAL(tapped(bool)), this, SLOT(tapped()));
 
@@ -127,11 +133,16 @@ EditionRow::EditionRow(QJsonObject json, QWidget *parent)
   };
 
   for (int i = 0; i < list.size(); i++) {
-    QString text =
-        QString("<b>%1:</b><br>%2").arg(list[i].first).arg(list[i].second.isEmpty() ? "No data" : list[i].second);
+    QString text = QString("<b>%1:</b><br>%2")
+                       .arg(list[i].first)
+                       .arg(list[i].second.isEmpty() || list[i].second == "0" ? "No data" : list[i].second);
     layout->addWidget(new Label(Label::ExtraSmall, text), i / 4 + 1, i % 4);
   }
 }
+
+void EditionRow::setVerticalSpacing(int value) { qobject_cast<QGridLayout *>(layout())->setVerticalSpacing(value); }
+
+int EditionRow::verticalSpacing() const { return qobject_cast<QGridLayout *>(layout())->verticalSpacing(); };
 
 QLabel *EditionRow::buildCover(QJsonObject json) {
   QLabel *label = new QLabel();
@@ -149,33 +160,6 @@ QLabel *EditionRow::buildCover(QJsonObject json) {
   }
 
   return label;
-}
-
-QWidget *EditionRow::buildTitle(QJsonObject json) {
-  QString title = json.value("title").toString();
-  if (title.isEmpty()) {
-    return nullptr;
-  }
-
-  return new ElidedLabel(Label::Medium, title);
-}
-
-QWidget *EditionRow::buildAuthor(QJsonObject json) {
-  QStringList author = json.value("contributions").toVariant().toStringList();
-  if (author.isEmpty()) {
-    return nullptr;
-  }
-
-  return new ElidedLabel(Label::ExtraSmall, author.join(", "));
-}
-
-QWidget *EditionRow::buildPublisher(QJsonObject json) {
-  QString publisher = json.value("publisher").toString();
-  if (publisher.isEmpty()) {
-    return nullptr;
-  }
-
-  return new Label(Label::ExtraSmall, "<b>Publisher:</b> " + publisher);
 }
 
 void EditionRow::loadCover() {

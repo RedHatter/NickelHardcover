@@ -22,8 +22,6 @@ private:
   QLabel *cover = nullptr;
 
   QLabel *buildCover(QJsonObject json);
-  QWidget *buildTitle(QJsonObject json);
-  QWidget *buildSeries(QJsonObject json);
-  QWidget *buildAuthor(QJsonObject json);
-  QWidget *buildMeta(QJsonObject json);
+  QString getSeries(QJsonObject json);
+  QString getMeta(QJsonObject json);
 };

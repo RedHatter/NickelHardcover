@@ -85,21 +85,10 @@ BookRow::BookRow(QJsonObject json, QWidget *parent) : QFrame(parent), id(json.va
   layout->addLayout(textLayout, 1);
   textLayout->addStretch(1);
 
-  if (QWidget *widget = buildTitle(json)) {
-    textLayout->addWidget(widget);
-  }
-
-  if (QWidget *widget = buildSeries(json)) {
-    textLayout->addWidget(widget);
-  }
-
-  if (QWidget *widget = buildAuthor(json)) {
-    textLayout->addWidget(widget);
-  }
-
-  if (QWidget *widget = buildMeta(json)) {
-    textLayout->addWidget(widget);
-  }
+  textLayout->addWidget(new ElidedLabel(Label::Large, json.value("title").toString()));
+  textLayout->addWidget(new ElidedLabel(Label::Avenir, getSeries(json)));
+  textLayout->addWidget(new ElidedLabel(Label::Small, json.value("authors").toVariant().toStringList().join(", ")));
+  textLayout->addWidget(new ElidedLabel(Label::Small, getMeta(json)));
 
   textLayout->addStretch(1);
 
@@ -115,7 +104,7 @@ BookRow::BookRow(QJsonObject json, QWidget *parent) : QFrame(parent), id(json.va
 
   button = construct_N3ButtonLabel(this);
   button->setText("Editions");
-  buttons->addWidget(button);
+  buttons->addWidget(button, 0, Qt::AlignLeft);
   QObject::connect(button, SIGNAL(tapped(bool)), this, SLOT(editionsTapped()));
 
   buttons->addStretch(1);
@@ -139,40 +128,19 @@ QLabel *BookRow::buildCover(QJsonObject json) {
   return label;
 }
 
-QWidget *BookRow::buildTitle(QJsonObject json) {
-  QString title = json.value("title").toString();
-  if (title.isEmpty()) {
-    return nullptr;
-  }
-
-  return new ElidedLabel(Label::Large, title);
-}
-
-QWidget *BookRow::buildSeries(QJsonObject json) {
+QString BookRow::getSeries(QJsonObject json) {
   QJsonObject series = json.value("series").toObject();
   QString seriesName = series.value("name").toString();
-  if (seriesName.isEmpty()) {
-    return nullptr;
+
+  QJsonValue position = series.value("position");
+  if (!seriesName.isEmpty() && position.isDouble()) {
+    seriesName.append(" - ").append(QString::number(position.toDouble()));
   }
 
-  QJsonValue seriesPosition = series.value("position");
-  if (seriesPosition.isDouble()) {
-    seriesName.append(" - ").append(QString::number(seriesPosition.toDouble()));
-  }
-
-  return new ElidedLabel(Label::Avenir, seriesName);
+  return seriesName;
 }
 
-QWidget *BookRow::buildAuthor(QJsonObject json) {
-  QStringList author = json.value("authors").toVariant().toStringList();
-  if (author.isEmpty()) {
-    return nullptr;
-  }
-
-  return new ElidedLabel(Label::Small, author.join(", "));
-}
-
-QWidget *BookRow::buildMeta(QJsonObject json) {
+QString BookRow::getMeta(QJsonObject json) {
   QStringList meta;
 
   QJsonValue year = json.value("release_year");
@@ -190,11 +158,7 @@ QWidget *BookRow::buildMeta(QJsonObject json) {
     meta.append(QString::number(rating, 'f', 1).append(" ★"));
   }
 
-  if (meta.isEmpty()) {
-    return nullptr;
-  }
-
-  return new ElidedLabel(Label::Small, meta.join(" • "));
+  return meta.join(" • ");
 }
 
 void BookRow::loadCover() {

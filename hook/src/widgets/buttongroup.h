@@ -1,8 +1,8 @@
-#include <QWidget>
+#include <QFrame>
 
 #include "../settings/menurow.h"
 
-class ButtonGroup : public QWidget {
+class ButtonGroup : public QFrame {
   Q_OBJECT
   Q_PROPERTY(QVariant value READ value WRITE setValue NOTIFY valueChanged)
 

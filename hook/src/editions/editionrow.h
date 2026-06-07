@@ -4,9 +4,13 @@
 
 class EditionRow : public QFrame {
   Q_OBJECT
+  Q_PROPERTY(int verticalSpacing READ verticalSpacing WRITE setVerticalSpacing)
 
 public:
   EditionRow(QJsonObject json, QWidget *parent = nullptr);
+
+  void setVerticalSpacing(int value);
+  int verticalSpacing() const;
 
 public Q_SLOTS:
   void tapped();
@@ -20,8 +24,4 @@ private:
   QLabel *cover = nullptr;
 
   QLabel *buildCover(QJsonObject json);
-  QWidget *buildTitle(QJsonObject json);
-  QWidget *buildAuthor(QJsonObject json);
-  QWidget *buildPublisher(QJsonObject json);
-  QWidget *buildDetails(QJsonObject json);
 };
