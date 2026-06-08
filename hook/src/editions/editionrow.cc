@@ -19,23 +19,23 @@ EditionRow::EditionRow(QJsonObject json, QWidget *parent)
 
   setStyleSheet(R"(
     [qApp_deviceIsTrilogy=true] EditionRow {
-      padding: 12px;
+      padding:  11px;
       qproperty-verticalSpacing: 11;
     }
     [qApp_deviceIsPhoenix=true] EditionRow {
-      padding: 15px;
+      padding: 13px;
       qproperty-verticalSpacing: 13;
     }
     [qApp_deviceIsDragon=true] EditionRow {
-      padding: 20px;
+      padding: 18px;
       qproperty-verticalSpacing: 18;
     }
     [qApp_deviceIsStorm=true] EditionRow {
-      padding: 22px;
+      padding: 21px;
       qproperty-verticalSpacing: 21;
     }
     [qApp_deviceIsDaylight=true] EditionRow {
-      padding: 26px;
+      padding: 23px;
       qproperty-verticalSpacing: 23;
     }
 
@@ -140,9 +140,11 @@ EditionRow::EditionRow(QJsonObject json, QWidget *parent)
   }
 }
 
-void EditionRow::setVerticalSpacing(int value) { qobject_cast<QGridLayout *>(layout())->setVerticalSpacing(value); }
+QGridLayout *EditionRow::layout() const { return qobject_cast<QGridLayout *>(QWidget::layout()); }
 
-int EditionRow::verticalSpacing() const { return qobject_cast<QGridLayout *>(layout())->verticalSpacing(); };
+void EditionRow::setVerticalSpacing(int value) { layout()->setVerticalSpacing(value); }
+
+int EditionRow::verticalSpacing() const { return layout()->verticalSpacing(); };
 
 QLabel *EditionRow::buildCover(QJsonObject json) {
   QLabel *label = new QLabel();

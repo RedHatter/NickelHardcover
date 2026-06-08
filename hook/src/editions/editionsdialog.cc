@@ -18,19 +18,19 @@ EditionsDialog *EditionsDialog::show(QString bookId) { return new EditionsDialog
 EditionsDialog::EditionsDialog(QString bookId) : Dialog("Manually link book"), bookId(bookId) {
   setStyleSheet(R"(
     [qApp_deviceIsTrilogy=true] QStackedWidget {
-      margin: 12px 20px 0;
+      margin: 0 20px;
     }
     [qApp_deviceIsPhoenix=true] QStackedWidget {
-      margin: 15px 24px 0;
+      margin: 0 24px;
     }
     [qApp_deviceIsDragon=true] QStackedWidget {
-      margin: 20px 37px 0;
+      margin: 0 37px;
     }
     [qApp_deviceIsStorm=true] QStackedWidget {
-      margin: 22px 42px 0;
+      margin: 0 42px;
     }
     [qApp_deviceIsDaylight=true] QStackedWidget {
-      margin: 26px 48px 0;
+      margin: 0 48px;
     }
 
     [qApp_deviceIsTrilogy=true] ButtonGroup {

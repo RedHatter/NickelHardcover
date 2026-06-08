@@ -1,4 +1,5 @@
 #include <QFrame>
+#include <QGridLayout>
 #include <QJsonObject>
 #include <QLabel>
 
@@ -8,6 +9,8 @@ class EditionRow : public QFrame {
 
 public:
   EditionRow(QJsonObject json, QWidget *parent = nullptr);
+
+  QGridLayout *layout() const;
 
   void setVerticalSpacing(int value);
   int verticalSpacing() const;
