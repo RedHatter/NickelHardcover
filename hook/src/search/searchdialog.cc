@@ -49,6 +49,8 @@ SearchDialog::SearchDialog(QString contentId, QString query) : Dialog("Manually 
     }
   )");
 
+  setFixedSize(parentWidget()->size());
+
   QVBoxLayout *layout = new QVBoxLayout(this);
   layout->setContentsMargins(0, 0, 0, 0);
   layout->setSpacing(0);
