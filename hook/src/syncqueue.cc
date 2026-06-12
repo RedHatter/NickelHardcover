@@ -4,8 +4,6 @@
 #include <QSettings>
 #include <QTimer>
 
-#include <stdlib.h>
-
 #include "cli.h"
 #include "qglobal.h"
 #include "settings.h"
@@ -16,17 +14,17 @@ SyncQueue::SyncQueue(QObject *parent) : QObject(parent) {};
 void SyncQueue::updateReadProgress(QString contentId) {
   MainWindowController *mwc = MainWindowController__sharedInstance();
   QWidget *cv = MainWindowController__currentView(mwc);
-  QString name = cv->objectName();
 
   int progress = ReadingView__getCalculatedReadProgress(cv);
-  if (progress == queue[contentId]) {
+  if (progress == 99) {
+    progress = 100;
+  }
+
+  if (progress < 2 || progress == queue[contentId]) {
     return;
   }
 
-  queue[contentId] = ReadingView__getCalculatedReadProgress(cv);
-  if (queue[contentId] == 0) {
-    queue[contentId] = 1;
-  }
+  queue[contentId] = progress;
 
   nh_log("Update %s queued progress to %d%%", qPrintable(contentId), queue[contentId]);
 }
@@ -66,7 +64,8 @@ void SyncQueue::run(QString contentId, bool manual) {
 
   if (progress == 0) {
     nh_log("Attempted to sync %s with no saved reading progress", qPrintable(contentId));
-    ConfirmationDialogFactory__showErrorDialog("Hardcover.app", "Attempted to sync with no saved reading progress");
+    ConfirmationDialogFactory__showErrorDialog("Hardcover.app",
+                                               "Reading progress must be at least 2% to sync with Hardcover.app");
     return;
   }
 

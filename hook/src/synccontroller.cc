@@ -38,8 +38,9 @@ void SyncController::currentViewIndexChanged(int index) {
     nh_log("Alarm set for %s", qPrintable(alarm.toString()));
   }
 
-  if (lastViewName == "ReadingView" && Settings::getInstance()->isEnabled(contentId)) {
-    if (queue->checkThreshold(contentId, Settings::getInstance()->getCloseThreshold())) {
+  Settings *settings = Settings::getInstance();
+  if (lastViewName == "ReadingView" && settings->isEnabled(contentId)) {
+    if (queue->checkThreshold(contentId, settings->getCloseThreshold())) {
       nh_log("Triggered on close auto-sync");
       queue->run(contentId);
     }
@@ -64,10 +65,12 @@ void SyncController::pageChanged() {
     queue->updateReadProgress(contentId);
   }
 
-  if (!Settings::getInstance()->isEnabled(contentId))
+  Settings *settings = Settings::getInstance();
+
+  if (!settings->isEnabled(contentId))
     return;
 
-  int syncDaily = Settings::getInstance()->getSyncDaily();
+  int syncDaily = settings->getSyncDaily();
 
   if (timer != nullptr && (PowerTimer__timeRemaining(timer) <= 0 || syncDaily != lastSyncDaily)) {
     timer->deleteLater();
@@ -90,8 +93,8 @@ void SyncController::pageChanged() {
     QObject::connect(timer, SIGNAL(timeout()), this, SLOT(alarm()));
   }
 
-  if ((queue->getReadProgress(contentId) == 100 && Settings::getInstance()->getLastProgress(contentId) != 100) ||
-      queue->checkThreshold(contentId, Settings::getInstance()->getPageThreshold())) {
+  if ((queue->getReadProgress(contentId) == 100 && settings->getLastProgress(contentId) != 100) ||
+      queue->checkThreshold(contentId, settings->getPageThreshold())) {
     nh_log("Triggered threshold auto-sync");
     queue->run(contentId);
   }
