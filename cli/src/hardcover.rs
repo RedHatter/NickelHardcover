@@ -49,22 +49,30 @@ async fn try_request<T: Serialize>(request_body: &T) -> Result<reqwest::Response
     .await
     .context("Failed to send request")?;
 
-  if res.status() == StatusCode::TOO_MANY_REQUESTS {
-    let timestamp = res
-      .headers()
-      .get("ratelimit-reset")
-      .context("Failed to get <i>ratelimit-reset</i> header from http 429")?
-      .to_str()
-      .context("Failed to get <i>ratelimit-reset</i> header value")?
-      .parse::<i64>()
-      .context("Failed to parse <i>ratelimit-reset</i> header")?;
-    let duration = chrono::DateTime::from_timestamp(timestamp, 0)
-      .context(format!("Failed to create DateTime from timestamp <i>{timestamp}</i>"))?
-      .signed_duration_since(chrono::Utc::now())
-      .to_std()
-      .context("Timestamp is in the past")?;
-    log!("Encountered http 429 sleeping for {}", duration.as_secs());
-    sleep(duration).await;
+  match res.status() {
+    StatusCode::TOO_MANY_REQUESTS => {
+      let timestamp = res
+        .headers()
+        .get("ratelimit-reset")
+        .context("Failed to get <i>ratelimit-reset</i> header from HTTP 429")?
+        .to_str()
+        .context("Failed to get <i>ratelimit-reset</i> header value")?
+        .parse::<i64>()
+        .context("Failed to parse <i>ratelimit-reset</i> header")?;
+      let duration = chrono::DateTime::from_timestamp(timestamp, 0)
+        .context(format!("Failed to create DateTime from timestamp <i>{timestamp}</i>"))?
+        .signed_duration_since(chrono::Utc::now())
+        .to_std()
+        .context("Timestamp is in the past")?;
+      log!("Encountered http 429 sleeping for {}", duration.as_secs());
+      sleep(duration).await;
+    }
+    StatusCode::UNAUTHORIZED => {
+      panic!(
+        "Authorization token is invalid. Please set a valid Hardcover.app authorization token in <i>.adds/NickelHardcover/config.ini</i>."
+      );
+    }
+    _ => {}
   }
 
   Ok(res.error_for_status()?)
@@ -76,11 +84,11 @@ pub async fn send_request<T: Serialize, R: DeserializeOwned + Debug + AggregateE
 ) -> Result<R> {
   assert!(
     !CONFIG.authorization.is_empty(),
-    "Please set the Hardcover.app authorization token in `.adds/NickelHardcover/config.ini`"
+    "Please set the Hardcover.app authorization token in <i>.adds/NickelHardcover/config.ini</i>."
   );
 
-  let res = Retry::spawn(ExponentialBackoff::from_millis(10).take(3), async || {
-    try_request(&request_body).await
+  let res = Retry::spawn(ExponentialBackoff::from_millis(10).take(3), || {
+    try_request(&request_body)
   })
   .await
   .context(format!("<i>{operation_name}</i> request failed"))?;
