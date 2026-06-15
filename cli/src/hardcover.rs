@@ -11,11 +11,11 @@ use serde::{Serialize, de::DeserializeOwned};
 use tokio::time::sleep;
 use tokio_retry::{Retry, strategy::ExponentialBackoff};
 
-use macros::{AggregateErrors, SendRequest};
+use macros::AggregateErrors;
 
 use crate::commands::getuser::get_user;
 use crate::config::CONFIG;
-use crate::utils::{AggregateErrors, VERSION, book_not_found};
+use crate::utils::{AggregateErrors, GraphQLQueryExt, VERSION, book_not_found};
 use crate::{debug_log, log};
 
 pub type date = String;
@@ -108,7 +108,7 @@ pub async fn send_request<T: Serialize, R: DeserializeOwned + Debug + AggregateE
   Ok(data)
 }
 
-#[derive(GraphQLQuery, SendRequest)]
+#[derive(GraphQLQuery)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/queries/getedition.graphql",

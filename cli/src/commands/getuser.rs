@@ -5,14 +5,14 @@ use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 use serde_json::json;
 
-use macros::{AggregateErrors, SendRequest};
+use macros::AggregateErrors;
 
 use crate::config::JournalPrivacy;
 use crate::hardcover::citext;
 use crate::log;
-use crate::utils::VERSION;
+use crate::utils::{GraphQLQueryExt, VERSION};
 
-#[derive(GraphQLQuery, SendRequest)]
+#[derive(GraphQLQuery)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/queries/getme.graphql",

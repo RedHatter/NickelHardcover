@@ -8,16 +8,16 @@ use graphql_client::GraphQLQuery;
 use itertools::{Either, Itertools};
 use serde_json::json;
 
-use macros::{AggregateErrors, SendRequest};
+use macros::AggregateErrors;
 
 use crate::bookmarks::get_bookmarks;
 use crate::commands::getuser::get_user;
 use crate::config::{CONFIG, SyncBookmarks};
 use crate::hardcover::{bigint, date, get_book, jsonb, send_request, timestamptz};
-use crate::utils::{VERSION, normalize_identifiers};
+use crate::utils::{GraphQLQueryExt, VERSION, normalize_identifiers};
 use crate::{debug_log, log};
 
-#[derive(GraphQLQuery, SendRequest)]
+#[derive(GraphQLQuery)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/mutations/insertreadingjournal.graphql",
@@ -26,7 +26,7 @@ use crate::{debug_log, log};
 )]
 struct InsertReadingJournal;
 
-#[derive(GraphQLQuery, SendRequest)]
+#[derive(GraphQLQuery)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/mutations/updatereadingjournal.graphql",
@@ -35,7 +35,7 @@ struct InsertReadingJournal;
 )]
 struct UpdateReadingJournal;
 
-#[derive(GraphQLQuery, SendRequest)]
+#[derive(GraphQLQuery)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/queries/getjournalquotes.graphql",

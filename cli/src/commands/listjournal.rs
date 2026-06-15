@@ -3,14 +3,14 @@ use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 use serde_json::{Value, json};
 
-use macros::{AggregateErrors, SendRequest};
+use macros::AggregateErrors;
 
 use crate::commands::getuser::get_user;
 use crate::hardcover::{bigint, jsonb, timestamptz};
 use crate::log;
-use crate::utils::{VERSION, normalize_identifiers};
+use crate::utils::{GraphQLQueryExt, VERSION, normalize_identifiers};
 
-#[derive(GraphQLQuery, SendRequest)]
+#[derive(GraphQLQuery)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/queries/getreadingjournal.graphql",

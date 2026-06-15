@@ -3,13 +3,13 @@ use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 use serde_json::{Value, json};
 
-use macros::{AggregateErrors, SendRequest};
+use macros::AggregateErrors;
 
 use crate::hardcover::date;
 use crate::log;
-use crate::utils::VERSION;
+use crate::utils::{GraphQLQueryExt, VERSION};
 
-#[derive(GraphQLQuery, SendRequest)]
+#[derive(GraphQLQuery)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/queries/geteditions.graphql",
@@ -18,7 +18,7 @@ use crate::utils::VERSION;
 )]
 struct GetEditions;
 
-#[derive(GraphQLQuery, SendRequest)]
+#[derive(GraphQLQuery)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/queries/geteditions.graphql",

@@ -1,12 +1,15 @@
+use std::fmt::Debug;
 use std::fs::write;
 use std::sync::{LazyLock, Mutex};
 
 use anyhow::{Context, Result};
 use chrono::Local;
+use graphql_client::{GraphQLQuery, Response};
 use itertools::Itertools;
 use serde_json::json;
 
 use crate::config::CONFIG;
+use crate::hardcover::send_request;
 use crate::isbn::get_isbn;
 
 #[macro_export]
@@ -97,5 +100,27 @@ impl<Data: AggregateErrors> AggregateErrors for graphql_client::Response<Data> {
 impl<T: AggregateErrors> AggregateErrors for Vec<T> {
   fn errors<'a>(&'a self) -> impl Iterator<Item = &'a str> {
     self.iter().flat_map(AggregateErrors::errors)
+  }
+}
+
+pub trait GraphQLQueryExt
+where
+  Self: GraphQLQuery,
+{
+  async fn send_request(variables: Self::Variables) -> Result<Self::ResponseData>;
+}
+
+impl<T: GraphQLQuery> GraphQLQueryExt for T
+where
+  <T as GraphQLQuery>::Variables: Debug,
+  <T as GraphQLQuery>::ResponseData: Debug + AggregateErrors,
+{
+  async fn send_request(variables: Self::Variables) -> Result<Self::ResponseData> {
+    let body = Self::build_query(variables);
+    debug_log!("{}, {:?}", body.operation_name, body.variables);
+    send_request::<_, Response<Self::ResponseData>>(body.operation_name, &body)
+      .await?
+      .data
+      .context(format!("{} response is None", body.operation_name))
   }
 }

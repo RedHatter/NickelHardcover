@@ -3,16 +3,16 @@ use argh::FromArgs;
 use chrono::Local;
 use graphql_client::GraphQLQuery;
 
-use macros::{AggregateErrors, SendRequest};
+use macros::AggregateErrors;
 
 use crate::commands::setuserbook::{update_or_insert_user_book, update_user_book::UserBookUpdateInput};
 use crate::commands::updatejournal::update_journal;
 use crate::config::{CONFIG, SyncBookmarks};
 use crate::hardcover::{date, get_book};
 use crate::log;
-use crate::utils::{VERSION, normalize_identifiers};
+use crate::utils::{GraphQLQueryExt, VERSION, normalize_identifiers};
 
-#[derive(GraphQLQuery, SendRequest)]
+#[derive(GraphQLQuery)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/mutations/updateread.graphql",
@@ -21,7 +21,7 @@ use crate::utils::{VERSION, normalize_identifiers};
 )]
 struct UpdateRead;
 
-#[derive(GraphQLQuery, SendRequest)]
+#[derive(GraphQLQuery)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/mutations/insertread.graphql",

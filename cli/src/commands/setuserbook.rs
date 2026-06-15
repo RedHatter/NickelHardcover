@@ -2,16 +2,16 @@ use anyhow::{Context, Result};
 use chrono::Local;
 use graphql_client::GraphQLQuery;
 
-use macros::{AggregateErrors, SendRequest};
+use macros::AggregateErrors;
 
 use crate::hardcover::get_book;
 use crate::hardcover::{date, get_edition::GetEditionEditionsBook, jsonb, numeric};
 use crate::log;
-use crate::utils::{VERSION, normalize_identifiers};
+use crate::utils::{GraphQLQueryExt, VERSION, normalize_identifiers};
 
 use argh::FromArgs;
 
-#[derive(GraphQLQuery, SendRequest)]
+#[derive(GraphQLQuery)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/mutations/insertuserbook.graphql",
@@ -21,7 +21,7 @@ use argh::FromArgs;
 )]
 struct InsertUserBook;
 
-#[derive(GraphQLQuery, SendRequest)]
+#[derive(GraphQLQuery)]
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/mutations/updateuserbook.graphql",
