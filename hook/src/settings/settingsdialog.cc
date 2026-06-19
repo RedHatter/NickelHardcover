@@ -241,11 +241,17 @@ QFrame *SettingsDialog::buildAutoSync() {
 
   layout->addWidget(new Label(Label::Avenir, "Auto-sync"));
 
+  Settings *settings = Settings::getInstance();
+
+  bool is24HourClock = settings->is24HourClock();
+
   QList<Item> hours;
   for (int hour = 1; hour <= 24; hour++) {
     QString text;
 
-    if (hour < 12) {
+    if (is24HourClock) {
+      text = QString("%1:00").arg(hour == 24 ? 0 : hour, 2, 10, QChar('0'));
+    } else if (hour < 12) {
       text = QString::number(hour).append(" AM");
     } else if (hour == 12) {
       text = "12 PM";
@@ -258,7 +264,6 @@ QFrame *SettingsDialog::buildAutoSync() {
     hours.append(Item{text, hour});
   }
 
-  Settings *settings = Settings::getInstance();
   MenuRow *menuRow =
       new MenuRow("Once per day", MenuRowType::Menu, {{"Never", 0}, {"Set time of day", MenuRow::OPEN_DIALOG}}, hours,
                   settings->getSyncDaily());

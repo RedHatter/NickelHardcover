@@ -22,7 +22,8 @@ Settings *Settings::getInstance() {
 
 Settings::Settings(QObject *parent)
     : QObject(parent), internal(new QSettings(Files::settings, QSettings::IniFormat)),
-      config(new QSettings(Files::config, QSettings::IniFormat)) {
+      config(new QSettings(Files::config, QSettings::IniFormat)),
+      kobo(new QSettings(Files::koboSettings, QSettings::IniFormat)) {
   QObject::connect(SyncController::getInstance(), &SyncController::currentViewChanged, this,
                    &Settings::currentViewChanged);
 };
@@ -138,3 +139,5 @@ void Settings::setDebug(bool value) {
 }
 
 bool Settings::getDebug() { return config->value("debug").toBool(); }
+
+bool Settings::is24HourClock() { return kobo->value("ApplicationPreferences/is24HourClock").toBool(); }

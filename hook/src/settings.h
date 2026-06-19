@@ -41,6 +41,8 @@ public:
   void setDebug(bool value);
   bool getDebug();
 
+  bool is24HourClock();
+
 public Q_SLOTS:
   void currentViewChanged(QString name);
 
@@ -51,6 +53,7 @@ private:
 
   QSettings *internal = nullptr;
   QSettings *config = nullptr;
+  QSettings *kobo = nullptr;
 
   QString getPath(QString contentId, QString key);
   void setValue(QString contentId, QString key, QVariant value);

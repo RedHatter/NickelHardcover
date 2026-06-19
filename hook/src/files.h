@@ -3,6 +3,7 @@
 namespace Files {
 constexpr char const *config = "/mnt/onboard/.adds/NickelHardcover/config.ini";
 constexpr char const *settings = "/mnt/onboard/.adds/NickelHardcover/settings.ini";
+constexpr char const *koboSettings = "/mnt/onboard/.kobo/Kobo/Kobo eReader.conf";
 constexpr char const *cli = "/mnt/onboard/.adds/NickelHardcover/CLI";
 constexpr char const *adds_directory = "/mnt/onboard/.adds/NickelHardcover";
 
@@ -35,6 +36,4 @@ constexpr char const *status_stopped = ":/nickelhardcover/status_stopped.png";
 constexpr char const *status_want_to_read = ":/nickelhardcover/status_want_to_read.png";
 constexpr char const *user_book_read_finished = ":/nickelhardcover/user_book_read_finished.png";
 constexpr char const *user_book_read_started = ":/nickelhardcover/user_book_read_started.png";
-
-constexpr char const *share_directory = "./usr/share/NickelHardcover";
 } // namespace Files

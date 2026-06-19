@@ -6,6 +6,7 @@
 #include <NickelHook.h>
 
 #include "../files.h"
+#include "../settings.h"
 #include "../widgets/elidedlabel.h"
 #include "journalentry.h"
 
@@ -101,8 +102,19 @@ JournalEntry::JournalEntry(QJsonObject doc, QWidget *parent) : QFrame(parent) {
     label->setText("Unknown journal type " + event);
   }
 
-  QString actionAt = locale().toString(
-      QDateTime::fromString(doc.value("action_at").toString(), Qt::ISODate).toLocalTime(), QLocale::ShortFormat);
+  QString fmt = locale().dateTimeFormat(QLocale::ShortFormat);
+
+  if (Settings::getInstance()->is24HourClock()) {
+    fmt = fmt.remove("ap", Qt::CaseInsensitive).remove("a", Qt::CaseInsensitive).replace('h', 'H');
+  } else {
+    fmt = fmt.replace('H', 'h');
+
+    if (!fmt.contains('a', Qt::CaseInsensitive)) {
+      fmt += " AP";
+    }
+  }
+
+  QString actionAt = QDateTime::fromString(doc.value("action_at").toString(), Qt::ISODate).toLocalTime().toString(fmt);
   Label *actionAtLabel = new Label(Label::ExtraSmall, actionAt);
   layout->addWidget(actionAtLabel, 0, Qt::AlignRight);
   actionAtLabel->lower();
