@@ -21,8 +21,11 @@ use crate::{debug_log, log};
 pub type date = String;
 pub type citext = String;
 pub type jsonb = serde_json::Value;
+pub type json = serde_json::Value;
 pub type numeric = f32;
 pub type bigint = i64;
+pub type float8 = f32;
+pub type smallint = i8;
 pub type timestamp = String;
 pub type timestamptz = DateTime<Utc>;
 
