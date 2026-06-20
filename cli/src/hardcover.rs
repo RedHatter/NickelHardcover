@@ -3,31 +3,30 @@
 use std::{fmt::Debug, sync::LazyLock};
 
 use anyhow::{Context, Result, bail};
-use chrono::{DateTime, Utc};
-use graphql_client::GraphQLQuery;
 use itertools::Itertools;
 use reqwest::{Certificate, Client, StatusCode};
 use serde::{Serialize, de::DeserializeOwned};
 use tokio::time::sleep;
 use tokio_retry::{Retry, strategy::ExponentialBackoff};
 
-use macros::AggregateErrors;
-
-use crate::commands::getuser::get_user;
 use crate::config::CONFIG;
-use crate::utils::{AggregateErrors, GraphQLQueryExt, VERSION, book_not_found};
+use crate::utils::{AggregateErrors, VERSION};
 use crate::{debug_log, log};
 
-pub type date = String;
-pub type citext = String;
-pub type jsonb = serde_json::Value;
-pub type json = serde_json::Value;
-pub type numeric = f32;
-pub type bigint = i64;
-pub type float8 = f32;
-pub type smallint = i8;
-pub type timestamp = String;
-pub type timestamptz = DateTime<Utc>;
+pub mod scalars {
+  use chrono::{DateTime, Utc};
+
+  pub type date = String;
+  pub type citext = String;
+  pub type jsonb = serde_json::Value;
+  pub type json = serde_json::Value;
+  pub type numeric = f32;
+  pub type bigint = i64;
+  pub type float8 = f32;
+  pub type smallint = i8;
+  pub type timestamp = String;
+  pub type timestamptz = DateTime<Utc>;
+}
 
 async fn try_request<T: Serialize>(request_body: &T) -> Result<reqwest::Response> {
   static CLIENT: LazyLock<Result<Client, reqwest::Error>> = LazyLock::new(|| {
@@ -109,104 +108,4 @@ pub async fn send_request<T: Serialize, R: DeserializeOwned + Debug + AggregateE
   }
 
   Ok(data)
-}
-
-#[derive(GraphQLQuery)]
-#[graphql(
-  schema_path = "src/graphql/schema.graphql",
-  query_path = "src/graphql/queries/getedition.graphql",
-  response_derives = "Debug,AggregateErrors",
-  variables_derives = "Debug"
-)]
-pub struct GetEdition;
-
-fn filter_edition(edition: &&get_edition::Edition) -> bool {
-  edition.reading_format_id != 2
-}
-
-fn map_pages(edition: &get_edition::Edition) -> Option<i64> {
-  if edition.reading_format_id == 2 {
-    None
-  } else {
-    edition.pages
-  }
-}
-
-pub async fn get_book(isbn: Vec<String>, linked_id: i64) -> Result<(get_edition::GetEditionEditionsBook, i64, i64)> {
-  let user_id = get_user().await?.id;
-  let isbn_display = isbn.join(", ");
-
-  // retrieve book, edition and maybe user book and user book read
-  let book = match GetEdition::send_request(get_edition::Variables {
-    isbn,
-    linked_id,
-    user_id,
-  })
-  .await?
-  .editions
-  .into_iter()
-  .next()
-  {
-    Some(edition) => edition.book,
-    None => book_not_found(&if linked_id != 0 {
-      format!(
-        "Unable to find book or edition with id <i>{linked_id}</i> on Hardcover.app. Please manually un-link and re-link book."
-      )
-    } else {
-      format!(
-        "Unable to find a book edition on Hardcover.app with ISBN/ASIN <i>{isbn_display}</i>. Please manually link book."
-      )
-    }),
-  };
-
-  let edition_id = book
-    .user_books
-    .first()
-    .and_then(|user_book| user_book.user_book_reads.first())
-    .and_then(|read| read.edition.as_ref())
-    .filter(filter_edition)
-    .or(book.id_edition.first().filter(filter_edition))
-    .or(book.isbn_edition.first().filter(filter_edition))
-    .or(
-      book
-        .user_books
-        .first()
-        .and_then(|user_book| user_book.edition.as_ref())
-        .filter(filter_edition),
-    )
-    .or(book.default_ebook_edition.as_ref().filter(filter_edition))
-    .or(book.default_cover_edition.as_ref().filter(filter_edition))
-    .or(book.ebook_edition.first().filter(filter_edition))
-    .or(book.paper_edition.first().filter(filter_edition))
-    .expect(&format!(
-      "Unable to find an edition for book <i>{}</i>. Does the book have any non-audiobook editions?",
-      book.id
-    ))
-    .id;
-
-  let pages = book
-    .user_books
-    .first()
-    .and_then(|user_book| user_book.user_book_reads.first())
-    .and_then(|read| read.edition.as_ref())
-    .and_then(map_pages)
-    .or(book.id_edition.first().and_then(map_pages))
-    .or(book.isbn_edition.first().and_then(map_pages))
-    .or(
-      book
-        .user_books
-        .first()
-        .and_then(|user_book| user_book.edition.as_ref()).and_then(map_pages),
-    )
-    .or(book.default_ebook_edition.as_ref().and_then(map_pages))
-    .or(book.default_cover_edition.as_ref().and_then(map_pages))
-    .or(book.ebook_edition.first().and_then(map_pages))
-    .or(book.paper_edition.first().and_then(map_pages))
-    .or(book.pages)
-    .expect(&format!(
-        "Unable to find the total page count for book <i>{}</i>. Please update the book on Hardcover.app with the correct page count.",
-        book.id)
-      );
-
-  Ok((book, edition_id, pages))
 }

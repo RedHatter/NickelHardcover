@@ -12,8 +12,9 @@ use macros::AggregateErrors;
 
 use crate::bookmarks::get_bookmarks;
 use crate::commands::getuser::get_user;
+use crate::commands::getuserbook::get_book;
 use crate::config::{CONFIG, SyncBookmarks};
-use crate::hardcover::{bigint, date, get_book, jsonb, send_request, timestamptz};
+use crate::hardcover::send_request;
 use crate::utils::{GraphQLQueryExt, VERSION, normalize_identifiers};
 use crate::{debug_log, log};
 
@@ -21,6 +22,7 @@ use crate::{debug_log, log};
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/mutations/insertreadingjournal.graphql",
+  custom_scalars_module = "crate::hardcover::scalars"
   response_derives = "Debug,AggregateErrors",
   variables_derives = "Debug"
 )]
@@ -30,6 +32,7 @@ struct InsertReadingJournal;
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/mutations/updatereadingjournal.graphql",
+  custom_scalars_module = "crate::hardcover::scalars"
   response_derives = "Debug,AggregateErrors",
   variables_derives = "Debug"
 )]
@@ -39,6 +42,7 @@ struct UpdateReadingJournal;
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/queries/getjournalquotes.graphql",
+  custom_scalars_module = "crate::hardcover::scalars"
   response_derives = "Debug,AggregateErrors",
   variables_derives = "Debug"
 )]

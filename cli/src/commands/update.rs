@@ -5,10 +5,10 @@ use graphql_client::GraphQLQuery;
 
 use macros::AggregateErrors;
 
+use crate::commands::getuserbook::get_book;
 use crate::commands::setuserbook::{update_or_insert_user_book, update_user_book::UserBookUpdateInput};
 use crate::commands::updatejournal::update_journal;
 use crate::config::{CONFIG, SyncBookmarks};
-use crate::hardcover::{date, get_book};
 use crate::log;
 use crate::utils::{GraphQLQueryExt, VERSION, normalize_identifiers};
 
@@ -16,6 +16,7 @@ use crate::utils::{GraphQLQueryExt, VERSION, normalize_identifiers};
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/mutations/updateread.graphql",
+  custom_scalars_module = "crate::hardcover::scalars"
   response_derives = "Debug,AggregateErrors",
   variables_derives = "Debug"
 )]
@@ -25,6 +26,7 @@ struct UpdateRead;
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/mutations/insertread.graphql",
+  custom_scalars_module = "crate::hardcover::scalars"
   response_derives = "Debug,AggregateErrors",
   variables_derives = "Debug"
 )]

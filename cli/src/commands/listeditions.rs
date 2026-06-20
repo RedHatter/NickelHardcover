@@ -5,7 +5,6 @@ use serde_json::Value;
 
 use macros::AggregateErrors;
 
-use crate::hardcover::{bigint, citext, date, float8, json, jsonb, numeric, smallint, timestamp, timestamptz};
 use crate::log;
 use crate::utils::{GraphQLQueryExt, VERSION};
 
@@ -13,6 +12,7 @@ use crate::utils::{GraphQLQueryExt, VERSION};
 #[graphql(
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/queries/geteditions.graphql",
+  custom_scalars_module = "crate::hardcover::scalars"
   response_derives = "Debug,AggregateErrors,Serialize",
   variables_derives = "Debug,Deserialize"
   skip_serializing_none
