@@ -13,8 +13,8 @@ Thanks to **pgaskin** for the [NickelHook](https://github.com/pgaskin/NickelHook
 
 **Warning: Firmware version 5.x is not supported yet.**
 
-<img src="https://codeberg.org/StrayRose/NickelHardcover/raw/branch/main/screenshots/syncing.png" alt="Syncing with hardcover tooltip" width="32%"> <img src="https://codeberg.org/StrayRose/NickelHardcover/raw/branch/main/screenshots/review.png" alt="Review dialog" width="32%"> <img src="https://codeberg.org/StrayRose/NickelHardcover/raw/branch/main/screenshots/journal.png" alt="Reading journal dialog" width="32%">
-<img src="https://codeberg.org/StrayRose/NickelHardcover/raw/branch/main/screenshots/menu.png?" alt="NickelHardcover menu" width="24%"> <img src="https://codeberg.org/StrayRose/NickelHardcover/raw/branch/main/screenshots/status.png" alt="Reading status menu" width="24%"> <img src="https://codeberg.org/StrayRose/NickelHardcover/raw/branch/main/screenshots/linking.png" alt="Manually linking dialog" width="24%"> <img src="https://codeberg.org/StrayRose/NickelHardcover/raw/branch/main/screenshots/settings.png" alt="Settings dialog" width="24%">
+<img src="https://codeberg.org/StrayRose/NickelHardcover/raw/branch/main/screenshots/syncing.png" alt="Syncing with hardcover" width="24%"> <img src="https://codeberg.org/StrayRose/NickelHardcover/raw/branch/main/screenshots/review.png" alt="Reviewing book" width="24%"> <img src="https://codeberg.org/StrayRose/NickelHardcover/raw/branch/main/screenshots/journal.png" alt="Reading journal" width="24%"> <img src="https://codeberg.org/StrayRose/NickelHardcover/raw/branch/main/screenshots/new-journal.png" alt="New reading journal note" width="24%">
+<img src="https://codeberg.org/StrayRose/NickelHardcover/raw/branch/main/screenshots/menu.png?" alt="NickelHardcover menu" width="20%"> <img src="https://codeberg.org/StrayRose/NickelHardcover/raw/branch/main/screenshots/status.png" alt="Reading status menu" width="20%"> <img src="https://codeberg.org/StrayRose/NickelHardcover/raw/branch/main/screenshots/linking.png" alt="Manually linking book" width="20%"> <img src="https://codeberg.org/StrayRose/NickelHardcover/raw/branch/main/screenshots/linking-edition.png" alt="Manually linking edition" width="20%"> <img src="https://codeberg.org/StrayRose/NickelHardcover/raw/branch/main/screenshots/settings.png" alt="Settings" width="24%">
 
 ## Features
 
@@ -95,9 +95,7 @@ While a book is open, you should find a new menu on the top right where all the 
 
 ### Linking a Hardcover book
 
-NickelHardcover attempts to determine which book to update on Hardcover using the ISBN of the open book. If that fails, or you would like more control, the "Manually link book” menu option allows you to manually select which book to update. The edition of the active read can be changed on the Hardcover book page under the description.
-
-<img src="https://codeberg.org/StrayRose/NickelHardcover/raw/branch/main/screenshots/edition.png" alt="Changing edition" width="400">
+NickelHardcover attempts to determine which book to update on Hardcover using the ISBN of the open book. If that fails, or you would like more control, the "Manually link book” menu option allows you to manually select which book or edition to update.
 
 ### Syncing
 
