@@ -33,6 +33,26 @@ fn isbn_10_check_digit(digits: &[u32]) -> u32 {
   if sum_m == 0 { 0 } else { 11 - sum_m }
 }
 
+fn digits_to_string(digits: &[u32]) -> String {
+  digits
+    .iter()
+    .map(|d| {
+      if *d == 10 {
+        'X'
+      } else {
+        char::from_digit(*d, 10).unwrap()
+      }
+    })
+    .collect()
+}
+
+fn string_to_digits(str: &str) -> Vec<u32> {
+  str
+    .chars()
+    .filter_map(|c| if c == 'X' || c == 'x' { Some(10) } else { c.to_digit(10) })
+    .collect()
+}
+
 fn normalize_isbn(isbn: &str) -> Option<Vec<String>> {
   let mut isbn = isbn.to_ascii_uppercase();
   isbn.retain(char::is_alphanumeric);
@@ -41,10 +61,7 @@ fn normalize_isbn(isbn: &str) -> Option<Vec<String>> {
     return Some(vec![isbn]);
   }
 
-  let digits = isbn
-    .chars()
-    .filter_map(|c| if c == 'X' { Some(10) } else { c.to_digit(10) })
-    .collect::<Vec<_>>();
+  let digits = string_to_digits(&isbn);
 
   if digits.len() == 13
     && (digits[..3] == [9, 7, 8] || digits[..3] == [9, 7, 9])
@@ -55,19 +72,7 @@ fn normalize_isbn(isbn: &str) -> Option<Vec<String>> {
       isbn_10[..9].clone_from_slice(&digits[3..12]);
       isbn_10[9] = isbn_10_check_digit(&isbn_10);
 
-      Some(vec![
-        isbn,
-        isbn_10
-          .iter()
-          .map(|d| {
-            if *d == 10 {
-              'X'
-            } else {
-              char::from_digit(*d, 10).unwrap()
-            }
-          })
-          .collect::<String>(),
-      ])
+      Some(vec![isbn, digits_to_string(&isbn_10)])
     } else {
       Some(vec![isbn])
     }
@@ -79,13 +84,7 @@ fn normalize_isbn(isbn: &str) -> Option<Vec<String>> {
     isbn_13[3..12].clone_from_slice(&digits[..9]);
     isbn_13[12] = isbn_13_check_digit(&isbn_13);
 
-    Some(vec![
-      isbn,
-      isbn_13
-        .iter()
-        .map(|d| char::from_digit(*d, 10).unwrap())
-        .collect::<String>(),
-    ])
+    Some(vec![isbn, digits_to_string(&isbn_13)])
   } else {
     None
   }
@@ -221,26 +220,37 @@ fn read_opf(opf: &str) -> Result<(Vec<String>, Vec<String>)> {
 }
 
 fn read_item(item: &str) -> Result<Vec<String>> {
-  static RE: LazyLock<Result<Regex, regex::Error>> = LazyLock::new(|| Regex::new(r"\s*([0-9\-\.–­―—\^ ]{9,22}[0-9xX])"));
+  static RE: LazyLock<Result<Regex, regex::Error>> = LazyLock::new(|| {
+    Regex::new(r"\s*([0-9\-\.\^ \u00a0\u00ad\u2010\u2011\u2012\u2013\u2014\u2015\u2212]{9,22}[0-9xX])")
+  });
 
   let mut reader = Reader::from_str(item);
 
   let mut text = String::new();
-  let mut inside_body = false;
+
+  enum State {
+    Start,
+    Body,
+    Style,
+  }
+  let mut state = State::Start;
 
   loop {
     let event = reader.read_event().context(format!(
       "Error reading OEBPS file at position {}",
       reader.error_position()
     ))?;
-    match event {
-      Event::Start(e) if e.local_name().as_ref() == b"body" => inside_body = true,
-      Event::End(e) if e.local_name().as_ref() == b"body" => break,
-      Event::Text(e) if inside_body => {
+    state = match (state, event) {
+      (State::Start, Event::Start(e)) if e.local_name().as_ref() == b"body" => State::Body,
+      (State::Body, Event::End(e)) if e.local_name().as_ref() == b"body" => break,
+      (State::Body, Event::Start(e)) if e.local_name().as_ref() == b"style" => State::Style,
+      (State::Style, Event::End(e)) if e.local_name().as_ref() == b"style" => State::Body,
+      (State::Body, Event::Text(e)) => {
         text += e.decode().context("Failed to decode text")?.as_ref();
+        State::Body
       }
-      Event::Eof => break,
-      _ => {}
+      (_, Event::Eof) => break,
+      (state, _) => state,
     };
   }
 
