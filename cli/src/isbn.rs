@@ -141,8 +141,8 @@ fn read_opf(opf: &str) -> Result<(Vec<String>, Vec<String>)> {
   let mut reader = Reader::from_str(opf);
 
   let mut xml_version = XmlVersion::Implicit1_0;
-  let mut isbns: Vec<String> = Vec::new();
-  let mut items: Vec<String> = Vec::new();
+  let mut isbns = Vec::<String>::new();
+  let mut items = Vec::<String>::new();
 
   #[derive(Debug)]
   enum State {
@@ -221,7 +221,9 @@ fn read_opf(opf: &str) -> Result<(Vec<String>, Vec<String>)> {
 
 fn read_item(item: &str) -> Result<Vec<String>> {
   static RE: LazyLock<Result<Regex, regex::Error>> = LazyLock::new(|| {
-    Regex::new(r"\s*([0-9\-\.\^ \u00a0\u00ad\u2010\u2011\u2012\u2013\u2014\u2015\u2212]{9,22}[0-9xX])")
+    Regex::new(
+      r"(?:-10 |-13 )?((?:[\u2010-\u2015\-\.\^ \t\u00a0\u00ad\u2212]?[0-9]){13}|(?:[\u2010-\u2015\-\.\^ \t\u00a0\u00ad\u2212]?[0-9]){9}[\u2010-\u2015\-\.\^ \t\u00a0\u00ad\u2212]]?[0-9xX])",
+    )
   });
 
   let mut reader = Reader::from_str(item);
@@ -258,17 +260,9 @@ fn read_item(item: &str) -> Result<Vec<String>> {
     RE.as_ref()?
       .captures_iter(&text)
       .filter_map(|c| c.get(0))
-      .filter_map(|c| {
-        let str = c.as_str();
-        let s = if str.starts_with("-10 ") || str.starts_with("-13 ") {
-          &str[4..]
-        } else {
-          str
-        };
-        normalize_isbn(&s)
-      })
+      .filter_map(|c| normalize_isbn(c.as_str()))
       .flatten()
-      .collect::<Vec<_>>(),
+      .collect(),
   )
 }
 

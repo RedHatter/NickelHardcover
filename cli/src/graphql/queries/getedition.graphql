@@ -38,7 +38,9 @@ query GetEdition($isbn: [String!]!, $linked_id: Int!, $user_id: Int!) {
             { isbn_10: { _in: $isbn } }
             { isbn_13: { _in: $isbn } }
           ]
+          reading_format_id: { _neq: 2 }
         }
+        order_by: { reading_format_id: desc }
         limit: 1
       ) {
         ...Edition
