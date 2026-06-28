@@ -1,13 +1,16 @@
 #![allow(non_camel_case_types)]
 
+use std::thread::sleep;
 use std::{fmt::Debug, sync::LazyLock};
 
 use anyhow::{Context, Result, bail};
 use itertools::Itertools;
-use reqwest::{Certificate, Client, StatusCode};
+use reqwest::{Certificate, StatusCode, blocking::Client};
+use retry::{
+  delay::{Exponential, jitter},
+  retry,
+};
 use serde::{Serialize, de::DeserializeOwned};
-use tokio::time::sleep;
-use tokio_retry::{Retry, strategy::ExponentialBackoff};
 
 use crate::config::CONFIG;
 use crate::utils::{AggregateErrors, VERSION};
@@ -28,7 +31,7 @@ pub mod scalars {
   pub type timestamptz = DateTime<Utc>;
 }
 
-async fn try_request<T: Serialize>(request_body: &T) -> Result<reqwest::Response> {
+fn try_request<T: Serialize>(request_body: &T) -> Result<reqwest::blocking::Response> {
   static CLIENT: LazyLock<Result<Client, reqwest::Error>> = LazyLock::new(|| {
     Client::builder()
       .user_agent(format!("{}/{}", env!("CARGO_PKG_NAME"), &*VERSION))
@@ -48,7 +51,6 @@ async fn try_request<T: Serialize>(request_body: &T) -> Result<reqwest::Response
     .header("authorization", &CONFIG.authorization)
     .json(&request_body)
     .send()
-    .await
     .context("Failed to send request")?;
 
   match res.status() {
@@ -67,7 +69,7 @@ async fn try_request<T: Serialize>(request_body: &T) -> Result<reqwest::Response
         .to_std()
         .context("Timestamp is in the past")?;
       log!("Encountered http 429 sleeping for {}", duration.as_secs());
-      sleep(duration).await;
+      sleep(duration);
     }
     StatusCode::UNAUTHORIZED => {
       panic!(
@@ -80,7 +82,7 @@ async fn try_request<T: Serialize>(request_body: &T) -> Result<reqwest::Response
   Ok(res.error_for_status()?)
 }
 
-pub async fn send_request<T: Serialize, R: DeserializeOwned + Debug + AggregateErrors>(
+pub fn send_request<T: Serialize, R: DeserializeOwned + Debug + AggregateErrors>(
   operation_name: &str,
   request_body: T,
 ) -> Result<R> {
@@ -89,15 +91,14 @@ pub async fn send_request<T: Serialize, R: DeserializeOwned + Debug + AggregateE
     "Please set the Hardcover.app authorization token in <i>.adds/NickelHardcover/config.ini</i>."
   );
 
-  let res = Retry::spawn(ExponentialBackoff::from_millis(10).take(3), || {
+  let res = retry(Exponential::from_millis(10).map(jitter).take(3), || {
     try_request(&request_body)
   })
-  .await
+  .map_err(|err| err.error)
   .context(format!("<i>{operation_name}</i> request failed"))?;
 
   let data: R = res
     .json()
-    .await
     .context(format!("Failed to parse <i>{operation_name}</i> response"))?;
 
   debug_log!("{:?}", data);

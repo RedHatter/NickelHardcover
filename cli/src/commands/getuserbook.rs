@@ -44,11 +44,11 @@ pub struct GetUserBook {
   linked_id: Option<i64>,
 }
 
-pub async fn run(args: GetUserBook) -> Result<()> {
+pub fn run(args: GetUserBook) -> Result<()> {
   log!("{} {:?}", &*VERSION, args);
 
   let (linked_id, isbn) = normalize_identifiers(args.linked_id, args.content_id.as_deref());
-  let (book, _, _) = get_book(isbn, linked_id).await?;
+  let (book, _, _) = get_book(isbn, linked_id)?;
 
   let user_book = book.user_books.first().map_or(json!({}), |user_book| {
     json!( {
@@ -67,8 +67,8 @@ pub async fn run(args: GetUserBook) -> Result<()> {
   Ok(())
 }
 
-pub async fn get_book(isbn: Vec<String>, linked_id: i64) -> Result<(get_edition::GetEditionEditionsBook, i64, i64)> {
-  let user_id = get_user().await?.id;
+pub fn get_book(isbn: Vec<String>, linked_id: i64) -> Result<(get_edition::GetEditionEditionsBook, i64, i64)> {
+  let user_id = get_user()?.id;
   let isbn_display = isbn.join(", ");
 
   // retrieve book, edition and maybe user book and user book read
@@ -76,8 +76,7 @@ pub async fn get_book(isbn: Vec<String>, linked_id: i64) -> Result<(get_edition:
     isbn,
     linked_id,
     user_id,
-  })
-  .await?
+  })?
   .editions
   .into_iter()
   .next()

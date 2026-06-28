@@ -12,7 +12,7 @@ use crate::utils::VERSION;
 #[argh(subcommand, name = "list-bookmarks")]
 pub struct ListBookmarks {}
 
-pub async fn run(args: ListBookmarks) -> Result<()> {
+pub fn run(args: ListBookmarks) -> Result<()> {
   log!("{} {:?}", &*VERSION, args);
 
   let bookmarks = Connection::open_with_flags(&CONFIG.sqlite_path, OpenFlags::SQLITE_OPEN_READ_ONLY)

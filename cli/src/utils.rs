@@ -12,6 +12,7 @@ use crate::config::CONFIG;
 use crate::hardcover::send_request;
 use crate::isbn::get_isbn;
 
+#[allow(clippy::crate_in_macro_def)]
 #[macro_export]
 macro_rules! debug_log {
   ($($t:tt)*) => {{
@@ -19,6 +20,7 @@ macro_rules! debug_log {
   }};
 }
 
+#[allow(clippy::crate_in_macro_def)]
 #[macro_export]
 macro_rules! log {
   ($($t:tt)*) => {{
@@ -107,7 +109,7 @@ pub trait GraphQLQueryExt
 where
   Self: GraphQLQuery,
 {
-  async fn send_request(variables: Self::Variables) -> Result<Self::ResponseData>;
+  fn send_request(variables: Self::Variables) -> Result<Self::ResponseData>;
 }
 
 impl<T: GraphQLQuery> GraphQLQueryExt for T
@@ -115,11 +117,10 @@ where
   <T as GraphQLQuery>::Variables: Debug,
   <T as GraphQLQuery>::ResponseData: Debug + AggregateErrors,
 {
-  async fn send_request(variables: Self::Variables) -> Result<Self::ResponseData> {
+  fn send_request(variables: Self::Variables) -> Result<Self::ResponseData> {
     let body = Self::build_query(variables);
     debug_log!("{}, {:?}", body.operation_name, body.variables);
-    send_request::<_, Response<Self::ResponseData>>(body.operation_name, &body)
-      .await?
+    send_request::<_, Response<Self::ResponseData>>(body.operation_name, &body)?
       .data
       .context(format!("{} response is None", body.operation_name))
   }

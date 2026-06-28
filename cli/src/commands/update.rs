@@ -49,11 +49,11 @@ pub struct Update {
   value: i64,
 }
 
-pub async fn run(args: Update) -> Result<()> {
+pub fn run(args: Update) -> Result<()> {
   log!("{} {:?}", &*VERSION, args);
 
   let (linked_id, isbn) = normalize_identifiers(args.linked_id, Some(&args.content_id));
-  let (book, edition_id, pages) = get_book(isbn, linked_id).await?;
+  let (book, edition_id, pages) = get_book(isbn, linked_id)?;
   let book_id = book.id;
   let (user_book_id, user_read_id, started_at) = update_or_insert_user_book(
     book,
@@ -62,8 +62,7 @@ pub async fn run(args: Update) -> Result<()> {
       status_id: Some(2),
       ..UserBookUpdateInput::default()
     },
-  )
-  .await?;
+  )?;
   let started_at = started_at.unwrap_or(Local::now().format("%Y-%m-%d").to_string());
 
   let progress_pages = (pages * args.value) / 100;
@@ -76,8 +75,7 @@ pub async fn run(args: Update) -> Result<()> {
       progress_pages,
       edition_id,
       started_at,
-    })
-    .await?;
+    })?;
   } else {
     log!("Insert new read for edition `{edition_id}` at page `{progress_pages}`");
 
@@ -86,8 +84,7 @@ pub async fn run(args: Update) -> Result<()> {
       progress_pages,
       edition_id,
       started_at,
-    })
-    .await?;
+    })?;
   }
 
   if CONFIG.sync_bookmarks == SyncBookmarks::Never
@@ -96,7 +93,7 @@ pub async fn run(args: Update) -> Result<()> {
     return Ok(());
   }
 
-  update_journal(&args.content_id, book_id, edition_id, pages).await?;
+  update_journal(&args.content_id, book_id, edition_id, pages)?;
 
   Ok(())
 }

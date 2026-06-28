@@ -61,17 +61,17 @@ pub struct UpdateJournal {
   linked_id: Option<i64>,
 }
 
-pub async fn run(args: UpdateJournal) -> Result<()> {
+pub fn run(args: UpdateJournal) -> Result<()> {
   log!("{} {:?}", &*VERSION, args);
 
   let (linked_id, isbn) = normalize_identifiers(args.linked_id, Some(&args.content_id));
-  let (book, edition_id, pages) = get_book(isbn, linked_id).await?;
-  update_journal(&args.content_id, book.id, edition_id, pages).await?;
+  let (book, edition_id, pages) = get_book(isbn, linked_id)?;
+  update_journal(&args.content_id, book.id, edition_id, pages)?;
 
   Ok(())
 }
 
-pub async fn update_journal(content_id: &str, book_id: i64, edition_id: i64, pages: i64) -> Result<()> {
+pub fn update_journal(content_id: &str, book_id: i64, edition_id: i64, pages: i64) -> Result<()> {
   let mut bookmarks = get_bookmarks(content_id)?;
 
   log!("{} bookmarks", bookmarks.len());
@@ -82,11 +82,10 @@ pub async fn update_journal(content_id: &str, book_id: i64, edition_id: i64, pag
 
   debug_log!("{:?}", bookmarks);
 
-  let user_id = get_user().await?.id;
+  let user_id = get_user()?.id;
 
-  let reading_journals = GetJournalQuotes::send_request(get_journal_quotes::Variables { book_id, user_id })
-    .await?
-    .reading_journals;
+  let reading_journals =
+    GetJournalQuotes::send_request(get_journal_quotes::Variables { book_id, user_id })?.reading_journals;
 
   match CONFIG.sync_bookmarks {
     SyncBookmarks::Finished => {
@@ -97,7 +96,7 @@ pub async fn update_journal(content_id: &str, book_id: i64, edition_id: i64, pag
     }
   }
 
-  let privacy_setting_id = CONFIG.journal_privacy.get_value().await?;
+  let privacy_setting_id = CONFIG.journal_privacy.get_value()?;
 
   let (insert_bookmarks, update_bookmarks): (Vec<_>, Vec<_>) = bookmarks.iter().partition_map(|bookmark| {
     let note = bookmark.annotation.as_deref().map(str::trim);
@@ -165,8 +164,7 @@ pub async fn update_journal(content_id: &str, book_id: i64, edition_id: i64, pag
     send_request::<_, Vec<graphql_client::Response<insert_reading_journal::ResponseData>>>(
       insert_reading_journal::OPERATION_NAME,
       insert_body,
-    )
-    .await?;
+    )?;
   }
 
   let update_body = update_bookmarks
@@ -183,8 +181,7 @@ pub async fn update_journal(content_id: &str, book_id: i64, edition_id: i64, pag
     send_request::<_, Vec<graphql_client::Response<update_reading_journal::ResponseData>>>(
       update_reading_journal::OPERATION_NAME,
       update_body,
-    )
-    .await?;
+    )?;
   }
 
   Ok(())

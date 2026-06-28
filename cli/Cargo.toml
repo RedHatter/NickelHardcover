@@ -10,22 +10,30 @@ edition = "2024"
 [dependencies]
 anyhow = "1.0.102"
 argh = "0.1.13"
-chrono = { version = "0.4.41", features = ["serde"] }
 graphql_client = "0.16.0"
 itertools = "0.14.0"
 macros = { path = "./macros" }
 quick-xml = "0.40.1"
 regex = "1.12.3"
-rusqlite = { version = "0.40.0", features = ["bundled", "chrono"] }
-serde = { version = "1.0.219", features = ["derive"] }
+retry = "2.2.0"
 serde_json = "1.0.140"
 serini = "0.2.0"
-tokio = { version = "1.45.0", features = ["full"] }
-tokio-retry = { version = "0.3.1", default-features = false }
 webpki-root-certs = "1.0.7"
 zip = "8.6.0"
+
+[dependencies.chrono]
+version = "0.4.41"
+features = ["serde"]
+
+[dependencies.rusqlite]
+version = "0.40.0"
+features = ["bundled", "chrono"]
+
+[dependencies.serde]
+version = "1.0.219"
+features = ["derive"]
 
 [dependencies.reqwest]
 version = "0.13.4"
 default-features = false
-features = ["rustls","json", "gzip"]
+features = ["rustls","json", "gzip", "blocking"]

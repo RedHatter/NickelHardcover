@@ -21,15 +21,14 @@ use crate::utils::{GraphQLQueryExt, VERSION};
 )]
 pub struct GetMe;
 
-pub async fn get_user() -> Result<&'static get_me::GetMeMe> {
+pub fn get_user() -> Result<&'static get_me::GetMeMe> {
   static USER: OnceLock<get_me::GetMeMe> = OnceLock::new();
 
   if let Some(user) = USER.get() {
     return Ok(user);
   }
 
-  let user = GetMe::send_request(get_me::Variables {})
-    .await?
+  let user = GetMe::send_request(get_me::Variables {})?
     .me
     .into_iter()
     .next()
@@ -45,10 +44,10 @@ pub async fn get_user() -> Result<&'static get_me::GetMeMe> {
 #[argh(subcommand, name = "get-user")]
 pub struct GetUser {}
 
-pub async fn run(args: GetUser) -> Result<()> {
+pub fn run(args: GetUser) -> Result<()> {
   log!("{} {:?}", &*VERSION, args);
 
-  let user = get_user().await?;
+  let user = get_user()?;
 
   log!(
     "BEGIN_JSON\n{}",

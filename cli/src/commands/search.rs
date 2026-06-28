@@ -35,15 +35,14 @@ pub struct Search {
   query: String,
 }
 
-pub async fn run(args: Search) -> Result<()> {
+pub fn run(args: Search) -> Result<()> {
   log!("{} {:?}", &*VERSION, args);
 
   let results = SearchBooks::send_request(search_books::Variables {
     query: args.query,
     limit: args.limit,
     page: args.page,
-  })
-  .await?
+  })?
   .search
   .context("Failed to find field <i>search</i> in Hardcover.app results")?
   .results

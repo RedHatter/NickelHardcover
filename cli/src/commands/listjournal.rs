@@ -40,11 +40,11 @@ pub struct ListJournal {
   offset: i64,
 }
 
-pub async fn run(args: ListJournal) -> Result<()> {
+pub fn run(args: ListJournal) -> Result<()> {
   log!("{} {:?}", &*VERSION, args);
 
   let (linked_id, isbn) = normalize_identifiers(args.linked_id, args.content_id.as_deref());
-  let user_id = get_user().await?.id;
+  let user_id = get_user()?.id;
 
   let journals = GetReadingJournal::send_request(get_reading_journal::Variables {
     isbn,
@@ -52,8 +52,7 @@ pub async fn run(args: ListJournal) -> Result<()> {
     user_id,
     limit: args.limit,
     offset: args.offset,
-  })
-  .await?
+  })?
   .reading_journals
   .iter()
   .map(|journal| {

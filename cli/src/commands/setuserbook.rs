@@ -65,11 +65,11 @@ pub struct SetUserBook {
   spoilers: Option<bool>,
 }
 
-pub async fn run(args: SetUserBook) -> Result<()> {
+pub fn run(args: SetUserBook) -> Result<()> {
   log!("{} {:?}", &*VERSION, args);
 
   let (linked_id, isbn) = normalize_identifiers(args.linked_id, args.content_id.as_deref());
-  let (book, edition_id, _) = get_book(isbn, linked_id).await?;
+  let (book, edition_id, _) = get_book(isbn, linked_id)?;
 
   update_or_insert_user_book(
     book,
@@ -106,13 +106,12 @@ pub async fn run(args: SetUserBook) -> Result<()> {
       }),
       ..update_user_book::UserBookUpdateInput::default()
     },
-  )
-  .await?;
+  )?;
 
   Ok(())
 }
 
-pub async fn update_or_insert_user_book(
+pub fn update_or_insert_user_book(
   book: GetEditionEditionsBook,
   edition_id: i64,
   object: update_user_book::UserBookUpdateInput,
@@ -135,8 +134,7 @@ pub async fn update_or_insert_user_book(
       UpdateUserBook::send_request(update_user_book::Variables {
         user_book_id: user_book.id,
         object,
-      })
-      .await?
+      })?
       .update_user_book
       .and_then(|update| update.user_book)
       .context(format!("Failed to find updated user book <i>{}</i>", user_book.id))?
@@ -171,8 +169,7 @@ pub async fn update_or_insert_user_book(
         review_has_spoilers: object.review_has_spoilers,
         ..insert_user_book::UserBookCreateInput::default()
       },
-    })
-    .await?
+    })?
     .insert_user_book
     .and_then(|update| update.user_book)
     .context("Failed to find inserted user book")?;

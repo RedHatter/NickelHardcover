@@ -43,9 +43,9 @@ pub enum JournalPrivacy {
 }
 
 impl JournalPrivacy {
-  pub async fn get_value(self) -> Result<i64> {
+  pub fn get_value(self) -> Result<i64> {
     match self {
-      JournalPrivacy::Account => Ok(get_user().await?.account_privacy_setting_id),
+      JournalPrivacy::Account => Ok(get_user()?.account_privacy_setting_id),
       _ => Ok(self as i64),
     }
   }

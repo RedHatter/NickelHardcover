@@ -36,7 +36,7 @@ pub struct ListEditions {
   language: Option<String>,
 }
 
-pub async fn run(args: ListEditions) -> Result<()> {
+pub fn run(args: ListEditions) -> Result<()> {
   log!("{} {:?}", &*VERSION, args);
 
   let reading_format = match args.reading_format {
@@ -59,8 +59,7 @@ pub async fn run(args: ListEditions) -> Result<()> {
       None => Value::Object(serde_json::Map::new()),
     })
     .context("Failed to build language filter")?,
-  })
-  .await?;
+  })?;
 
   let mut languages = res
     .languages

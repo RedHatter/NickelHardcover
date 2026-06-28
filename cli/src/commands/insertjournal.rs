@@ -45,17 +45,17 @@ pub struct InsertJournal {
   privacy: Option<JournalPrivacy>,
 }
 
-pub async fn run(args: InsertJournal) -> Result<()> {
+pub fn run(args: InsertJournal) -> Result<()> {
   log!("{} {:?}", &*VERSION, args);
 
   let (linked_id, isbn) = normalize_identifiers(args.linked_id, args.content_id.as_deref());
-  let (book, edition_id, pages) = get_book(isbn, linked_id).await?;
+  let (book, edition_id, pages) = get_book(isbn, linked_id)?;
 
   InsertReadingJournal::send_request(insert_reading_journal::Variables {
     book_id: book.id,
     edition_id,
     event: "note".into(),
-    privacy_setting_id: args.privacy.unwrap_or(CONFIG.journal_privacy).get_value().await?,
+    privacy_setting_id: args.privacy.unwrap_or(CONFIG.journal_privacy).get_value()?,
     entry: args.text,
     action_at: None,
     metadata: Some(json!({
@@ -63,8 +63,7 @@ pub async fn run(args: InsertJournal) -> Result<()> {
       "possible": pages,
       "percent": args.percentage,
     })),
-  })
-  .await?;
+  })?;
 
   Ok(())
 }
