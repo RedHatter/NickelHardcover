@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -14,8 +14,8 @@ use crate::utils::{GraphQLQueryExt, VERSION};
   query_path = "src/graphql/queries/geteditions.graphql",
   custom_scalars_module = "crate::hardcover::scalars"
   response_derives = "Debug,AggregateErrors,Serialize",
-  variables_derives = "Debug,Deserialize"
-  skip_serializing_none
+  variables_derives = "Debug,Deserialize",
+  variable_types("Int","Vec<Int>","Value"),
 )]
 struct GetEditions;
 
@@ -48,7 +48,7 @@ pub fn run(args: ListEditions) -> Result<()> {
   let res = GetEditions::send_request(get_editions::Variables {
     book_id: args.book_id,
     reading_format,
-    where_: serde_json::from_value(match args.language {
+    where_: match args.language {
       Some(language) => serde_json::json!({
         "language": {
           "language": {
@@ -57,8 +57,7 @@ pub fn run(args: ListEditions) -> Result<()> {
         }
       }),
       None => Value::Object(serde_json::Map::new()),
-    })
-    .context("Failed to build language filter")?,
+    },
   })?;
 
   let mut languages = res
