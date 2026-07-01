@@ -80,7 +80,7 @@ auto_sync_default = false
 sync_bookmarks = always
 
 ; Run auto-sync at the specified hour even if the Kobo is asleep. Possible
-; values are 1-24 where 1 is 1am, 22 is 10pm, etc.
+; values are 1-24 where 1 is 1am, 22 is 10pm, etc. Set to 0 to disable.
 ; sync_daily = 2
 
 ; Whether to run auto-sync after closing a book or the Kobo is put to sleep.
@@ -92,8 +92,15 @@ sync_on_close = always
 
 ; Run auto-sync while a book is open when the difference between the last synced
 ; read percentage and the current read percentage is greater than this number
-; (in percentage points). Set to 100 to disable.
+; (in percentage points). Set to 0 to disable.
 threshold = 20
+
+; What privacy setting to use when creating new journal entries.
+; - account   Use the privacy setting specified in your Hardcover.app account
+; - public    The journal entries will be visible to anyone.
+; - follows   The journal entries will be visible only to people you follow.
+; - private   Only you can see your the journal entries.
+journal_privacy = account
 ```
 
 ## Usage
