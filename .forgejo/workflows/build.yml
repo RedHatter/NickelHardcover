@@ -11,7 +11,7 @@ jobs:
           ref: ${{ github.ref }} # workaround for actions/checkout#1638
       - uses: ./.forgejo/nickeltc
         with:
-          args: just build-package
+          args: just build package
       - uses: forgejo/upload-artifact@v5
         with:
           name: KoboRoot.tgz
