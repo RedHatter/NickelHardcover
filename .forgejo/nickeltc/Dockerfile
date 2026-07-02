@@ -6,3 +6,4 @@ USER $UID
 ENV RUSTUP_HOME=/rustup CARGO_HOME=/cargo
 RUN mkdir -p /rustup /cargo && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --target arm-unknown-linux-gnueabihf
 ENV PATH=$CARGO_HOME/bin:$PATH
+RUN cargo install resvg just
