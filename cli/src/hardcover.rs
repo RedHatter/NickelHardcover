@@ -1,22 +1,25 @@
-#![allow(non_camel_case_types)]
-
 use std::thread::sleep;
 use std::{fmt::Debug, sync::LazyLock};
 
 use anyhow::{Context, Result, bail};
 use itertools::Itertools;
-use reqwest::{Certificate, StatusCode, blocking::Client};
 use retry::{
   delay::{Exponential, jitter},
   retry,
 };
 use serde::{Serialize, de::DeserializeOwned};
+use ureq::{
+  Agent, Body,
+  http::{Response, StatusCode},
+};
 
 use crate::config::CONFIG;
 use crate::utils::{AggregateErrors, VERSION};
 use crate::{debug_log, log};
 
 pub mod scalars {
+  #![allow(non_camel_case_types)]
+
   use chrono::{DateTime, Utc};
 
   pub type date = String;
@@ -31,26 +34,19 @@ pub mod scalars {
   pub type timestamptz = DateTime<Utc>;
 }
 
-fn try_request<T: Serialize>(request_body: &T) -> Result<reqwest::blocking::Response> {
-  static CLIENT: LazyLock<Result<Client, reqwest::Error>> = LazyLock::new(|| {
-    Client::builder()
+fn try_request<T: Serialize>(request_body: &T) -> Result<Response<Body>> {
+  static CLIENT: LazyLock<Agent> = LazyLock::new(|| {
+    Agent::config_builder()
       .user_agent(format!("{}/{}", env!("CARGO_PKG_NAME"), &*VERSION))
-      .tls_certs_only(
-        webpki_root_certs::TLS_SERVER_ROOT_CERTS
-          .iter()
-          .map(|cert| Certificate::from_der(cert))
-          .collect::<Result<Vec<_>, _>>()?,
-      )
+      .http_status_as_error(false)
       .build()
+      .into()
   });
 
   let res = CLIENT
-    .as_ref()
-    .context("Failed to construct http client")?
     .post("https://api.hardcover.app/v1/graphql")
     .header("authorization", &CONFIG.authorization)
-    .json(&request_body)
-    .send()
+    .send_json(&request_body)
     .context("Failed to send request")?;
 
   match res.status() {
@@ -76,10 +72,13 @@ fn try_request<T: Serialize>(request_body: &T) -> Result<reqwest::blocking::Resp
         "Authorization token is invalid. Please set a valid Hardcover.app authorization token in <i>.adds/NickelHardcover/config.ini</i>."
       );
     }
+    code if !code.is_success() => {
+      bail!("Request failed with status code <i>{code}</i>");
+    }
     _ => {}
   }
 
-  Ok(res.error_for_status()?)
+  Ok(res)
 }
 
 pub fn send_request<T: Serialize, R: DeserializeOwned + Debug + AggregateErrors>(
@@ -91,15 +90,14 @@ pub fn send_request<T: Serialize, R: DeserializeOwned + Debug + AggregateErrors>
     "Please set the Hardcover.app authorization token in <i>.adds/NickelHardcover/config.ini</i>."
   );
 
-  let res = retry(Exponential::from_millis(10).map(jitter).take(3), || {
+  let data = retry(Exponential::from_millis(10).map(jitter).take(3), || {
     try_request(&request_body)
   })
   .map_err(|err| err.error)
-  .context(format!("<i>{operation_name}</i> request failed"))?;
-
-  let data: R = res
-    .json()
-    .context(format!("Failed to parse <i>{operation_name}</i> response"))?;
+  .context(format!("<i>{operation_name}</i> request failed"))?
+  .body_mut()
+  .read_json::<R>()
+  .context(format!("Failed to parse <i>{operation_name}</i> response"))?;
 
   debug_log!("{:?}", data);
 
