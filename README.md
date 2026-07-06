@@ -45,13 +45,15 @@ Thanks to **pgaskin** for the [NickelHook](https://github.com/pgaskin/NickelHook
 - **Can you add support for X feature?**  
   Maybe. [Open a new issue](https://codeberg.org/StrayRose/NickelHardcover/issues/new) and ask, be sure to provide your use case.
 
-## Installation
+## Installing or updating
 
-1. Download the latest release from the [releases page](https://codeberg.org/StrayRose/NickelHardcover/releases)
+1. Download the [KoboRoot.tgz](https://codeberg.org/StrayRose/NickelHardcover/releases/download/latest/KoboRoot.tgz) file from the [latest release](https://codeberg.org/StrayRose/NickelHardcover/releases/latest)
 2. Copy the _KoboRoot.tgz_ file to the `.kobo` directory on your Kobo
 3. Eject/disconnect your Kobo, and it should automatically reboot
 
-## Configuration
+No need to uninstall before updating. Configuration will be retained.
+
+## Configuring
 
 To function, NickelHardcover needs to be configured with an authorization token from your Hardcover.app account.
 
