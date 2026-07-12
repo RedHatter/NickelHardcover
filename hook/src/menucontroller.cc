@@ -26,7 +26,6 @@ NickelTouchMenu *MenuController::showMenu(QList<Item> items, QWidget *anchor, in
   for (Item item : items) {
     MenuTextItem *menuItem = construct_MenuTextItem(menu, checkable, true);
     MenuTextItem__setText(menuItem, item.text);
-    MenuTextItem__registerForTapGestures(menuItem);
 
     if (item.checked) {
       MenuTextItem__setSelected(menuItem, true);
@@ -34,9 +33,17 @@ NickelTouchMenu *MenuController::showMenu(QList<Item> items, QWidget *anchor, in
 
     QWidgetAction *action = new QWidgetAction(menu);
     action->setDefaultWidget(menuItem);
-    action->setEnabled(true);
     action->setData(item.value);
     menu->addAction(action);
+
+    if (item.disabled) {
+      nh_log("%s disabled", qPrintable(item.text));
+      action->setEnabled(false);
+      menuItem->setStyleSheet("color: #666666;");
+    } else {
+      action->setEnabled(true);
+      MenuTextItem__registerForTapGestures(menuItem);
+    }
 
     QObject::connect(action, &QAction::triggered, menu, &QMenu::hide);
     QObject::connect(menuItem, SIGNAL(tapped(bool)), action, SIGNAL(triggered()));
@@ -82,13 +89,15 @@ void MenuController::showMainMenu() {
 
   setSelected(true);
 
-  QString contentId = SyncController::getInstance()->contentId;
+  SyncController *syncController = SyncController::getInstance();
+  QString contentId = syncController->contentId;
   Settings *settings = Settings::getInstance();
 
   NickelTouchMenu *menu = showMenu(
       {
-          {"Sync now", MenuOption::SYNC_NOW},
-          {settings->isEnabled(contentId) ? "Disable auto-sync" : "Enable auto-sync", MenuOption::TOGGLE_ENABLED},
+          {"Sync now", MenuOption::SYNC_NOW, false, syncController->syncDisabled},
+          {!settings->isEnabled(contentId) || syncController->syncDisabled ? "Enable auto-sync" : "Disable auto-sync",
+           MenuOption::TOGGLE_ENABLED, false, syncController->syncDisabled},
           {settings->getLinkedId(contentId).isEmpty() ? "Manually link book" : "Unlink book", MenuOption::LINK},
           {"Update book status", MenuOption::BOOK_STATUS},
           {"Open reading journal", MenuOption::JOURNAL},

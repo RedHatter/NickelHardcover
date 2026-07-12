@@ -10,6 +10,7 @@ struct Item {
   QString text;
   QVariant value;
   bool checked;
+  bool disabled;
 };
 
 class MenuController : public QWidget {

@@ -38,6 +38,10 @@ void SyncController::currentViewIndexChanged(int index) {
     nh_log("Alarm set for %s", qPrintable(alarm.toString()));
   }
 
+  if (syncDisabled) {
+    return;
+  }
+
   Settings *settings = Settings::getInstance();
   if (lastViewName == "ReadingView" && settings->isEnabled(contentId)) {
     if (queue->checkThreshold(contentId, settings->getCloseThreshold())) {
@@ -57,6 +61,10 @@ void SyncController::currentViewIndexChanged(int index) {
 
 void SyncController::pageChanged() {
   nh_log("SyncController::pageChanged()");
+
+  if (syncDisabled) {
+    return;
+  }
 
   MainWindowController *mwc = MainWindowController__sharedInstance();
   QWidget *cv = MainWindowController__currentView(mwc);

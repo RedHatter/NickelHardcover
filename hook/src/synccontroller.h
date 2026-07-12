@@ -15,6 +15,7 @@ public:
   QString title;
   QString author;
   QString contentId;
+  bool syncDisabled;
   QNetworkAccessManager *network = new QNetworkAccessManager();
 
   int getReadProgress();
