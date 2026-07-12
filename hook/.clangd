@@ -6,3 +6,4 @@ CompileFlags:
     - "--include-directory=/usr/include/x86_64-linux-gnu/qt5/QtGui/"
     - "--include-directory=/usr/include/x86_64-linux-gnu/qt5/QtWidgets/"
     - "--include-directory=../NickelHook"
+    - "--include-directory=../../NickelHook"
