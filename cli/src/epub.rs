@@ -3,16 +3,10 @@ use std::sync::LazyLock;
 use std::{fs::File, path::Path};
 
 use anyhow::{Context, Result, bail};
-use itertools::Itertools;
 use quick_xml::events::Event;
 use quick_xml::{Reader, XmlVersion};
 use regex::Regex;
-use rusqlite::{Connection, OpenFlags};
 use zip::ZipArchive;
-
-use crate::config::CONFIG;
-use crate::log;
-use crate::utils::book_not_found;
 
 fn isbn_13_check_digit(digits: &[u32]) -> u32 {
   let mut sum = 0;
@@ -53,7 +47,7 @@ fn string_to_digits(str: &str) -> Vec<u32> {
     .collect()
 }
 
-fn normalize_isbn(isbn: &str) -> Option<Vec<String>> {
+pub fn normalize_isbn(isbn: &str) -> Option<Vec<String>> {
   let mut isbn = isbn.to_ascii_uppercase();
   isbn.retain(char::is_alphanumeric);
 
@@ -266,7 +260,7 @@ fn read_item(item: &str) -> Result<Vec<String>> {
   )
 }
 
-fn read_epub_isbn(content_id: &str) -> Result<Vec<String>> {
+pub fn read_epub_isbn(content_id: &str) -> Result<Vec<String>> {
   let file = File::open(Path::new(&content_id[7..])).context("Failed to open file")?;
   let mut archive = ZipArchive::new(file).context("Failed to parse file as archive")?;
 
@@ -314,59 +308,11 @@ fn read_epub_isbn(content_id: &str) -> Result<Vec<String>> {
   }
 
   if isbn.is_empty() {
-    book_not_found("Couldn't find an ISBN in the EPUB metadata or content. Please link book manually.")
+    bail!("No ISBN found in the EPUB metadata or content");
   }
 
   isbn.sort();
   isbn.dedup();
 
-  log!("ISBN from EPUB `{}`", isbn.join(", "));
-
   Ok(isbn)
-}
-
-fn read_sqlite_isbn(content_id: &str) -> Result<Vec<String>> {
-  let isbn = Connection::open_with_flags(&CONFIG.sqlite_path, OpenFlags::SQLITE_OPEN_READ_ONLY)
-    .context(format!(
-      "Failed to connect to the database <i>{}</i>",
-      &CONFIG.sqlite_path
-    ))?
-    .prepare(
-      "SELECT ISBN
-      FROM content
-      WHERE BookTitle is null
-      AND ContentId is (?1)
-      LIMIT 1;",
-    )
-    .context("Failed to prepare query")?
-    .query_map([&content_id], |row| row.get::<_, Option<String>>(0))
-    .context("Failed to run query")?
-    .next()
-    .context("Query returned no results")?
-    .context("Failed to map query result")?
-    .and_then(|isbn| normalize_isbn(&isbn));
-
-  match isbn {
-    Some(isbn) => {
-      log!("ISBN from database `{}`", isbn.join(", "));
-      Ok(isbn)
-    }
-    None => book_not_found("Couldn't find an ISBN in the database. Please link book manually."),
-  }
-}
-
-pub fn get_isbn(content_id: &str) -> Vec<String> {
-  let res = if content_id.starts_with("file://") {
-    read_epub_isbn(content_id)
-  } else {
-    read_sqlite_isbn(content_id)
-  };
-
-  match res {
-    Ok(isbn) => isbn,
-    Err(e) => book_not_found(&format!(
-      "Encountered an unexpected error while finding ISBN. Please link book manually.<br><br>{:#}",
-      e.chain().join("<br>> ")
-    )),
-  }
 }

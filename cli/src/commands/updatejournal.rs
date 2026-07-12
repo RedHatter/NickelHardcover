@@ -10,10 +10,10 @@ use serde_json::json;
 
 use macros::AggregateErrors;
 
-use crate::bookmarks::get_bookmarks;
 use crate::commands::getuser::get_user;
 use crate::commands::getuserbook::get_book;
 use crate::config::{CONFIG, SyncBookmarks};
+use crate::database::get_bookmarks;
 use crate::hardcover::send_request;
 use crate::utils::{GraphQLQueryExt, VERSION, normalize_identifiers};
 use crate::{debug_log, log};

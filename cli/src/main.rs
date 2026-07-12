@@ -11,9 +11,9 @@ use crate::utils::{VERSION, write_logfile};
 mod commands;
 mod hardcover;
 
-mod bookmarks;
 mod config;
-mod isbn;
+mod database;
+mod epub;
 mod utils;
 
 use argh::FromArgs;

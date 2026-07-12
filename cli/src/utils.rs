@@ -9,8 +9,9 @@ use itertools::Itertools;
 use serde_json::json;
 
 use crate::config::CONFIG;
+use crate::database::get_sqlite_isbn;
+use crate::epub::read_epub_isbn;
 use crate::hardcover::send_request;
-use crate::isbn::get_isbn;
 
 #[allow(clippy::crate_in_macro_def)]
 #[macro_export]
@@ -66,15 +67,29 @@ pub fn write_logfile() {
 pub fn normalize_identifiers(linked_id: Option<i64>, content_id: Option<&str>) -> (i64, Vec<String>) {
   match (linked_id, content_id) {
     (Some(linked_id), _) => (linked_id, Vec::new()),
-    (_, Some(content_id)) => (0, get_isbn(&content_id)),
+    (_, Some(content_id)) => {
+      let isbn = if content_id.starts_with("file://") {
+        read_epub_isbn(content_id)
+      } else {
+        get_sqlite_isbn(content_id)
+      };
+
+      match isbn {
+        Ok(isbn) => (0, isbn),
+        Err(e) => book_not_found(&format!(
+          "Failed to find an ISBN. Please link book manually.<br><br>{:#}",
+          e.chain().join("<br>> ")
+        )),
+      }
+    }
     (None, None) => panic!("One of --content-id or --linked-id is required"),
   }
 }
 
 pub fn book_not_found(msg: &str) -> ! {
   log!(
-    "BEGIN_JSON\n{}",
-    json!({ "error_code": "BOOK_NOT_FOUND", "message": msg })
+    "BEGIN_JSON\n{{\"error_code\": \"BOOK_NOT_FOUND\", \"message\": \"{}\"}}",
+    msg
   );
 
   if CONFIG.debug {

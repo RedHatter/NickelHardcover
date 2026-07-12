@@ -1,8 +1,8 @@
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, anyhow};
 use chrono::{DateTime, Utc};
 use rusqlite::{Connection, OpenFlags};
 
-use crate::config::CONFIG;
+use crate::{config::CONFIG, epub::normalize_isbn};
 
 #[derive(Debug)]
 pub struct Bookmark {
@@ -74,4 +74,28 @@ pub fn get_bookmarks(content_id: &str) -> Result<Vec<Bookmark>> {
     .context("Failed to run bookmark query")?
     .collect::<Result<Vec<_>, _>>()
     .context("Failed to map bookmark query result")
+}
+
+pub fn get_sqlite_isbn(content_id: &str) -> Result<Vec<String>> {
+  let isbn = Connection::open_with_flags(&CONFIG.sqlite_path, OpenFlags::SQLITE_OPEN_READ_ONLY)
+    .context(format!(
+      "Failed to connect to the database <i>{}</i>",
+      &CONFIG.sqlite_path
+    ))?
+    .prepare(
+      "SELECT ISBN
+      FROM content
+      WHERE BookTitle is null
+      AND ContentId is (?1)
+      LIMIT 1;",
+    )
+    .context("Failed to prepare ISBN query")?
+    .query_map([&content_id], |row| row.get::<_, Option<String>>(0))
+    .context("Failed to run ISBN query")?
+    .next()
+    .context("ISBN query returned no results")?
+    .context("Failed to map ISBN query result")?
+    .and_then(|isbn| normalize_isbn(&isbn));
+
+  isbn.ok_or(anyhow!("No ISBN found in the database"))
 }

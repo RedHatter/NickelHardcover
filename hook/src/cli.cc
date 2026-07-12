@@ -222,13 +222,16 @@ void CLI::processFinished(int exitCode) {
     QJsonObject obj = QJsonDocument::fromJson(json).object();
 
     if (obj.value("error_code").toString() == "BOOK_NOT_FOUND") {
+      QString message = obj.value("message").toString();
+      nh_log("%s", qPrintable(message));
+
       ConfirmationDialog *dialog = ConfirmationDialogFactory__getConfirmationDialog(nullptr);
       QString contentId = options.contentId.isEmpty() ? SyncController::getInstance()->contentId : options.contentId;
       ConfirmationDialog__setAcceptButtonText(
           dialog, Settings::getInstance()->getLinkedId(contentId).isEmpty() ? "Link book" : "Unlink book");
       ConfirmationDialog__setRejectButtonText(dialog, "Cancel");
       ConfirmationDialog__setTitle(dialog, "Hardcover.app");
-      ConfirmationDialog__setText(dialog, obj.value("message").toString());
+      ConfirmationDialog__setText(dialog, message);
 
       QObject::connect(dialog, &QDialog::accepted, this, &CLI::linkBook);
       QObject::connect(dialog, &QDialog::rejected, this, &CLI::deleteLater);
