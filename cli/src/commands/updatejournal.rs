@@ -3,7 +3,7 @@ use std::ops::Sub;
 
 use anyhow::Result;
 use argh::FromArgs;
-use chrono::Utc;
+use chrono::{Duration, Utc};
 use graphql_client::GraphQLQuery;
 use itertools::{Either, Itertools};
 use serde_json::json;
@@ -84,103 +84,105 @@ pub fn update_journal(content_id: &str, book_id: i64, edition_id: i64, pages: i6
 
   let user_id = get_user()?.id;
 
-  let reading_journals =
-    GetJournalQuotes::send_request(get_journal_quotes::Variables { book_id, user_id })?.reading_journals;
-
-  match CONFIG.sync_bookmarks {
+  let reading_journals = match CONFIG.sync_bookmarks {
     SyncBookmarks::Finished => {
       bookmarks.sort_by(|a, b| a.location.unwrap_or(0.0).total_cmp(&b.location.unwrap_or(0.0)));
+      vec![]
     }
     _ => {
       bookmarks.sort_by(|a, b| a.date_created.cmp(&b.date_created));
+      GetJournalQuotes::send_request(get_journal_quotes::Variables { book_id, user_id })?.reading_journals
     }
-  }
+  };
 
   let privacy_setting_id = CONFIG.journal_privacy.get_value()?;
 
-  let (insert_bookmarks, update_bookmarks): (Vec<_>, Vec<_>) = bookmarks.iter().partition_map(|bookmark| {
-    let note = bookmark.annotation.as_deref().map(str::trim);
-    let highlight = bookmark.text.trim();
-    let entry = if let Some(note) = note
-      && !note.is_empty()
-    {
-      format!("{highlight}\n━━━\n{note}")
-    } else {
-      highlight.to_string()
-    };
-
-    if let Some(journal) = reading_journals
-      .iter()
-      .find(|journal| journal.action_at.sub(bookmark.date_created).num_seconds() == 0)
-    {
-      if journal.entry.as_ref() != Some(&entry) {
-        Either::Right(Some(update_reading_journal::Variables {
-          journal_id: journal.id,
-          entry,
-        }))
+  let (insert_bookmarks, update_bookmarks): (Vec<_>, Vec<_>) =
+    bookmarks.iter().enumerate().partition_map(|(i, bookmark)| {
+      let note = bookmark.annotation.as_deref().map(str::trim);
+      let highlight = bookmark.text.trim();
+      let entry = if let Some(note) = note
+        && !note.is_empty()
+      {
+        format!("{highlight}\n━━━\n{note}")
       } else {
-        Either::Right(None)
-      }
-    } else {
-      Either::Left(insert_reading_journal::Variables {
-        book_id,
-        edition_id,
-        event: "quote".into(),
-        privacy_setting_id,
-        entry,
-        action_at: Some(
-          match CONFIG.sync_bookmarks {
-            SyncBookmarks::Finished => Utc::now(),
-            _ => bookmark.date_created,
-          }
-          .format("%+")
-          .to_string(),
-        ),
-        metadata: bookmark.location.map(|location| {
-          json!({
-            "position": {
-              "page": (pages as f64 * location).round() as i64,
-              "possible": pages,
-              "percent": location * 100.0,
+        highlight.to_string()
+      };
+
+      if let Some(journal) = reading_journals
+        .iter()
+        .find(|journal| journal.action_at.sub(bookmark.date_created).num_seconds() == 0)
+      {
+        if journal.entry.as_ref() != Some(&entry) {
+          Either::Right(Some(update_reading_journal::Variables {
+            journal_id: journal.id,
+            entry,
+          }))
+        } else {
+          Either::Right(None)
+        }
+      } else {
+        Either::Left(insert_reading_journal::Variables {
+          book_id,
+          edition_id,
+          event: "quote".into(),
+          privacy_setting_id,
+          entry,
+          action_at: Some(
+            match CONFIG.sync_bookmarks {
+              SyncBookmarks::Finished => Utc::now() + Duration::seconds(i.try_into().unwrap()),
+              _ => bookmark.date_created,
             }
-          })
-        }),
-      })
-    }
-  });
+            .format("%+")
+            .to_string(),
+          ),
+          metadata: bookmark.location.map(|location| {
+            json!({
+              "position": {
+                "type": "pages",
+                "value": (pages as f64 * location).round() as i64,
+                "possible": pages,
+                "percent": location * 100.0,
+              }
+            })
+          }),
+        })
+      }
+    });
 
-  let insert_body = insert_bookmarks
-    .into_iter()
-    .map(InsertReadingJournal::build_query)
-    .collect::<Vec<_>>();
-
-  if !insert_body.is_empty() {
+  if !insert_bookmarks.is_empty() {
     log!(
       "Insert {} quotes for book `{}` and edition `{}`",
-      insert_body.len(),
+      insert_bookmarks.len(),
       book_id,
       edition_id,
     );
+    debug_log!("InsertReadingJournal, {:?}", insert_bookmarks);
     send_request::<_, Vec<graphql_client::Response<insert_reading_journal::ResponseData>>>(
       insert_reading_journal::OPERATION_NAME,
-      insert_body,
+      insert_bookmarks
+        .into_iter()
+        .map(InsertReadingJournal::build_query)
+        .collect::<Vec<_>>(),
     )?;
   }
 
-  let update_body = update_bookmarks
-    .into_iter()
-    .filter_map(identity)
-    .map(UpdateReadingJournal::build_query)
-    .collect::<Vec<_>>();
+  let update_bookmarks = update_bookmarks.into_iter().filter_map(identity).collect::<Vec<_>>();
 
-  if !update_body.is_empty() {
+  if !update_bookmarks.is_empty() {
     log!(
-      "Update quotes `{}`",
-      update_body.iter().map(|q| q.variables.journal_id).join(", ")
+      "Update {} quotes for book `{}` and edition `{}`",
+      update_bookmarks.len(),
+      book_id,
+      edition_id,
     );
+    debug_log!("UpdateReadingJournal, {:?}", update_bookmarks);
     send_request::<_, Vec<graphql_client::Response<update_reading_journal::ResponseData>>>(
       update_reading_journal::OPERATION_NAME,
-      update_body,
+      update_bookmarks
+        .into_iter()
+        .map(UpdateReadingJournal::build_query)
+        .collect::<Vec<_>>(),
     )?;
   }
 
