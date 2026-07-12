@@ -119,7 +119,7 @@ QLabel *BookRow::buildCover(QJsonObject json) {
   if (imageUrl.isEmpty()) {
     label->setProperty("blank", true);
   } else {
-    label->setPixmap(QPixmap(Files::loading));
+    label->setPixmap(QPixmap(Files::loading_cover));
 
     QNetworkReply *reply = SyncController::getInstance()->network->get(QNetworkRequest(QUrl(imageUrl)));
     QObject::connect(reply, &QNetworkReply::finished, this, &BookRow::loadCover);

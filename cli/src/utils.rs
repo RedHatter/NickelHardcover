@@ -6,7 +6,6 @@ use anyhow::{Context, Result};
 use chrono::Local;
 use graphql_client::{GraphQLQuery, Response};
 use itertools::Itertools;
-use serde_json::json;
 
 use crate::config::CONFIG;
 use crate::database::get_sqlite_isbn;

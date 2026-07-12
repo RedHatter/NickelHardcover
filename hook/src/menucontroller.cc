@@ -2,6 +2,7 @@
 #include <QJsonObject>
 #include <QLabel>
 #include <QPixmap>
+#include <QTimer>
 #include <QWidgetAction>
 
 #include <NickelHook.h>
@@ -180,6 +181,7 @@ void MenuController::triggered(QAction *action) {
   }
 
   case MenuOption::BOOK_STATUS: {
+    QTimer::singleShot(0, this, [this] { icon->setPixmap(QPixmap(Files::loading).scaledToHeight(iconHeight)); });
     CLI *cli = CLI::getUserBook();
     QObject::connect(cli, &CLI::response, this, &MenuController::showStatusMenu);
     break;
