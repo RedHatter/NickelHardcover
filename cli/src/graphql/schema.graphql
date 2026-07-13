@@ -5544,6 +5544,7 @@ input date_comparison_exp {
 
 input DatesReadInput {
   action: String
+  action_at: timestamptz
   edition_id: Int
   finished_at: date
   finished_at_precision: Int
@@ -6394,6 +6395,1127 @@ input editions_variance_order_by {
   score: order_by
   users_count: order_by
   users_read_count: order_by
+}
+
+"""
+columns and relationships of "filter_list_entities"
+"""
+type filter_list_entities {
+  """An object relationship"""
+  author: authors
+
+  """An object relationship"""
+  book: books
+  created_at: timestamp!
+  entity_id: Int!
+  entity_type: String!
+
+  """An object relationship"""
+  filter_list: filter_lists
+  filter_list_id: Int!
+  id: Int!
+
+  """An object relationship"""
+  publisher: publishers
+  updated_at: timestamp!
+
+  """An object relationship"""
+  user: users
+}
+
+"""
+aggregated selection of "filter_list_entities"
+"""
+type filter_list_entities_aggregate {
+  aggregate: filter_list_entities_aggregate_fields
+  nodes: [filter_list_entities!]!
+}
+
+input filter_list_entities_aggregate_bool_exp {
+  count: filter_list_entities_aggregate_bool_exp_count
+}
+
+input filter_list_entities_aggregate_bool_exp_count {
+  arguments: [filter_list_entities_select_column!]
+  distinct: Boolean
+  filter: filter_list_entities_bool_exp
+  predicate: Int_comparison_exp!
+}
+
+"""
+aggregate fields of "filter_list_entities"
+"""
+type filter_list_entities_aggregate_fields {
+  avg: filter_list_entities_avg_fields
+  count(columns: [filter_list_entities_select_column!], distinct: Boolean): Int!
+  max: filter_list_entities_max_fields
+  min: filter_list_entities_min_fields
+  stddev: filter_list_entities_stddev_fields
+  stddev_pop: filter_list_entities_stddev_pop_fields
+  stddev_samp: filter_list_entities_stddev_samp_fields
+  sum: filter_list_entities_sum_fields
+  var_pop: filter_list_entities_var_pop_fields
+  var_samp: filter_list_entities_var_samp_fields
+  variance: filter_list_entities_variance_fields
+}
+
+"""
+order by aggregate values of table "filter_list_entities"
+"""
+input filter_list_entities_aggregate_order_by {
+  avg: filter_list_entities_avg_order_by
+  count: order_by
+  max: filter_list_entities_max_order_by
+  min: filter_list_entities_min_order_by
+  stddev: filter_list_entities_stddev_order_by
+  stddev_pop: filter_list_entities_stddev_pop_order_by
+  stddev_samp: filter_list_entities_stddev_samp_order_by
+  sum: filter_list_entities_sum_order_by
+  var_pop: filter_list_entities_var_pop_order_by
+  var_samp: filter_list_entities_var_samp_order_by
+  variance: filter_list_entities_variance_order_by
+}
+
+"""aggregate avg on columns"""
+type filter_list_entities_avg_fields {
+  entity_id: Float
+  filter_list_id: Float
+  id: Float
+}
+
+"""
+order by avg() on columns of table "filter_list_entities"
+"""
+input filter_list_entities_avg_order_by {
+  entity_id: order_by
+  filter_list_id: order_by
+  id: order_by
+}
+
+"""
+Boolean expression to filter rows from the table "filter_list_entities". All fields are combined with a logical 'AND'.
+"""
+input filter_list_entities_bool_exp {
+  _and: [filter_list_entities_bool_exp!]
+  _not: filter_list_entities_bool_exp
+  _or: [filter_list_entities_bool_exp!]
+  author: authors_bool_exp
+  book: books_bool_exp
+  created_at: timestamp_comparison_exp
+  entity_id: Int_comparison_exp
+  entity_type: String_comparison_exp
+  filter_list: filter_lists_bool_exp
+  filter_list_id: Int_comparison_exp
+  id: Int_comparison_exp
+  publisher: publishers_bool_exp
+  updated_at: timestamp_comparison_exp
+  user: users_bool_exp
+}
+
+"""aggregate max on columns"""
+type filter_list_entities_max_fields {
+  created_at: timestamp
+  entity_id: Int
+  entity_type: String
+  filter_list_id: Int
+  id: Int
+  updated_at: timestamp
+}
+
+"""
+order by max() on columns of table "filter_list_entities"
+"""
+input filter_list_entities_max_order_by {
+  created_at: order_by
+  entity_id: order_by
+  entity_type: order_by
+  filter_list_id: order_by
+  id: order_by
+  updated_at: order_by
+}
+
+"""aggregate min on columns"""
+type filter_list_entities_min_fields {
+  created_at: timestamp
+  entity_id: Int
+  entity_type: String
+  filter_list_id: Int
+  id: Int
+  updated_at: timestamp
+}
+
+"""
+order by min() on columns of table "filter_list_entities"
+"""
+input filter_list_entities_min_order_by {
+  created_at: order_by
+  entity_id: order_by
+  entity_type: order_by
+  filter_list_id: order_by
+  id: order_by
+  updated_at: order_by
+}
+
+"""Ordering options when selecting data from "filter_list_entities"."""
+input filter_list_entities_order_by {
+  author: authors_order_by
+  book: books_order_by
+  created_at: order_by
+  entity_id: order_by
+  entity_type: order_by
+  filter_list: filter_lists_order_by
+  filter_list_id: order_by
+  id: order_by
+  publisher: publishers_order_by
+  updated_at: order_by
+  user: users_order_by
+}
+
+"""
+select columns of table "filter_list_entities"
+"""
+enum filter_list_entities_select_column {
+  """column name"""
+  created_at
+
+  """column name"""
+  entity_id
+
+  """column name"""
+  entity_type
+
+  """column name"""
+  filter_list_id
+
+  """column name"""
+  id
+
+  """column name"""
+  updated_at
+}
+
+"""aggregate stddev on columns"""
+type filter_list_entities_stddev_fields {
+  entity_id: Float
+  filter_list_id: Float
+  id: Float
+}
+
+"""
+order by stddev() on columns of table "filter_list_entities"
+"""
+input filter_list_entities_stddev_order_by {
+  entity_id: order_by
+  filter_list_id: order_by
+  id: order_by
+}
+
+"""aggregate stddev_pop on columns"""
+type filter_list_entities_stddev_pop_fields {
+  entity_id: Float
+  filter_list_id: Float
+  id: Float
+}
+
+"""
+order by stddev_pop() on columns of table "filter_list_entities"
+"""
+input filter_list_entities_stddev_pop_order_by {
+  entity_id: order_by
+  filter_list_id: order_by
+  id: order_by
+}
+
+"""aggregate stddev_samp on columns"""
+type filter_list_entities_stddev_samp_fields {
+  entity_id: Float
+  filter_list_id: Float
+  id: Float
+}
+
+"""
+order by stddev_samp() on columns of table "filter_list_entities"
+"""
+input filter_list_entities_stddev_samp_order_by {
+  entity_id: order_by
+  filter_list_id: order_by
+  id: order_by
+}
+
+"""
+Streaming cursor of the table "filter_list_entities"
+"""
+input filter_list_entities_stream_cursor_input {
+  """Stream column input with initial value"""
+  initial_value: filter_list_entities_stream_cursor_value_input!
+
+  """cursor ordering"""
+  ordering: cursor_ordering
+}
+
+"""Initial value of the column from where the streaming should start"""
+input filter_list_entities_stream_cursor_value_input {
+  created_at: timestamp
+  entity_id: Int
+  entity_type: String
+  filter_list_id: Int
+  id: Int
+  updated_at: timestamp
+}
+
+"""aggregate sum on columns"""
+type filter_list_entities_sum_fields {
+  entity_id: Int
+  filter_list_id: Int
+  id: Int
+}
+
+"""
+order by sum() on columns of table "filter_list_entities"
+"""
+input filter_list_entities_sum_order_by {
+  entity_id: order_by
+  filter_list_id: order_by
+  id: order_by
+}
+
+"""aggregate var_pop on columns"""
+type filter_list_entities_var_pop_fields {
+  entity_id: Float
+  filter_list_id: Float
+  id: Float
+}
+
+"""
+order by var_pop() on columns of table "filter_list_entities"
+"""
+input filter_list_entities_var_pop_order_by {
+  entity_id: order_by
+  filter_list_id: order_by
+  id: order_by
+}
+
+"""aggregate var_samp on columns"""
+type filter_list_entities_var_samp_fields {
+  entity_id: Float
+  filter_list_id: Float
+  id: Float
+}
+
+"""
+order by var_samp() on columns of table "filter_list_entities"
+"""
+input filter_list_entities_var_samp_order_by {
+  entity_id: order_by
+  filter_list_id: order_by
+  id: order_by
+}
+
+"""aggregate variance on columns"""
+type filter_list_entities_variance_fields {
+  entity_id: Float
+  filter_list_id: Float
+  id: Float
+}
+
+"""
+order by variance() on columns of table "filter_list_entities"
+"""
+input filter_list_entities_variance_order_by {
+  entity_id: order_by
+  filter_list_id: order_by
+  id: order_by
+}
+
+"""
+columns and relationships of "filter_list_subscriptions"
+"""
+type filter_list_subscriptions {
+  color: String
+  created_at: timestamp!
+
+  """An object relationship"""
+  filter_list: filter_lists
+  filter_list_id: Int!
+  id: Int!
+  updated_at: timestamp!
+
+  """An object relationship"""
+  user: users
+  user_id: Int!
+  visibility: Int!
+}
+
+"""
+aggregated selection of "filter_list_subscriptions"
+"""
+type filter_list_subscriptions_aggregate {
+  aggregate: filter_list_subscriptions_aggregate_fields
+  nodes: [filter_list_subscriptions!]!
+}
+
+input filter_list_subscriptions_aggregate_bool_exp {
+  count: filter_list_subscriptions_aggregate_bool_exp_count
+}
+
+input filter_list_subscriptions_aggregate_bool_exp_count {
+  arguments: [filter_list_subscriptions_select_column!]
+  distinct: Boolean
+  filter: filter_list_subscriptions_bool_exp
+  predicate: Int_comparison_exp!
+}
+
+"""
+aggregate fields of "filter_list_subscriptions"
+"""
+type filter_list_subscriptions_aggregate_fields {
+  avg: filter_list_subscriptions_avg_fields
+  count(columns: [filter_list_subscriptions_select_column!], distinct: Boolean): Int!
+  max: filter_list_subscriptions_max_fields
+  min: filter_list_subscriptions_min_fields
+  stddev: filter_list_subscriptions_stddev_fields
+  stddev_pop: filter_list_subscriptions_stddev_pop_fields
+  stddev_samp: filter_list_subscriptions_stddev_samp_fields
+  sum: filter_list_subscriptions_sum_fields
+  var_pop: filter_list_subscriptions_var_pop_fields
+  var_samp: filter_list_subscriptions_var_samp_fields
+  variance: filter_list_subscriptions_variance_fields
+}
+
+"""
+order by aggregate values of table "filter_list_subscriptions"
+"""
+input filter_list_subscriptions_aggregate_order_by {
+  avg: filter_list_subscriptions_avg_order_by
+  count: order_by
+  max: filter_list_subscriptions_max_order_by
+  min: filter_list_subscriptions_min_order_by
+  stddev: filter_list_subscriptions_stddev_order_by
+  stddev_pop: filter_list_subscriptions_stddev_pop_order_by
+  stddev_samp: filter_list_subscriptions_stddev_samp_order_by
+  sum: filter_list_subscriptions_sum_order_by
+  var_pop: filter_list_subscriptions_var_pop_order_by
+  var_samp: filter_list_subscriptions_var_samp_order_by
+  variance: filter_list_subscriptions_variance_order_by
+}
+
+"""aggregate avg on columns"""
+type filter_list_subscriptions_avg_fields {
+  filter_list_id: Float
+  id: Float
+  user_id: Float
+  visibility: Float
+}
+
+"""
+order by avg() on columns of table "filter_list_subscriptions"
+"""
+input filter_list_subscriptions_avg_order_by {
+  filter_list_id: order_by
+  id: order_by
+  user_id: order_by
+  visibility: order_by
+}
+
+"""
+Boolean expression to filter rows from the table "filter_list_subscriptions". All fields are combined with a logical 'AND'.
+"""
+input filter_list_subscriptions_bool_exp {
+  _and: [filter_list_subscriptions_bool_exp!]
+  _not: filter_list_subscriptions_bool_exp
+  _or: [filter_list_subscriptions_bool_exp!]
+  color: String_comparison_exp
+  created_at: timestamp_comparison_exp
+  filter_list: filter_lists_bool_exp
+  filter_list_id: Int_comparison_exp
+  id: Int_comparison_exp
+  updated_at: timestamp_comparison_exp
+  user: users_bool_exp
+  user_id: Int_comparison_exp
+  visibility: Int_comparison_exp
+}
+
+"""aggregate max on columns"""
+type filter_list_subscriptions_max_fields {
+  color: String
+  created_at: timestamp
+  filter_list_id: Int
+  id: Int
+  updated_at: timestamp
+  user_id: Int
+  visibility: Int
+}
+
+"""
+order by max() on columns of table "filter_list_subscriptions"
+"""
+input filter_list_subscriptions_max_order_by {
+  color: order_by
+  created_at: order_by
+  filter_list_id: order_by
+  id: order_by
+  updated_at: order_by
+  user_id: order_by
+  visibility: order_by
+}
+
+"""aggregate min on columns"""
+type filter_list_subscriptions_min_fields {
+  color: String
+  created_at: timestamp
+  filter_list_id: Int
+  id: Int
+  updated_at: timestamp
+  user_id: Int
+  visibility: Int
+}
+
+"""
+order by min() on columns of table "filter_list_subscriptions"
+"""
+input filter_list_subscriptions_min_order_by {
+  color: order_by
+  created_at: order_by
+  filter_list_id: order_by
+  id: order_by
+  updated_at: order_by
+  user_id: order_by
+  visibility: order_by
+}
+
+"""Ordering options when selecting data from "filter_list_subscriptions"."""
+input filter_list_subscriptions_order_by {
+  color: order_by
+  created_at: order_by
+  filter_list: filter_lists_order_by
+  filter_list_id: order_by
+  id: order_by
+  updated_at: order_by
+  user: users_order_by
+  user_id: order_by
+  visibility: order_by
+}
+
+"""
+select columns of table "filter_list_subscriptions"
+"""
+enum filter_list_subscriptions_select_column {
+  """column name"""
+  color
+
+  """column name"""
+  created_at
+
+  """column name"""
+  filter_list_id
+
+  """column name"""
+  id
+
+  """column name"""
+  updated_at
+
+  """column name"""
+  user_id
+
+  """column name"""
+  visibility
+}
+
+"""aggregate stddev on columns"""
+type filter_list_subscriptions_stddev_fields {
+  filter_list_id: Float
+  id: Float
+  user_id: Float
+  visibility: Float
+}
+
+"""
+order by stddev() on columns of table "filter_list_subscriptions"
+"""
+input filter_list_subscriptions_stddev_order_by {
+  filter_list_id: order_by
+  id: order_by
+  user_id: order_by
+  visibility: order_by
+}
+
+"""aggregate stddev_pop on columns"""
+type filter_list_subscriptions_stddev_pop_fields {
+  filter_list_id: Float
+  id: Float
+  user_id: Float
+  visibility: Float
+}
+
+"""
+order by stddev_pop() on columns of table "filter_list_subscriptions"
+"""
+input filter_list_subscriptions_stddev_pop_order_by {
+  filter_list_id: order_by
+  id: order_by
+  user_id: order_by
+  visibility: order_by
+}
+
+"""aggregate stddev_samp on columns"""
+type filter_list_subscriptions_stddev_samp_fields {
+  filter_list_id: Float
+  id: Float
+  user_id: Float
+  visibility: Float
+}
+
+"""
+order by stddev_samp() on columns of table "filter_list_subscriptions"
+"""
+input filter_list_subscriptions_stddev_samp_order_by {
+  filter_list_id: order_by
+  id: order_by
+  user_id: order_by
+  visibility: order_by
+}
+
+"""
+Streaming cursor of the table "filter_list_subscriptions"
+"""
+input filter_list_subscriptions_stream_cursor_input {
+  """Stream column input with initial value"""
+  initial_value: filter_list_subscriptions_stream_cursor_value_input!
+
+  """cursor ordering"""
+  ordering: cursor_ordering
+}
+
+"""Initial value of the column from where the streaming should start"""
+input filter_list_subscriptions_stream_cursor_value_input {
+  color: String
+  created_at: timestamp
+  filter_list_id: Int
+  id: Int
+  updated_at: timestamp
+  user_id: Int
+  visibility: Int
+}
+
+"""aggregate sum on columns"""
+type filter_list_subscriptions_sum_fields {
+  filter_list_id: Int
+  id: Int
+  user_id: Int
+  visibility: Int
+}
+
+"""
+order by sum() on columns of table "filter_list_subscriptions"
+"""
+input filter_list_subscriptions_sum_order_by {
+  filter_list_id: order_by
+  id: order_by
+  user_id: order_by
+  visibility: order_by
+}
+
+"""aggregate var_pop on columns"""
+type filter_list_subscriptions_var_pop_fields {
+  filter_list_id: Float
+  id: Float
+  user_id: Float
+  visibility: Float
+}
+
+"""
+order by var_pop() on columns of table "filter_list_subscriptions"
+"""
+input filter_list_subscriptions_var_pop_order_by {
+  filter_list_id: order_by
+  id: order_by
+  user_id: order_by
+  visibility: order_by
+}
+
+"""aggregate var_samp on columns"""
+type filter_list_subscriptions_var_samp_fields {
+  filter_list_id: Float
+  id: Float
+  user_id: Float
+  visibility: Float
+}
+
+"""
+order by var_samp() on columns of table "filter_list_subscriptions"
+"""
+input filter_list_subscriptions_var_samp_order_by {
+  filter_list_id: order_by
+  id: order_by
+  user_id: order_by
+  visibility: order_by
+}
+
+"""aggregate variance on columns"""
+type filter_list_subscriptions_variance_fields {
+  filter_list_id: Float
+  id: Float
+  user_id: Float
+  visibility: Float
+}
+
+"""
+order by variance() on columns of table "filter_list_subscriptions"
+"""
+input filter_list_subscriptions_variance_order_by {
+  filter_list_id: order_by
+  id: order_by
+  user_id: order_by
+  visibility: order_by
+}
+
+"""
+columns and relationships of "filter_lists"
+"""
+type filter_lists {
+  authors_count: Int!
+  books_count: Int!
+  created_at: timestamp!
+  description: String
+
+  """An array relationship"""
+  filter_list_entities(
+    """distinct select on columns"""
+    distinct_on: [filter_list_entities_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [filter_list_entities_order_by!]
+
+    """filter the rows returned"""
+    where: filter_list_entities_bool_exp
+  ): [filter_list_entities!]!
+
+  """An aggregate relationship"""
+  filter_list_entities_aggregate(
+    """distinct select on columns"""
+    distinct_on: [filter_list_entities_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [filter_list_entities_order_by!]
+
+    """filter the rows returned"""
+    where: filter_list_entities_bool_exp
+  ): filter_list_entities_aggregate!
+
+  """An array relationship"""
+  filter_list_subscriptions(
+    """distinct select on columns"""
+    distinct_on: [filter_list_subscriptions_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [filter_list_subscriptions_order_by!]
+
+    """filter the rows returned"""
+    where: filter_list_subscriptions_bool_exp
+  ): [filter_list_subscriptions!]!
+
+  """An aggregate relationship"""
+  filter_list_subscriptions_aggregate(
+    """distinct select on columns"""
+    distinct_on: [filter_list_subscriptions_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [filter_list_subscriptions_order_by!]
+
+    """filter the rows returned"""
+    where: filter_list_subscriptions_bool_exp
+  ): filter_list_subscriptions_aggregate!
+  filter_type: Int!
+
+  """An array relationship"""
+  followers(
+    """distinct select on columns"""
+    distinct_on: [followed_users_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [followed_users_order_by!]
+
+    """filter the rows returned"""
+    where: followed_users_bool_exp
+  ): [followed_users!]!
+  id: Int!
+
+  """An object relationship"""
+  privacy_setting: privacy_settings
+  privacy_setting_id: Int!
+  publishers_count: Int!
+  subscribers_count: Int!
+  title: String!
+  updated_at: timestamp!
+
+  """An object relationship"""
+  user: users
+  user_id: Int!
+  users_count: Int!
+}
+
+"""
+aggregated selection of "filter_lists"
+"""
+type filter_lists_aggregate {
+  aggregate: filter_lists_aggregate_fields
+  nodes: [filter_lists!]!
+}
+
+"""
+aggregate fields of "filter_lists"
+"""
+type filter_lists_aggregate_fields {
+  avg: filter_lists_avg_fields
+  count(columns: [filter_lists_select_column!], distinct: Boolean): Int!
+  max: filter_lists_max_fields
+  min: filter_lists_min_fields
+  stddev: filter_lists_stddev_fields
+  stddev_pop: filter_lists_stddev_pop_fields
+  stddev_samp: filter_lists_stddev_samp_fields
+  sum: filter_lists_sum_fields
+  var_pop: filter_lists_var_pop_fields
+  var_samp: filter_lists_var_samp_fields
+  variance: filter_lists_variance_fields
+}
+
+"""aggregate avg on columns"""
+type filter_lists_avg_fields {
+  authors_count: Float
+  books_count: Float
+  filter_type: Float
+  id: Float
+  privacy_setting_id: Float
+  publishers_count: Float
+  subscribers_count: Float
+  user_id: Float
+  users_count: Float
+}
+
+"""
+Boolean expression to filter rows from the table "filter_lists". All fields are combined with a logical 'AND'.
+"""
+input filter_lists_bool_exp {
+  _and: [filter_lists_bool_exp!]
+  _not: filter_lists_bool_exp
+  _or: [filter_lists_bool_exp!]
+  authors_count: Int_comparison_exp
+  books_count: Int_comparison_exp
+  created_at: timestamp_comparison_exp
+  description: String_comparison_exp
+  filter_list_entities: filter_list_entities_bool_exp
+  filter_list_entities_aggregate: filter_list_entities_aggregate_bool_exp
+  filter_list_subscriptions: filter_list_subscriptions_bool_exp
+  filter_list_subscriptions_aggregate: filter_list_subscriptions_aggregate_bool_exp
+  filter_type: Int_comparison_exp
+  followers: followed_users_bool_exp
+  id: Int_comparison_exp
+  privacy_setting: privacy_settings_bool_exp
+  privacy_setting_id: Int_comparison_exp
+  publishers_count: Int_comparison_exp
+  subscribers_count: Int_comparison_exp
+  title: String_comparison_exp
+  updated_at: timestamp_comparison_exp
+  user: users_bool_exp
+  user_id: Int_comparison_exp
+  users_count: Int_comparison_exp
+}
+
+"""aggregate max on columns"""
+type filter_lists_max_fields {
+  authors_count: Int
+  books_count: Int
+  created_at: timestamp
+  description: String
+  filter_type: Int
+  id: Int
+  privacy_setting_id: Int
+  publishers_count: Int
+  subscribers_count: Int
+  title: String
+  updated_at: timestamp
+  user_id: Int
+  users_count: Int
+}
+
+"""aggregate min on columns"""
+type filter_lists_min_fields {
+  authors_count: Int
+  books_count: Int
+  created_at: timestamp
+  description: String
+  filter_type: Int
+  id: Int
+  privacy_setting_id: Int
+  publishers_count: Int
+  subscribers_count: Int
+  title: String
+  updated_at: timestamp
+  user_id: Int
+  users_count: Int
+}
+
+"""Ordering options when selecting data from "filter_lists"."""
+input filter_lists_order_by {
+  authors_count: order_by
+  books_count: order_by
+  created_at: order_by
+  description: order_by
+  filter_list_entities_aggregate: filter_list_entities_aggregate_order_by
+  filter_list_subscriptions_aggregate: filter_list_subscriptions_aggregate_order_by
+  filter_type: order_by
+  followers_aggregate: followed_users_aggregate_order_by
+  id: order_by
+  privacy_setting: privacy_settings_order_by
+  privacy_setting_id: order_by
+  publishers_count: order_by
+  subscribers_count: order_by
+  title: order_by
+  updated_at: order_by
+  user: users_order_by
+  user_id: order_by
+  users_count: order_by
+}
+
+"""
+select columns of table "filter_lists"
+"""
+enum filter_lists_select_column {
+  """column name"""
+  authors_count
+
+  """column name"""
+  books_count
+
+  """column name"""
+  created_at
+
+  """column name"""
+  description
+
+  """column name"""
+  filter_type
+
+  """column name"""
+  id
+
+  """column name"""
+  privacy_setting_id
+
+  """column name"""
+  publishers_count
+
+  """column name"""
+  subscribers_count
+
+  """column name"""
+  title
+
+  """column name"""
+  updated_at
+
+  """column name"""
+  user_id
+
+  """column name"""
+  users_count
+}
+
+"""aggregate stddev on columns"""
+type filter_lists_stddev_fields {
+  authors_count: Float
+  books_count: Float
+  filter_type: Float
+  id: Float
+  privacy_setting_id: Float
+  publishers_count: Float
+  subscribers_count: Float
+  user_id: Float
+  users_count: Float
+}
+
+"""aggregate stddev_pop on columns"""
+type filter_lists_stddev_pop_fields {
+  authors_count: Float
+  books_count: Float
+  filter_type: Float
+  id: Float
+  privacy_setting_id: Float
+  publishers_count: Float
+  subscribers_count: Float
+  user_id: Float
+  users_count: Float
+}
+
+"""aggregate stddev_samp on columns"""
+type filter_lists_stddev_samp_fields {
+  authors_count: Float
+  books_count: Float
+  filter_type: Float
+  id: Float
+  privacy_setting_id: Float
+  publishers_count: Float
+  subscribers_count: Float
+  user_id: Float
+  users_count: Float
+}
+
+"""
+Streaming cursor of the table "filter_lists"
+"""
+input filter_lists_stream_cursor_input {
+  """Stream column input with initial value"""
+  initial_value: filter_lists_stream_cursor_value_input!
+
+  """cursor ordering"""
+  ordering: cursor_ordering
+}
+
+"""Initial value of the column from where the streaming should start"""
+input filter_lists_stream_cursor_value_input {
+  authors_count: Int
+  books_count: Int
+  created_at: timestamp
+  description: String
+  filter_type: Int
+  id: Int
+  privacy_setting_id: Int
+  publishers_count: Int
+  subscribers_count: Int
+  title: String
+  updated_at: timestamp
+  user_id: Int
+  users_count: Int
+}
+
+"""aggregate sum on columns"""
+type filter_lists_sum_fields {
+  authors_count: Int
+  books_count: Int
+  filter_type: Int
+  id: Int
+  privacy_setting_id: Int
+  publishers_count: Int
+  subscribers_count: Int
+  user_id: Int
+  users_count: Int
+}
+
+"""aggregate var_pop on columns"""
+type filter_lists_var_pop_fields {
+  authors_count: Float
+  books_count: Float
+  filter_type: Float
+  id: Float
+  privacy_setting_id: Float
+  publishers_count: Float
+  subscribers_count: Float
+  user_id: Float
+  users_count: Float
+}
+
+"""aggregate var_samp on columns"""
+type filter_lists_var_samp_fields {
+  authors_count: Float
+  books_count: Float
+  filter_type: Float
+  id: Float
+  privacy_setting_id: Float
+  publishers_count: Float
+  subscribers_count: Float
+  user_id: Float
+  users_count: Float
+}
+
+"""aggregate variance on columns"""
+type filter_lists_variance_fields {
+  authors_count: Float
+  books_count: Float
+  filter_type: Float
+  id: Float
+  privacy_setting_id: Float
+  publishers_count: Float
+  subscribers_count: Float
+  user_id: Float
+  users_count: Float
+}
+
+type FilterDefaultEntryType {
+  color: String
+  filter_list: filter_lists
+  filter_list_id: Int
+  id: Int
+  subscribers_count: Int
+  title: String
+}
+
+type FilterListEntityIdType {
+  errors: [String]
+  filter_list_entity: filter_list_entities
+  id: Int
+}
+
+input FilterListEntityInput {
+  entity_id: Int!
+  entity_type: String!
+  filter_list_id: Int!
+}
+
+type FilterListIdType {
+  errors: [String]
+  filter_list: filter_lists
+  id: Int
+}
+
+input FilterListInput {
+  description: String
+  privacy_setting_id: Int
+  subscription_color: String
+  subscription_visibility: Int
+  title: String
+}
+
+type FilterSubscriptionDeleteType {
+  subscribers_count: Int
+}
+
+type FilterSubscriptionType {
+  color: String
+  filter_list_subscription: filter_list_subscriptions
+  id: Int
+  subscribers_count: Int
+  visibility: Int
 }
 
 """
@@ -10224,6 +11346,9 @@ input lists_variance_order_by {
 
 """mutation root"""
 type mutation_root {
+  """add_to_default_filter_list"""
+  add_to_default_filter_list(entity_id: Int!, entity_type: String!, visibility: Int!): FilterDefaultEntryType
+
   """book_mapping_normalize"""
   book_mapping_normalize(deep: Boolean!, id: Int!): BookMappingIdType
   book_normalize(deep: Boolean, id: Int!): BookIdType
@@ -10249,6 +11374,15 @@ type mutation_root {
 
   """delete_book_mapping"""
   delete_book_mapping(id: Int!): BookMappingIdType
+
+  """delete_filter_list"""
+  delete_filter_list(id: Int!): SuccessType
+
+  """delete_filter_list_entity"""
+  delete_filter_list_entity(id: Int!): SuccessType
+
+  """delete_filter_list_subscription"""
+  delete_filter_list_subscription(filter_list_id: Int!): FilterSubscriptionDeleteType
 
   """delete_follow"""
   delete_follow(followable_id: Int!, followable_type: String!): FollowDeleteType
@@ -10368,6 +11502,12 @@ type mutation_root {
 
   """insert_edition"""
   insert_edition(book_id: Int!, edition: EditionInput!): EditionIdType
+
+  """insert_filter_list"""
+  insert_filter_list(object: FilterListInput!): FilterListIdType
+
+  """insert_filter_list_entity"""
+  insert_filter_list_entity(object: FilterListEntityInput!): FilterListEntityIdType
 
   """insert_follow"""
   insert_follow(followable_id: Int!, followable_type: String!): FollowType
@@ -10548,6 +11688,9 @@ type mutation_root {
 
   """update_edition"""
   update_edition(edition: EditionInput!, id: Int!): EditionIdType
+
+  """update_filter_list"""
+  update_filter_list(id: Int!, object: FilterListInput!): FilterListIdType
 
   """
   update data of the table: "followed_prompts"
@@ -10739,6 +11882,9 @@ type mutation_root {
 
   """upsert_book"""
   upsert_book(book: CreateBookFromPlatformInput!): NewBookIdType
+
+  """upsert_filter_list_subscription"""
+  upsert_filter_list_subscription(color: String, filter_list_id: Int!, visibility: Int!): FilterSubscriptionType
 
   """upsert_followed_list"""
   upsert_followed_list(list_id: Int!): FollowedListType
@@ -13491,8 +14637,8 @@ type query_root {
   """fetch data from the table: "books" using primary key columns"""
   books_by_pk(id: Int!): books
 
-  """books_trending"""
-  books_trending(from: date!, limit: Int!, offset: Int!, to: date!): TrendingBookType
+  """books_trending (from/to are deprecated)"""
+  books_trending(duration: TrendingDuration, from: date, limit: Int, offset: Int, to: date): TrendingBookType
 
   """
   fetch data from the table: "characters"
@@ -13645,6 +14791,131 @@ type query_root {
 
   """fetch data from the table: "editions" using primary key columns"""
   editions_by_pk(id: Int!): editions
+
+  """An array relationship"""
+  filter_list_entities(
+    """distinct select on columns"""
+    distinct_on: [filter_list_entities_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [filter_list_entities_order_by!]
+
+    """filter the rows returned"""
+    where: filter_list_entities_bool_exp
+  ): [filter_list_entities!]!
+
+  """An aggregate relationship"""
+  filter_list_entities_aggregate(
+    """distinct select on columns"""
+    distinct_on: [filter_list_entities_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [filter_list_entities_order_by!]
+
+    """filter the rows returned"""
+    where: filter_list_entities_bool_exp
+  ): filter_list_entities_aggregate!
+
+  """
+  fetch data from the table: "filter_list_entities" using primary key columns
+  """
+  filter_list_entities_by_pk(id: Int!): filter_list_entities
+
+  """An array relationship"""
+  filter_list_subscriptions(
+    """distinct select on columns"""
+    distinct_on: [filter_list_subscriptions_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [filter_list_subscriptions_order_by!]
+
+    """filter the rows returned"""
+    where: filter_list_subscriptions_bool_exp
+  ): [filter_list_subscriptions!]!
+
+  """An aggregate relationship"""
+  filter_list_subscriptions_aggregate(
+    """distinct select on columns"""
+    distinct_on: [filter_list_subscriptions_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [filter_list_subscriptions_order_by!]
+
+    """filter the rows returned"""
+    where: filter_list_subscriptions_bool_exp
+  ): filter_list_subscriptions_aggregate!
+
+  """
+  fetch data from the table: "filter_list_subscriptions" using primary key columns
+  """
+  filter_list_subscriptions_by_pk(id: Int!): filter_list_subscriptions
+
+  """
+  fetch data from the table: "filter_lists"
+  """
+  filter_lists(
+    """distinct select on columns"""
+    distinct_on: [filter_lists_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [filter_lists_order_by!]
+
+    """filter the rows returned"""
+    where: filter_lists_bool_exp
+  ): [filter_lists!]!
+
+  """
+  fetch aggregated fields from the table: "filter_lists"
+  """
+  filter_lists_aggregate(
+    """distinct select on columns"""
+    distinct_on: [filter_lists_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [filter_lists_order_by!]
+
+    """filter the rows returned"""
+    where: filter_lists_bool_exp
+  ): filter_lists_aggregate!
+
+  """fetch data from the table: "filter_lists" using primary key columns"""
+  filter_lists_by_pk(id: Int!): filter_lists
 
   """
   fetch data from the table: "flag_statuses"
@@ -15622,6 +16893,10 @@ input series_stream_cursor_value_input {
   user_id: Int
 }
 
+input SeriesIdentifiersInput {
+  goodreads: [String!]
+}
+
 type SeriesIdType {
   errors: [String]
   id: Int
@@ -15629,6 +16904,7 @@ type SeriesIdType {
 }
 
 input SeriesInput {
+  author_id: Int
   name: String!
 }
 
@@ -15637,6 +16913,7 @@ input SeriesInputType {
   curation_status: String
   description: String
   id: Int
+  identifiers: SeriesIdentifiersInput
   is_completed: Boolean
   locked: Boolean
   name: String
@@ -16348,6 +17625,173 @@ type subscription_root {
     """filter the rows returned"""
     where: editions_bool_exp
   ): [editions!]!
+
+  """An array relationship"""
+  filter_list_entities(
+    """distinct select on columns"""
+    distinct_on: [filter_list_entities_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [filter_list_entities_order_by!]
+
+    """filter the rows returned"""
+    where: filter_list_entities_bool_exp
+  ): [filter_list_entities!]!
+
+  """An aggregate relationship"""
+  filter_list_entities_aggregate(
+    """distinct select on columns"""
+    distinct_on: [filter_list_entities_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [filter_list_entities_order_by!]
+
+    """filter the rows returned"""
+    where: filter_list_entities_bool_exp
+  ): filter_list_entities_aggregate!
+
+  """
+  fetch data from the table: "filter_list_entities" using primary key columns
+  """
+  filter_list_entities_by_pk(id: Int!): filter_list_entities
+
+  """
+  fetch data from the table in a streaming manner: "filter_list_entities"
+  """
+  filter_list_entities_stream(
+    """maximum number of rows returned in a single batch"""
+    batch_size: Int!
+
+    """cursor to stream the results returned by the query"""
+    cursor: [filter_list_entities_stream_cursor_input]!
+
+    """filter the rows returned"""
+    where: filter_list_entities_bool_exp
+  ): [filter_list_entities!]!
+
+  """An array relationship"""
+  filter_list_subscriptions(
+    """distinct select on columns"""
+    distinct_on: [filter_list_subscriptions_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [filter_list_subscriptions_order_by!]
+
+    """filter the rows returned"""
+    where: filter_list_subscriptions_bool_exp
+  ): [filter_list_subscriptions!]!
+
+  """An aggregate relationship"""
+  filter_list_subscriptions_aggregate(
+    """distinct select on columns"""
+    distinct_on: [filter_list_subscriptions_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [filter_list_subscriptions_order_by!]
+
+    """filter the rows returned"""
+    where: filter_list_subscriptions_bool_exp
+  ): filter_list_subscriptions_aggregate!
+
+  """
+  fetch data from the table: "filter_list_subscriptions" using primary key columns
+  """
+  filter_list_subscriptions_by_pk(id: Int!): filter_list_subscriptions
+
+  """
+  fetch data from the table in a streaming manner: "filter_list_subscriptions"
+  """
+  filter_list_subscriptions_stream(
+    """maximum number of rows returned in a single batch"""
+    batch_size: Int!
+
+    """cursor to stream the results returned by the query"""
+    cursor: [filter_list_subscriptions_stream_cursor_input]!
+
+    """filter the rows returned"""
+    where: filter_list_subscriptions_bool_exp
+  ): [filter_list_subscriptions!]!
+
+  """
+  fetch data from the table: "filter_lists"
+  """
+  filter_lists(
+    """distinct select on columns"""
+    distinct_on: [filter_lists_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [filter_lists_order_by!]
+
+    """filter the rows returned"""
+    where: filter_lists_bool_exp
+  ): [filter_lists!]!
+
+  """
+  fetch aggregated fields from the table: "filter_lists"
+  """
+  filter_lists_aggregate(
+    """distinct select on columns"""
+    distinct_on: [filter_lists_select_column!]
+
+    """limit the number of rows returned"""
+    limit: Int
+
+    """skip the first n rows. Use only with order_by"""
+    offset: Int
+
+    """sort the rows by one or more columns"""
+    order_by: [filter_lists_order_by!]
+
+    """filter the rows returned"""
+    where: filter_lists_bool_exp
+  ): filter_lists_aggregate!
+
+  """fetch data from the table: "filter_lists" using primary key columns"""
+  filter_lists_by_pk(id: Int!): filter_lists
+
+  """
+  fetch data from the table in a streaming manner: "filter_lists"
+  """
+  filter_lists_stream(
+    """maximum number of rows returned in a single batch"""
+    batch_size: Int!
+
+    """cursor to stream the results returned by the query"""
+    cursor: [filter_lists_stream_cursor_input]!
+
+    """filter the rows returned"""
+    where: filter_lists_bool_exp
+  ): [filter_lists!]!
 
   """
   fetch data from the table: "flag_statuses"
@@ -19235,6 +20679,14 @@ type TrendingBookType {
   ids: [Int]
 }
 
+enum TrendingDuration {
+  all
+  month
+  one_year
+  three_month
+  week
+}
+
 input update_user_input {
   account_privacy_setting_id: Int
   activity_privacy_settings_id: Int
@@ -20350,6 +21802,7 @@ type user_books {
   review: String
   review_has_spoilers: Boolean!
   review_length: Int!
+  review_markdown: String
   review_migrated: Boolean
   review_raw: String
   review_slate(
@@ -20596,6 +22049,7 @@ input user_books_bool_exp {
   review: String_comparison_exp
   review_has_spoilers: Boolean_comparison_exp
   review_length: Int_comparison_exp
+  review_markdown: String_comparison_exp
   review_migrated: Boolean_comparison_exp
   review_raw: String_comparison_exp
   review_slate: jsonb_comparison_exp
@@ -20641,6 +22095,7 @@ type user_books_max_fields {
   referrer_user_id: Int
   review: String
   review_length: Int
+  review_markdown: String
   review_raw: String
   reviewed_at: timestamp
   status_id: Int
@@ -20678,6 +22133,7 @@ input user_books_max_order_by {
   referrer_user_id: order_by
   review: order_by
   review_length: order_by
+  review_markdown: order_by
   review_raw: order_by
   reviewed_at: order_by
   status_id: order_by
@@ -20713,6 +22169,7 @@ type user_books_min_fields {
   referrer_user_id: Int
   review: String
   review_length: Int
+  review_markdown: String
   review_raw: String
   reviewed_at: timestamp
   status_id: Int
@@ -20750,6 +22207,7 @@ input user_books_min_order_by {
   referrer_user_id: order_by
   review: order_by
   review_length: order_by
+  review_markdown: order_by
   review_raw: order_by
   reviewed_at: order_by
   status_id: order_by
@@ -20797,6 +22255,7 @@ input user_books_order_by {
   review: order_by
   review_has_spoilers: order_by
   review_length: order_by
+  review_markdown: order_by
   review_migrated: order_by
   review_raw: order_by
   review_slate: order_by
@@ -20903,6 +22362,9 @@ enum user_books_select_column {
 
   """column name"""
   review_length
+
+  """column name"""
+  review_markdown
 
   """column name"""
   review_migrated
@@ -21149,6 +22611,7 @@ input user_books_stream_cursor_value_input {
   review: String
   review_has_spoilers: Boolean
   review_length: Int
+  review_markdown: String
   review_migrated: Boolean
   review_raw: String
   review_slate: jsonb
@@ -21793,6 +23256,7 @@ input user_statuses_stream_cursor_value_input {
 }
 
 input UserBookCreateInput {
+  action_at: timestamptz
   book_id: Int!
   date_added: date
   edition_id: Int
@@ -21808,6 +23272,7 @@ input UserBookCreateInput {
   recommended_for: String
   referrer_user_id: Int
   review_has_spoilers: Boolean
+  review_markdown: String
   review_slate: jsonb
   reviewed_at: date
   sponsored_review: Boolean
@@ -21843,6 +23308,7 @@ type UserBooksReadUpsertType {
 }
 
 input UserBookUpdateInput {
+  action_at: timestamptz
   date_added: date
   edition_id: Int
   finished_at_precision: Int
@@ -21857,6 +23323,7 @@ input UserBookUpdateInput {
   recommended_for: String
   referrer_user_id: Int
   review_has_spoilers: Boolean
+  review_markdown: String
   review_slate: jsonb
   reviewed_at: date
   sponsored_review: Boolean
