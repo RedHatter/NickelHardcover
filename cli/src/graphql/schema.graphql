@@ -2232,6 +2232,14 @@ type BookIdType {
   warnings: [String]
 }
 
+enum BookImportStatus {
+  created
+  failed
+  fetching
+  loaded
+  not_found
+}
+
 input BookInput {
   book_status_id: Int
   canonical_id: Int
@@ -9614,6 +9622,22 @@ input images_variance_order_by {
   width: order_by
 }
 
+input ImportStatusEntryInput {
+  external_id: String!
+  platform_id: Int!
+}
+
+type ImportStatusResult {
+  book_id: Int
+  book_title: String
+  edition_id: Int
+  edition_title: String
+  error: String
+  external_id: String!
+  platform_id: Int!
+  status: BookImportStatus!
+}
+
 type InsertBlockOutput {
   error: String
   id: Int
@@ -11911,6 +11935,7 @@ type NewBookIdType {
   edition_id: Int
   errors: [String]
   id: Int
+  status: String
 }
 
 type NewsletterStatusType {
@@ -14491,6 +14516,9 @@ type query_root {
   fetch data from the table: "book_collections" using primary key columns
   """
   book_collections_by_pk(id: bigint!): book_collections
+
+  """book_import_statuses"""
+  book_import_statuses(entries: [ImportStatusEntryInput!]!): [ImportStatusResult!]!
 
   """An array relationship"""
   book_mappings(
