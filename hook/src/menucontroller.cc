@@ -75,6 +75,7 @@ enum MenuOption {
   WANT_TO_READ = 1,
   CURRENTLY_READING = 2,
   READ = 3,
+  PAUSED = 4,
   DID_NOT_FINISH = 5,
   SYNC_NOW,
   TOGGLE_ENABLED,
@@ -127,6 +128,7 @@ void MenuController::showStatusMenu(QJsonObject doc) {
           {"Want to Read", MenuOption::WANT_TO_READ, status == MenuOption::WANT_TO_READ},
           {"Currently Reading", MenuOption::CURRENTLY_READING, status == MenuOption::CURRENTLY_READING},
           {"Read", MenuOption::READ, status == MenuOption::READ},
+          {"Paused", MenuOption::PAUSED, status == MenuOption::PAUSED},
           {"Did Not Finish", MenuOption::DID_NOT_FINISH, status == MenuOption::DID_NOT_FINISH},
       },
       icon, 6, true);
@@ -153,6 +155,7 @@ void MenuController::triggered(QAction *action) {
   case MenuOption::WANT_TO_READ:
   case MenuOption::CURRENTLY_READING:
   case MenuOption::READ:
+  case MenuOption::PAUSED:
   case MenuOption::DID_NOT_FINISH: {
     CLI *cli = CLI::setUserBook(value);
     QObject::connect(cli, &CLI::response, this, &MenuController::showStatusMenu);

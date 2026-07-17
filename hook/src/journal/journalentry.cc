@@ -55,7 +55,7 @@ JournalEntry::JournalEntry(QJsonObject doc, QWidget *parent) : QFrame(parent) {
   } else if (event == "status_read") {
     icon->setPixmap(QPixmap(Files::status_read));
     label->setText("Marked as Read");
-  } else if (event == "user_book_read_started") {
+  } else if (event == "user_book_read_started" || event == "status_currently_reading") {
     icon->setPixmap(QPixmap(Files::user_book_read_started));
     label->setText("Started reading");
   } else if (event == "user_book_read_finished") {
@@ -64,6 +64,9 @@ JournalEntry::JournalEntry(QJsonObject doc, QWidget *parent) : QFrame(parent) {
   } else if (event == "status_stopped") {
     icon->setPixmap(QPixmap(Files::status_stopped));
     label->setText("Stopped reading");
+  } else if (event == "status_paused") {
+    icon->setPixmap(QPixmap(Files::status_paused));
+    label->setText("Paused reading");
   } else if (event == "progress_updated") {
     icon->setPixmap(QPixmap(Files::progress_updated));
     QJsonObject metadata = doc.value("metadata").toObject();

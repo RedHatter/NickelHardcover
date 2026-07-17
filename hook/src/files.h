@@ -32,6 +32,7 @@ constexpr char const *prompt_book = ":/nickelhardcover/prompt_book.png";
 constexpr char const *quote = ":/nickelhardcover/quote.png";
 constexpr char const *rated = ":/nickelhardcover/rated.png";
 constexpr char const *reviewed = ":/nickelhardcover/reviewed.png";
+constexpr char const *status_paused = ":/nickelhardcover/status_paused.png";
 constexpr char const *status_read = ":/nickelhardcover/status_read.png";
 constexpr char const *status_stopped = ":/nickelhardcover/status_stopped.png";
 constexpr char const *status_want_to_read = ":/nickelhardcover/status_want_to_read.png";
