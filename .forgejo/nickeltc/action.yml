@@ -6,6 +6,6 @@ inputs:
     required: true
 runs:
   using: "docker"
-  image: "Dockerfile"
+  image: "docker://strayrose/nickeltc:latest"
   args:
     - ${{ inputs.args }}

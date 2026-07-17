@@ -6,10 +6,10 @@ export VERSION := `git describe --tags --long --dirty 2>/dev/null`
 default:
   @{{ just_executable() }} --list --justfile {{ justfile() }}
 
-# Prepare the toolchain docker image
+# Build and push the toolchain docker image to docker hub
 [group('build')]
 build-tc:
-  docker build .forgejo/nickeltc --build-arg UID=$(id --user) --build-arg GID=$(id --group) --tag strayrose/nickeltc
+  docker buildx build . --tag strayrose/nickeltc --push
 
 # Render modified svgs to png
 [group('build')]
@@ -56,7 +56,7 @@ package:
 # Build KoboRoot.tgz within NickelTC docker container
 [group('package')]
 build-package:
-  docker run --volume="$PWD:$PWD" --workdir="$PWD" --rm strayrose/nickeltc just build package
+  docker run --volume="$PWD:$PWD" --workdir="$PWD" -u $(id --user):$(id --group) --rm strayrose/nickeltc just build package
 
 # Copy KoboRoot.tgz onto kobo device
 [group('package')]
