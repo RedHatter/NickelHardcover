@@ -9,7 +9,9 @@ StaticRow::StaticRow(QString heading, QString value, bool showClear, QWidget *pa
   QHBoxLayout *rowLayout = new QHBoxLayout(this);
   rowLayout->setContentsMargins(0, 0, 0, 0);
 
-  rowLayout->addWidget(new Label(Label::Medium, heading), 1);
+  Label *headingLabel = new Label(Label::Medium, heading);
+  headingLabel->setWordWrap(true);
+  rowLayout->addWidget(headingLabel, 1);
 
   label = new Label(Label::Medium, value);
   label->setProperty("style", "italic");

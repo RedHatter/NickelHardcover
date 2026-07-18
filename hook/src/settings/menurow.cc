@@ -23,7 +23,10 @@ MenuRow::MenuRow(QString heading, MenuRowType type, QList<Item> menuItems, QList
 
   QHBoxLayout *rowLayout = new QHBoxLayout(row);
   rowLayout->setContentsMargins(0, 0, 0, 0);
-  rowLayout->addWidget(new Label(Label::Medium, heading), 1);
+
+  Label *headingLabel = new Label(Label::Medium, heading);
+  headingLabel->setWordWrap(true);
+  rowLayout->addWidget(headingLabel, 1);
 
   label = new Label(Label::Medium, "Unset");
   label->setProperty("style", "italic");

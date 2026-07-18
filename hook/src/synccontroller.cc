@@ -115,7 +115,7 @@ void SyncController::alarm() {
 
   timer->deleteLater();
   timer = nullptr;
-  queue->prepareNext();
+  queue->runAll();
 }
 
 int SyncController::getReadProgress() { return queue->getReadProgress(contentId); }

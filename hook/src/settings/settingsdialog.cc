@@ -217,6 +217,12 @@ QFrame *SettingsDialog::buildGeneral() {
   QObject::connect(checkboxRow, &CheckboxRow::triggered, this, &SettingsDialog::setAutoSyncDefault);
   layout->addWidget(checkboxRow);
 
+  checkboxRow = new CheckboxRow(
+      "If syncing fails due to lack of internet connection automatically retry next time you connect to WiFi",
+      Settings::getInstance()->isRetryOnNetwork());
+  QObject::connect(checkboxRow, &CheckboxRow::triggered, this, &SettingsDialog::setRetryOnNetwork);
+  layout->addWidget(checkboxRow);
+
   MenuRow *menuRow = new MenuRow("Sync annotations to reading journal", MenuRowType::Menu,
                                  {{"Always", "always"}, {"Never", "never"}, {"Once the book is finished", "finished"}},
                                  {}, Settings::getInstance()->getSyncBookmarks());
@@ -344,6 +350,8 @@ void SettingsDialog::setAutoSyncDefault(bool value) { Settings::getInstance()->s
 void SettingsDialog::setSyncBookmarks(QVariant value) { Settings::getInstance()->setSyncBookmarks(value.toString()); }
 
 void SettingsDialog::setJournalPrivacy(QVariant value) { Settings::getInstance()->setJournalPrivacy(value.toString()); }
+
+void SettingsDialog::setRetryOnNetwork(bool value) { Settings::getInstance()->setRetryOnNetwork(value); }
 
 void SettingsDialog::setSyncDaily(QVariant value) { Settings::getInstance()->setSyncDaily(value.toInt()); }
 

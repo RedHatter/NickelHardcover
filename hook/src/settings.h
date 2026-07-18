@@ -29,6 +29,9 @@ public:
   void setJournalPrivacy(QString value);
   QString getJournalPrivacy();
 
+  void setRetryOnNetwork(bool value);
+  bool isRetryOnNetwork();
+
   void setSyncDaily(int value);
   int getSyncDaily();
 

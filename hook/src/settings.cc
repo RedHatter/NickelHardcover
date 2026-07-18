@@ -93,6 +93,10 @@ void Settings::setJournalPrivacy(QString value) { config->setValue("journal_priv
 
 QString Settings::getJournalPrivacy() { return config->value("journal_privacy", "public").toString().toLower(); }
 
+void Settings::setRetryOnNetwork(bool value) { config->setValue("retry_on_network", value); }
+
+bool Settings::isRetryOnNetwork() { return config->value("retry_on_network", false).toBool(); }
+
 void Settings::setCloseThreshold(int value) {
   QVariant realValue = "never";
 

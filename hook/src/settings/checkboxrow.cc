@@ -17,6 +17,7 @@ CheckboxRow::CheckboxRow(QString heading, bool checked, QWidget *parent) : QWidg
   QHBoxLayout *rowLayout = new QHBoxLayout(row);
   rowLayout->setContentsMargins(0, 0, 0, 0);
   Label *headingLabel = new Label(Label::Medium, heading);
+  headingLabel->setWordWrap(true);
   rowLayout->addWidget(headingLabel, 1);
 
   checkbox = construct_TouchCheckBox(this);
