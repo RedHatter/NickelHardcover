@@ -45,11 +45,11 @@ void SyncController::currentViewIndexChanged(int index) {
   }
 
   Settings *settings = Settings::getInstance();
-  if (lastViewName == "ReadingView" && settings->isEnabled(contentId)) {
-    if (queue->checkThreshold(contentId, settings->getCloseThreshold())) {
-      nh_log("Triggered on close auto-sync");
-      queue->run(contentId);
-    }
+  if (lastViewName == "ReadingView" &&
+      (name.endsWith("DragonPowerView") || MainWindowController__viewWithObjectName(mwc, "ReadingView") == nullptr) &&
+      settings->isEnabled(contentId) && queue->checkThreshold(contentId, settings->getCloseThreshold())) {
+    nh_log("Triggered on close auto-sync");
+    queue->run(contentId);
   }
 
   if (name == "ReadingView") {

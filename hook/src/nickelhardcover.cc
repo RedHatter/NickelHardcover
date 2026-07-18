@@ -25,6 +25,7 @@ static SupportedLocales *(*SupportedLocales__supportedLocales)(SupportedLocales 
 
 MainWindowController *(*MainWindowController__sharedInstance)();
 QWidget *(*MainWindowController__currentView)(MainWindowController *mwc);
+QWidget *(*MainWindowController__viewWithObjectName)(MainWindowController *mwc, QString const &);
 QWidget *(*MainWindowController__pushView)(MainWindowController *mwc, QWidget *view);
 WirelessManager *(*WirelessManager__sharedInstance)();
 
@@ -180,6 +181,7 @@ static struct nh_dlsym NickelHardcoverDlsym[] = {
   { .name = "_ZN20MainWindowController14sharedInstanceEv",                     .out = nh_symoutptr(MainWindowController__sharedInstance) },
   { .name = "_ZNK20MainWindowController11currentViewEv",                       .out = nh_symoutptr(MainWindowController__currentView) },
   { .name = "_ZN20MainWindowController8pushViewEP7QWidget",                    .out = nh_symoutptr(MainWindowController__pushView) },
+  { .name = "_ZNK20MainWindowController18viewWithObjectNameERK7QString",       .out = nh_symoutptr(MainWindowController__viewWithObjectName) },
   { .name = "_ZN11ReadingView25getCalculatedReadProgressEv",                   .out = nh_symoutptr(ReadingView__getCalculatedReadProgress) },
 
   { .name = "_ZN25ConfirmationDialogFactory15showErrorDialogERK7QStringS2_",   .out = nh_symoutptr(ConfirmationDialogFactory__showErrorDialog) },
