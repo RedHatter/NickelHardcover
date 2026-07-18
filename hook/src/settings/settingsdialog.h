@@ -24,6 +24,7 @@ public Q_SLOTS:
   void setDebug(bool value);
   void saveLogs();
 
+  void clearReadProgress();
   void clearLastSynced();
 
   void setUsername(QJsonObject doc);

@@ -4,7 +4,6 @@
 #include <QSettings>
 #include <QTimer>
 
-#include "cli.h"
 #include "settings.h"
 #include "synccontroller.h"
 
@@ -53,7 +52,9 @@ void SyncController::currentViewIndexChanged(int index) {
   }
 
   if (name == "ReadingView") {
-    queue->updateReadProgress(contentId);
+    if (settings->isEnabled(contentId)) {
+      queue->updateReadProgress(contentId);
+    }
 
     QObject::connect(cv, SIGNAL(pageChanged(int)), this, SLOT(pageChanged()), Qt::UniqueConnection);
   }
@@ -68,17 +69,17 @@ void SyncController::pageChanged() {
     return;
   }
 
+  Settings *settings = Settings::getInstance();
+
+  if (!settings->isEnabled(contentId))
+    return;
+
   MainWindowController *mwc = MainWindowController__sharedInstance();
   QWidget *cv = MainWindowController__currentView(mwc);
   QString name = cv->objectName();
   if (name == "ReadingView") {
     queue->updateReadProgress(contentId);
   }
-
-  Settings *settings = Settings::getInstance();
-
-  if (!settings->isEnabled(contentId))
-    return;
 
   int syncDaily = settings->getSyncDaily();
 
@@ -120,8 +121,11 @@ void SyncController::alarm() {
 
 int SyncController::getReadProgress() { return queue->getReadProgress(contentId); }
 
+void SyncController::clearReadProgress() { queue->clearReadProgress(contentId); }
+
 void SyncController::manualSync() {
   nh_log("SyncController::manualSync()");
+  queue->updateReadProgress(contentId);
   queue->run(contentId, true);
 }
 

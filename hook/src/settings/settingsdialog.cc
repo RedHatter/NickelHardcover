@@ -312,8 +312,9 @@ QFrame *SettingsDialog::buildInformation() {
   layout->addWidget(row);
   row->setProperty("noBorder", true);
 
-  row = new StaticRow("Current progress", QString::number(ctl->getReadProgress()).append("%"), false);
+  row = new StaticRow("Current progress", QString::number(ctl->getReadProgress()).append("%"), true);
   layout->addWidget(row);
+  QObject::connect(row, &StaticRow::clear, this, &SettingsDialog::clearReadProgress);
 
   int progress = Settings::getInstance()->getLastProgress(ctl->contentId);
   row = new StaticRow("Last synced", progress <= 0 ? "Never" : QString::number(progress).append("%"), true);
@@ -358,6 +359,14 @@ void SettingsDialog::setSyncDaily(QVariant value) { Settings::getInstance()->set
 void SettingsDialog::setCloseThreshold(QVariant value) { Settings::getInstance()->setCloseThreshold(value.toInt()); }
 
 void SettingsDialog::setPageThreshold(QVariant value) { Settings::getInstance()->setPageThreshold(value.toInt()); }
+
+void SettingsDialog::clearReadProgress() {
+  SyncController *ctl = SyncController::getInstance();
+  ctl->clearReadProgress();
+
+  StaticRow *row = qobject_cast<StaticRow *>(sender());
+  row->setValue(QString::number(ctl->getReadProgress()).append("%"));
+}
 
 void SettingsDialog::clearLastSynced() {
   QString contentId = SyncController::getInstance()->contentId;

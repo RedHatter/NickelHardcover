@@ -154,7 +154,7 @@ void CLI::connectingFailed() {
   }
 
   deleteLater();
-  failure();
+  failure(FailureReason::Network);
 }
 
 void CLI::showIcon(const char *path) {
@@ -212,7 +212,7 @@ void CLI::processFinished(int exitCode) {
     QByteArray stderr = process->readAllStandardError();
     nh_log("Error from command line \"%s\"", qPrintable(stderr));
     ConfirmationDialogFactory__showErrorDialog("Hardcover.app", QString(stderr));
-    failure();
+    failure(FailureReason::Error);
     deleteLater();
     return;
   }
@@ -237,7 +237,7 @@ void CLI::processFinished(int exitCode) {
       QObject::connect(dialog, &QDialog::rejected, this, &CLI::deleteLater);
       dialog->open();
 
-      failure();
+      failure(FailureReason::BookNotFound);
       return;
     }
 

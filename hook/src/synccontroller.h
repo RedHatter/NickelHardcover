@@ -19,6 +19,7 @@ public:
   QNetworkAccessManager *network = new QNetworkAccessManager();
 
   int getReadProgress();
+  void clearReadProgress();
   void manualSync();
   QDateTime getAlarm();
 

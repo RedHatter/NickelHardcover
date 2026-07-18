@@ -4,64 +4,84 @@
 #include <QSettings>
 #include <QTimer>
 
-#include "cli.h"
-#include "qglobal.h"
 #include "settings.h"
 #include "syncqueue.h"
 
-SyncQueue::SyncQueue(QObject *parent) : QObject(parent) {};
+SyncQueue::SyncQueue(QObject *parent) : QObject(parent) {
+  WirelessManager *wm = WirelessManager__sharedInstance();
+  QObject::connect(wm, SIGNAL(networkConnected()), this, SLOT(networkConnected()));
+};
 
 void SyncQueue::updateReadProgress(QString contentId) {
   MainWindowController *mwc = MainWindowController__sharedInstance();
   QWidget *cv = MainWindowController__currentView(mwc);
 
-  int progress = ReadingView__getCalculatedReadProgress(cv);
-  if (progress == 99) {
-    progress = 100;
+  int newProgress = ReadingView__getCalculatedReadProgress(cv);
+  if (newProgress == 99) {
+    newProgress = 100;
   }
 
-  if (progress < 2 || progress == queue[contentId]) {
+  if (newProgress < 2 || newProgress == progress[contentId]) {
     return;
   }
 
-  queue[contentId] = progress;
+  progress[contentId] = newProgress;
 
-  nh_log("Update %s queued progress to %d%%", qPrintable(contentId), queue[contentId]);
+  nh_log("Update %s queued progress to %d%%", qPrintable(contentId), progress[contentId]);
 }
 
-int SyncQueue::getReadProgress(QString contentId) { return queue[contentId]; }
+int SyncQueue::getReadProgress(QString contentId) { return progress[contentId]; }
+
+void SyncQueue::clearReadProgress(QString contentId) { progress.remove(contentId); }
 
 bool SyncQueue::checkThreshold(QString contentId, int threshold) {
-  return threshold > 0 && queue[contentId] > 0 &&
-         abs(Settings::getInstance()->getLastProgress(contentId) - queue[contentId]) >= threshold;
+  return threshold > 0 && progress[contentId] > 0 &&
+         abs(Settings::getInstance()->getLastProgress(contentId) - progress[contentId]) >= threshold;
+}
+
+void SyncQueue::networkConnected() {
+  if (retryQueue.isEmpty() || !Settings::getInstance()->isRetryOnNetwork())
+    return;
+
+  nh_log("Retrying %d items", retryQueue.size());
+
+  foreach (const QString &value, retryQueue) {
+    queue.insert(value);
+  }
+
+  retryQueue.clear();
+  prepareNext();
+}
+
+void SyncQueue::runAll() {
+  QHash<QString, int>::const_iterator i = progress.constBegin();
+  while (i != progress.constEnd()) {
+    queue.insert(i.key());
+  }
+
+  prepareNext();
 }
 
 void SyncQueue::prepareNext() {
   QObject::connect(this, &SyncQueue::finished, this, &SyncQueue::prepareNext, Qt::UniqueConnection);
 
-  QHashIterator<QString, int> i(queue);
-  if (i.hasNext()) {
-    i.next();
-
-    QString contentId = i.key();
-    if (Settings::getInstance()->isEnabled(contentId) && queue[contentId] > 0) {
-      nh_log("Syncing %s", qPrintable(contentId));
-      run(contentId);
-    } else {
-      nh_log("Removing %s from queue and skipping", qPrintable(contentId));
-      queue.remove(contentId);
-      prepareNext();
-    }
-  } else {
+  if (queue.isEmpty()) {
     nh_log("No more items in queue");
     QObject::disconnect(this, &SyncQueue::finished, this, &SyncQueue::prepareNext);
+  } else {
+    QString contentId = *queue.begin();
+    queue.remove(contentId);
+
+    nh_log("Syncing %s", qPrintable(contentId));
+    run(contentId);
   }
 }
 
 void SyncQueue::run(QString contentId, bool manual) {
-  progress = queue[contentId];
+  retryQueue.remove(contentId);
+  currentProgress = progress[contentId];
 
-  if (progress == 0) {
+  if (currentProgress == 0) {
     nh_log("Attempted to sync %s with no saved reading progress", qPrintable(contentId));
     ConfirmationDialogFactory__showErrorDialog("Hardcover.app",
                                                "Reading progress must be at least 2% to sync with Hardcover.app");
@@ -69,7 +89,7 @@ void SyncQueue::run(QString contentId, bool manual) {
   }
 
   failed = false;
-  this->contentId = contentId;
+  this->currentContentId = contentId;
 
   if (manual) {
     dialog = ConfirmationDialogFactory__getConfirmationDialog(nullptr);
@@ -83,18 +103,18 @@ void SyncQueue::run(QString contentId, bool manual) {
   options.icon = true;
   options.contentId = contentId;
 
-  CLI *cli = CLI::update(progress, options);
+  CLI *cli = CLI::update(currentProgress, options);
   QObject::connect(cli, &CLI::success, this, &SyncQueue::success);
   QObject::connect(cli, &CLI::failure, this, &SyncQueue::failure);
 }
 
 void SyncQueue::success() {
-  if (progress == 100) {
-    Settings::getInstance()->setEnabled(contentId, false);
+  if (currentProgress == 100) {
+    Settings::getInstance()->setEnabled(currentContentId, false);
   }
 
-  Settings::getInstance()->setLastProgress(contentId, progress);
-  queue.remove(contentId);
+  Settings::getInstance()->setLastProgress(currentContentId, currentProgress);
+  progress.remove(currentContentId);
 
   finished();
 
@@ -105,8 +125,12 @@ void SyncQueue::success() {
   QTimer::singleShot(800, this, &SyncQueue::closeDialog);
 }
 
-void SyncQueue::failure() {
+void SyncQueue::failure(CLI::FailureReason reason) {
   failed = true;
+
+  if (reason == CLI::FailureReason::Network && Settings::getInstance()->isRetryOnNetwork()) {
+    retryQueue.insert(currentContentId);
+  }
 
   closeDialog();
   finished();

@@ -167,8 +167,17 @@ void MenuController::triggered(QAction *action) {
     break;
 
   case MenuOption::TOGGLE_ENABLED: {
-    QString contentId = SyncController::getInstance()->contentId;
-    Settings::getInstance()->setEnabled(contentId, !Settings::getInstance()->isEnabled(contentId));
+    SyncController *ctl = SyncController::getInstance();
+    QString contentId = ctl->contentId;
+
+    Settings *settings = Settings::getInstance();
+    bool enabled = !settings->isEnabled(contentId);
+    settings->setEnabled(contentId, enabled);
+
+    if (!enabled) {
+      ctl->clearReadProgress();
+    }
+
     break;
   }
 

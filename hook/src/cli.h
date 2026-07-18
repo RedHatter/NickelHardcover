@@ -1,3 +1,5 @@
+#pragma once
+
 #include <QJsonObject>
 #include <QLabel>
 #include <QObject>
@@ -7,6 +9,12 @@ class CLI : public QObject {
   Q_OBJECT
 
 public:
+  enum FailureReason {
+    Network,
+    Error,
+    BookNotFound,
+  };
+
   struct Options {
     bool silent = false;
     bool icon = false;
@@ -38,7 +46,7 @@ public Q_SLOTS:
 Q_SIGNALS:
   void response(QJsonObject doc);
   void success();
-  void failure();
+  void failure(FailureReason reason);
 
 private:
   static QStringList getIdentifier(Options options);
