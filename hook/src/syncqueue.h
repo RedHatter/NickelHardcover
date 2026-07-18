@@ -17,9 +17,12 @@ public:
 
   void run(QString contentId, bool manual = false);
 
+  bool failed;
+
 public Q_SLOTS:
   void prepareNext();
   void success();
+  void failure();
   void closeDialog();
 
 Q_SIGNALS:
@@ -29,5 +32,6 @@ private:
   ConfirmationDialog *dialog = nullptr;
 
   QString contentId;
+  int progress;
   QHash<QString, int> queue;
 };

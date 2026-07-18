@@ -24,6 +24,8 @@ void SyncController::currentViewIndexChanged(int index) {
   if (index < 0)
     return;
 
+  queue->failed = false;
+
   MainWindowController *mwc = MainWindowController__sharedInstance();
   QWidget *cv = MainWindowController__currentView(mwc);
   QString name = cv->objectName();
@@ -101,8 +103,8 @@ void SyncController::pageChanged() {
     QObject::connect(timer, SIGNAL(timeout()), this, SLOT(alarm()));
   }
 
-  if ((queue->getReadProgress(contentId) == 100 && settings->getLastProgress(contentId) != 100) ||
-      queue->checkThreshold(contentId, settings->getPageThreshold())) {
+  if (!queue->failed && ((queue->getReadProgress(contentId) == 100 && settings->getLastProgress(contentId) != 100) ||
+                         queue->checkThreshold(contentId, settings->getPageThreshold()))) {
     nh_log("Triggered threshold auto-sync");
     queue->run(contentId);
   }

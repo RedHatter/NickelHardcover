@@ -59,8 +59,7 @@ void SyncQueue::prepareNext() {
 }
 
 void SyncQueue::run(QString contentId, bool manual) {
-  int progress = queue[contentId];
-  queue.remove(contentId);
+  progress = queue[contentId];
 
   if (progress == 0) {
     nh_log("Attempted to sync %s with no saved reading progress", qPrintable(contentId));
@@ -69,6 +68,7 @@ void SyncQueue::run(QString contentId, bool manual) {
     return;
   }
 
+  failed = false;
   this->contentId = contentId;
 
   if (manual) {
@@ -78,12 +78,6 @@ void SyncQueue::run(QString contentId, bool manual) {
     dialog->open();
   }
 
-  if (progress == 100) {
-    Settings::getInstance()->setEnabled(contentId, false);
-  }
-
-  Settings::getInstance()->setLastProgress(contentId, progress);
-
   CLI::Options options;
   options.silent = !manual;
   options.icon = true;
@@ -91,11 +85,17 @@ void SyncQueue::run(QString contentId, bool manual) {
 
   CLI *cli = CLI::update(progress, options);
   QObject::connect(cli, &CLI::success, this, &SyncQueue::success);
-  QObject::connect(cli, &CLI::failure, this, &SyncQueue::closeDialog);
-  QObject::connect(cli, &CLI::failure, this, &SyncQueue::finished);
+  QObject::connect(cli, &CLI::failure, this, &SyncQueue::failure);
 }
 
 void SyncQueue::success() {
+  if (progress == 100) {
+    Settings::getInstance()->setEnabled(contentId, false);
+  }
+
+  Settings::getInstance()->setLastProgress(contentId, progress);
+  queue.remove(contentId);
+
   finished();
 
   if (dialog == nullptr)
@@ -103,6 +103,13 @@ void SyncQueue::success() {
 
   ConfirmationDialog__setText(dialog, "Success!");
   QTimer::singleShot(800, this, &SyncQueue::closeDialog);
+}
+
+void SyncQueue::failure() {
+  failed = true;
+
+  closeDialog();
+  finished();
 }
 
 void SyncQueue::closeDialog() {
