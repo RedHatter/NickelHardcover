@@ -91,7 +91,28 @@ pub fn update_journal(content_id: &str, book_id: i64, edition_id: i64, pages: i6
     }
     _ => {
       bookmarks.sort_by(|a, b| a.date_created.cmp(&b.date_created));
-      GetJournalQuotes::send_request(get_journal_quotes::Variables { book_id, user_id })?.reading_journals
+
+      let mut offset = 0;
+      let mut reading_journals = GetJournalQuotes::send_request(get_journal_quotes::Variables {
+        book_id,
+        user_id,
+        offset,
+      })?
+      .reading_journals;
+
+      while reading_journals.len() % 100 == 0 {
+        offset += 100;
+        reading_journals.extend(
+          GetJournalQuotes::send_request(get_journal_quotes::Variables {
+            book_id,
+            user_id,
+            offset,
+          })?
+          .reading_journals,
+        );
+      }
+
+      reading_journals
     }
   };
 
