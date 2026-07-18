@@ -179,13 +179,18 @@ pub fn update_journal(content_id: &str, book_id: i64, edition_id: i64, pages: i6
       edition_id,
     );
     debug_log!("InsertReadingJournal, {:?}", insert_bookmarks);
-    send_request::<_, Vec<graphql_client::Response<insert_reading_journal::ResponseData>>>(
-      insert_reading_journal::OPERATION_NAME,
-      insert_bookmarks
-        .into_iter()
-        .map(InsertReadingJournal::build_query)
-        .collect::<Vec<_>>(),
-    )?;
+
+    for chunk in insert_bookmarks
+      .into_iter()
+      .map(InsertReadingJournal::build_query)
+      .collect::<Vec<_>>()
+      .chunks(5)
+    {
+      send_request::<_, Vec<graphql_client::Response<insert_reading_journal::ResponseData>>>(
+        insert_reading_journal::OPERATION_NAME,
+        chunk,
+      )?;
+    }
   }
 
   let update_bookmarks = update_bookmarks.into_iter().filter_map(identity).collect::<Vec<_>>();
@@ -198,13 +203,18 @@ pub fn update_journal(content_id: &str, book_id: i64, edition_id: i64, pages: i6
       edition_id,
     );
     debug_log!("UpdateReadingJournal, {:?}", update_bookmarks);
-    send_request::<_, Vec<graphql_client::Response<update_reading_journal::ResponseData>>>(
-      update_reading_journal::OPERATION_NAME,
-      update_bookmarks
-        .into_iter()
-        .map(UpdateReadingJournal::build_query)
-        .collect::<Vec<_>>(),
-    )?;
+
+    for chunk in update_bookmarks
+      .into_iter()
+      .map(UpdateReadingJournal::build_query)
+      .collect::<Vec<_>>()
+      .chunks(5)
+    {
+      send_request::<_, Vec<graphql_client::Response<update_reading_journal::ResponseData>>>(
+        update_reading_journal::OPERATION_NAME,
+        chunk,
+      )?;
+    }
   }
 
   Ok(())
