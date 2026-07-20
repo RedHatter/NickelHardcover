@@ -4,9 +4,9 @@ query GetJournalQuotes($book_id: Int!, $user_id: Int!, $offset: Int!) {
       event: { _eq: "quote" }
       book_id: { _eq: $book_id }
       user_id: { _eq: $user_id }
-      offset: $offset
-      limit: 100
     }
+    offset: $offset
+    limit: 100
   ) {
     entry
     event
