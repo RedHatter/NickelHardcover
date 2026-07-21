@@ -165,8 +165,8 @@ fn read_opf(opf: &str) -> Result<(Vec<String>, Vec<String>)> {
         State::Identifier(String::new())
       }
       (State::Identifier(s), Event::End(e)) if e.local_name().as_ref() == b"identifier" => {
-        let i = s.rfind(':').unwrap_or(0);
-        if let Some(normalized) = normalize_isbn(&s[i..]) {
+        let id = s.rfind(':').map_or(s.as_str(), |i| &s[i + 1..]);
+        if let Some(normalized) = normalize_isbn(id) {
           isbns.extend(normalized);
         }
 

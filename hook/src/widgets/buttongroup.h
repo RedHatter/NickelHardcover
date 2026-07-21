@@ -7,7 +7,7 @@ class ButtonGroup : public QFrame {
   Q_PROPERTY(QVariant value READ value WRITE setValue NOTIFY valueChanged)
 
 public:
-  ButtonGroup(QList<Item> items, QVariant defaultValue, QString label = nullptr, QWidget *parent = nullptr);
+  ButtonGroup(QList<Item> items, QVariant defaultValue, QString label = QString(), QWidget *parent = nullptr);
 
   void setValue(QVariant value);
   QVariant value() const;

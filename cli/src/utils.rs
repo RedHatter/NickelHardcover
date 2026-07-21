@@ -26,7 +26,7 @@ macro_rules! debug_log {
 macro_rules! log {
   ($($t:tt)*) => {{
     let msg = format!($($t)*);
-    println!("{}", msg);
+    println!("{msg}");
     crate::utils::debug_log(&msg)
   }};
 }

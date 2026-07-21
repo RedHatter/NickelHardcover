@@ -26,8 +26,8 @@ pub mod scalars {
   pub type citext = String;
   pub type jsonb = serde_json::Value;
   pub type json = serde_json::Value;
-  pub type numeric = f32;
-  pub type float8 = f32;
+  pub type numeric = f64;
+  pub type float8 = f64;
   pub type bigint = i64;
   pub type smallint = i16;
   pub type timestamp = String;
@@ -74,7 +74,18 @@ fn try_request<T: Serialize>(request_body: &T) -> Result<Response<Body>> {
       );
     }
     code if !code.is_success() => {
-      bail!("Request failed with status code <i>{code}</i>");
+      let body = res.into_body().read_to_string()?;
+      let msg = format!(
+        "Request failed <i>{code}: {}</i>",
+        serde_json::from_str::<serde_json::Value>(&body)
+          .ok()
+          .as_ref()
+          .and_then(|v| v.get("error"))
+          .and_then(Value::as_str)
+          .unwrap_or(&body)
+      );
+      log!("{msg}")?;
+      bail!("{msg}");
     }
     _ => {}
   }

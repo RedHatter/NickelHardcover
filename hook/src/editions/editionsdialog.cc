@@ -139,7 +139,7 @@ void EditionsDialog::requestPage(int index) {
   vbox->addStretch(1);
   pages->addPage(page);
 
-  if (index == 1) {
+  if (index == 1 && offset > 0) {
     pages->setTotal(qCeil((float)length / offset));
   }
 }

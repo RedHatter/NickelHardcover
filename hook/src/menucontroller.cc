@@ -111,7 +111,7 @@ void MenuController::showMainMenu() {
   QWidget::connect(menu, &QMenu::triggered, this, &MenuController::triggered);
 
   QList<QLabel *> extraField = menu->findChildren<QLabel *>("extraField");
-  if (extraField[3]) {
+  if (extraField.size() > 3 && extraField[3]) {
     extraField[3]->setPixmap(QPixmap(Files::arrow_right));
   }
 }

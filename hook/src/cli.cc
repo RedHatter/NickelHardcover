@@ -10,6 +10,15 @@
 #include "settings.h"
 #include "synccontroller.h"
 
+QString CLI::Options::getContentId() {
+  return contentId.isEmpty() ? SyncController::getInstance()->contentId : contentId;
+}
+
+QString CLI::Options::getQuery() {
+  SyncController *ctl = SyncController::getInstance();
+  return query.isEmpty() ? ctl->title + " " + ctl->author : query;
+}
+
 CLI *CLI::listBookmarks(Options options) { return new CLI({"list-bookmarks"}, options); }
 
 CLI *CLI::listEditions(QString bookId, int readingFormat, QString language, Options options) {
@@ -90,7 +99,7 @@ CLI *CLI::update(int percentage, Options options) {
 }
 
 QStringList CLI::getIdentifier(Options options) {
-  QString contentId = options.contentId.isEmpty() ? SyncController::getInstance()->contentId : options.contentId;
+  QString contentId = options.getContentId();
   QStringList identifiers = {"--content-id", contentId};
 
   QString linkedId = Settings::getInstance()->getLinkedId(contentId);
@@ -173,6 +182,9 @@ void CLI::showIcon(const char *path) {
 void CLI::networkConnected() {
   nh_log("CLI::networkConnected()");
 
+  WirelessManager *wm = WirelessManager__sharedInstance();
+  QObject::disconnect(wm, SIGNAL(networkConnected()), this, SLOT(networkConnected()));
+
   if (options.icon) {
     showIcon(Files::icon);
   }
@@ -226,9 +238,8 @@ void CLI::processFinished(int exitCode) {
       nh_log("%s", qPrintable(message));
 
       ConfirmationDialog *dialog = ConfirmationDialogFactory__getConfirmationDialog(nullptr);
-      QString contentId = options.contentId.isEmpty() ? SyncController::getInstance()->contentId : options.contentId;
       ConfirmationDialog__setAcceptButtonText(
-          dialog, Settings::getInstance()->getLinkedId(contentId).isEmpty() ? "Link book" : "Unlink book");
+          dialog, Settings::getInstance()->getLinkedId(options.getContentId()).isEmpty() ? "Link book" : "Unlink book");
       ConfirmationDialog__setRejectButtonText(dialog, "Cancel");
       ConfirmationDialog__setTitle(dialog, "Hardcover.app");
       ConfirmationDialog__setText(dialog, message);
@@ -251,11 +262,10 @@ void CLI::processFinished(int exitCode) {
 void CLI::linkBook() {
   nh_log("CLI::linkBook()");
 
-  SyncController *ctl = SyncController::getInstance();
-  QString contentId = options.contentId.isEmpty() ? ctl->contentId : options.contentId;
+  QString contentId = options.getContentId();
 
   if (Settings::getInstance()->getLinkedId(contentId).isEmpty()) {
-    SearchDialog::show(contentId, options.query.isEmpty() ? ctl->title + " " + ctl->author : options.query);
+    SearchDialog::show(contentId, options.getQuery());
   } else {
     Settings::getInstance()->setLinkedId(contentId, QString());
   }

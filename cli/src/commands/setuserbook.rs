@@ -50,7 +50,7 @@ pub struct SetUserBook {
 
   /// book rating
   #[argh(option)]
-  rating: Option<f32>,
+  rating: Option<f64>,
 
   /// review body text
   #[argh(option)]

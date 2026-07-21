@@ -20,7 +20,7 @@ public:
   void runAll();
   void run(QString contentId, bool manual = false);
 
-  bool failed;
+  bool failed = false;
 
 public Q_SLOTS:
   void networkConnected();
@@ -36,7 +36,7 @@ private:
   ConfirmationDialog *dialog = nullptr;
 
   QString currentContentId;
-  int currentProgress;
+  int currentProgress = 0;
 
   QHash<QString, int> progress;
   QSet<QString> queue;

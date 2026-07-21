@@ -172,7 +172,7 @@ pub static CONFIG: LazyLock<Config> = LazyLock::new(|| {
     };
 
     Ok(Config {
-      authorization: if config.authorization.is_empty() || config.authorization.starts_with("Bearer") {
+      authorization: if config.authorization.is_empty() || config.authorization.starts_with("Bearer ") {
         config.authorization
       } else {
         "Bearer ".to_string() + &config.authorization

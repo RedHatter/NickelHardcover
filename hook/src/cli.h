@@ -23,6 +23,9 @@ public:
     QString query = QString();
 
     Options() {};
+
+    QString getContentId();
+    QString getQuery();
   };
 
   static CLI *listBookmarks(Options options = Options());

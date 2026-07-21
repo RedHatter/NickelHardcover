@@ -72,11 +72,11 @@ void ReviewDialog::response(QJsonObject doc) {
   SyncController *ctl = SyncController::getInstance();
 
   // Title and author
-  if (ctl->title != nullptr) {
+  if (!ctl->title.isEmpty()) {
     column->addWidget(new Label(Label::Large, ctl->title));
   }
 
-  if (ctl->author != nullptr) {
+  if (!ctl->author.isEmpty()) {
     column->addWidget(new Label(Label::Small, "by " + ctl->author));
   }
 
