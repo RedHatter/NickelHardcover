@@ -57,6 +57,7 @@ void SyncQueue::runAll() {
   QHash<QString, int>::const_iterator i = progress.constBegin();
   while (i != progress.constEnd()) {
     queue.insert(i.key());
+    ++i;
   }
 
   prepareNext();
@@ -85,6 +86,7 @@ void SyncQueue::run(QString contentId, bool manual) {
     nh_log("Attempted to sync %s with no saved reading progress", qPrintable(contentId));
     ConfirmationDialogFactory__showErrorDialog("Hardcover.app",
                                                "Reading progress must be at least 2% to sync with Hardcover.app");
+    finished();
     return;
   }
 
@@ -130,6 +132,8 @@ void SyncQueue::failure(CLI::FailureReason reason) {
 
   if (reason == CLI::FailureReason::Network && Settings::getInstance()->isRetryOnNetwork()) {
     retryQueue.insert(currentContentId);
+  } else {
+    progress.remove(currentContentId);
   }
 
   closeDialog();
