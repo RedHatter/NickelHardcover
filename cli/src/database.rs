@@ -64,9 +64,10 @@ pub fn get_bookmarks(content_id: &str) -> Result<Vec<Bookmark>> {
         location: if let Some(chapter_progress) = chapter_progress
           && let Some(chapter_word_count) = chapter_word_count
           && let Some(total_word_count) = total_word_count
+          && let Some(bookmark_word_count) = bookmark_word_count
           && total_word_count > 0.0
         {
-          Some((bookmark_word_count.unwrap_or(0.0) + chapter_word_count * chapter_progress) / total_word_count)
+          Some((bookmark_word_count + chapter_word_count * chapter_progress) / total_word_count)
         } else {
           None
         },
