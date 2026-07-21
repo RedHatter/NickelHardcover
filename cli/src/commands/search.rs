@@ -36,7 +36,7 @@ pub struct Search {
 }
 
 pub fn run(args: Search) -> Result<()> {
-  log!("{} {:?}", &*VERSION, args);
+  log!("{} {:?}", &*VERSION, args)?;
 
   let results = SearchBooks::send_request(search_books::Variables {
     query: args.query,
@@ -85,14 +85,12 @@ pub fn run(args: Search) -> Result<()> {
     json!({
       "results": hits,
       "page": results.get("page"),
-      "total": match results.get("found").and_then(Value::as_i64) {
-        Some(0) => 0,
-        Some(n) => (n / args.limit).max(1),
+      "total": match results.get("found").and_then(Value::as_f64) {
+        Some(0.0) => 0,
+        Some(n) => ((n / args.limit as f64).ceil() as i64).max(1),
         None => 1,
       }
     })
     .to_string()
-  );
-
-  Ok(())
+  )
 }

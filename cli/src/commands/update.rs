@@ -49,8 +49,8 @@ pub struct Update {
   value: i64,
 }
 
-pub fn run(args: Update) -> Result<()> {
-  log!("{} {:?}", &*VERSION, args);
+pub fn run(args: &Update) -> Result<()> {
+  log!("{} {:?}", &*VERSION, args)?;
 
   let (linked_id, isbn) = normalize_identifiers(args.linked_id, Some(&args.content_id));
   let (book, edition_id, pages) = get_book(isbn, linked_id)?;
@@ -65,10 +65,10 @@ pub fn run(args: Update) -> Result<()> {
   )?;
   let started_at = started_at.unwrap_or(Local::now().format("%Y-%m-%d").to_string());
 
-  let progress_pages = (pages * args.value) / 100;
+  let progress_pages = (pages as f64 * (args.value as f64 / 100.0)).round() as i64;
 
   if let Some(user_read_id) = user_read_id {
-    log!("Update read `{user_read_id}` for edition `{edition_id}` to page `{progress_pages}`");
+    log!("Update read `{user_read_id}` for edition `{edition_id}` to page `{progress_pages}`")?;
 
     UpdateRead::send_request(update_read::Variables {
       id: user_read_id,
@@ -77,12 +77,12 @@ pub fn run(args: Update) -> Result<()> {
       started_at,
     })?;
   } else {
-    log!("Insert new read for edition `{edition_id}` at page `{progress_pages}`");
+    log!("Insert new read for edition `{edition_id}` at page `{progress_pages}`")?;
 
     InsertRead::send_request(insert_read::Variables {
       user_book_id,
-      progress_pages,
       edition_id,
+      progress_pages,
       started_at,
     })?;
   }

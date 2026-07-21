@@ -37,7 +37,7 @@ pub struct ListEditions {
 }
 
 pub fn run(args: ListEditions) -> Result<()> {
-  log!("{} {:?}", &*VERSION, args);
+  log!("{} {:?}", &*VERSION, args)?;
 
   let reading_format = match args.reading_format {
     Some(format @ (1 | 2 | 4)) => vec![format],
@@ -109,7 +109,5 @@ pub fn run(args: ListEditions) -> Result<()> {
         )
         .collect::<Vec<_>>()
     })
-  );
-
-  Ok(())
+  )
 }

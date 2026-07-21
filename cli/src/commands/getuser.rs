@@ -34,7 +34,7 @@ pub fn get_user() -> Result<&'static get_me::GetMeMe> {
     .next()
     .context("Failed to find Hardcover.app user")?;
 
-  log!("user {}", user.id);
+  log!("user {}", user.id)?;
 
   Ok(USER.get_or_init(|| user))
 }
@@ -44,8 +44,8 @@ pub fn get_user() -> Result<&'static get_me::GetMeMe> {
 #[argh(subcommand, name = "get-user")]
 pub struct GetUser {}
 
-pub fn run(args: GetUser) -> Result<()> {
-  log!("{} {:?}", &*VERSION, args);
+pub fn run(args: &GetUser) -> Result<()> {
+  log!("{} {:?}", &*VERSION, args)?;
 
   let user = get_user()?;
 
@@ -58,7 +58,7 @@ pub fn run(args: GetUser) -> Result<()> {
       "account_privacy_setting": JournalPrivacy::try_from(user.account_privacy_setting_id)
         .context("Failed to parse <i>account_privacy_setting_id</i>")?,
     })
-  );
+  )?;
 
   Ok(())
 }

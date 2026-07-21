@@ -19,6 +19,7 @@ use crate::utils::{GraphQLQueryExt, VERSION, book_not_found, normalize_identifie
 )]
 pub struct GetEdition;
 
+#[allow(clippy::trivially_copy_pass_by_ref)]
 fn filter_edition(edition: &&get_edition::Edition) -> bool {
   edition.reading_format_id != 2
 }
@@ -44,8 +45,8 @@ pub struct GetUserBook {
   linked_id: Option<i64>,
 }
 
-pub fn run(args: GetUserBook) -> Result<()> {
-  log!("{} {:?}", &*VERSION, args);
+pub fn run(args: &GetUserBook) -> Result<()> {
+  log!("{} {:?}", &*VERSION, args)?;
 
   let (linked_id, isbn) = normalize_identifiers(args.linked_id, args.content_id.as_deref());
   let (book, _, _) = get_book(isbn, linked_id)?;
@@ -62,7 +63,7 @@ pub fn run(args: GetUserBook) -> Result<()> {
     })
   });
 
-  log!("BEGIN_JSON\n{user_book}");
+  log!("BEGIN_JSON\n{user_book}")?;
 
   Ok(())
 }
@@ -112,10 +113,12 @@ pub fn get_book(isbn: Vec<String>, linked_id: i64) -> Result<(get_edition::GetEd
     .or(book.default_cover_edition.as_ref().filter(filter_edition))
     .or(book.ebook_edition.first().filter(filter_edition))
     .or(book.paper_edition.first().filter(filter_edition))
-    .expect(&format!(
-      "Unable to find an edition for book <i>{}</i>. Does the book have any non-audiobook editions?",
-      book.id
-    ))
+    .unwrap_or_else(|| {
+      panic!(
+        "Unable to find an edition for book <i>{}</i>. Does the book have any non-audiobook editions?",
+        book.id
+      )
+    })
     .id;
 
   let pages = book
@@ -137,10 +140,8 @@ pub fn get_book(isbn: Vec<String>, linked_id: i64) -> Result<(get_edition::GetEd
     .or(book.ebook_edition.first().and_then(map_pages))
     .or(book.paper_edition.first().and_then(map_pages))
     .or(book.pages)
-    .expect(&format!(
-        "Unable to find the total page count for book <i>{}</i>. Please update the book on Hardcover.app with the correct page count.",
-        book.id)
-      );
+    .unwrap_or_else(|| panic!("Unable to find the total page count for book <i>{}</i>. Please update the book on Hardcover.app with the correct page count.",
+        book.id));
 
   Ok((book, edition_id, pages))
 }

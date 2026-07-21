@@ -66,7 +66,7 @@ pub struct SetUserBook {
 }
 
 pub fn run(args: SetUserBook) -> Result<()> {
-  log!("{} {:?}", &*VERSION, args);
+  log!("{} {:?}", &*VERSION, args)?;
 
   let (linked_id, isbn) = normalize_identifiers(args.linked_id, args.content_id.as_deref());
   let (book, edition_id, _) = get_book(isbn, linked_id)?;
@@ -129,7 +129,7 @@ pub fn update_or_insert_user_book(
         .status_id
         .is_some_and(|status_id| status_id != user_book.status_id)
     {
-      log!("Update user book `{}`", user_book.id);
+      log!("Update user book `{}`", user_book.id)?;
 
       UpdateUserBook::send_request(update_user_book::Variables {
         user_book_id: user_book.id,
@@ -155,7 +155,7 @@ pub fn update_or_insert_user_book(
     }
   } else {
     // Insert new user book
-    log!("Insert user book for book `{}` and edition `{edition_id}`", book.id);
+    log!("Insert user book for book `{}` and edition `{edition_id}`", book.id)?;
 
     let user_book = InsertUserBook::send_request(insert_user_book::Variables {
       object: insert_user_book::UserBookCreateInput {
@@ -183,7 +183,7 @@ pub fn update_or_insert_user_book(
   };
 
   if let Some(id) = user_read_id {
-    log!("user read `{id}`");
+    log!("user read `{id}`")?;
   }
 
   Ok((user_book_id, user_read_id, started_at))

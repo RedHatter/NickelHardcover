@@ -46,7 +46,7 @@ pub struct InsertJournal {
 }
 
 pub fn run(args: InsertJournal) -> Result<()> {
-  log!("{} {:?}", &*VERSION, args);
+  log!("{} {:?}", &*VERSION, args)?;
 
   let (linked_id, isbn) = normalize_identifiers(args.linked_id, args.content_id.as_deref());
   let (book, edition_id, pages) = get_book(isbn, linked_id)?;

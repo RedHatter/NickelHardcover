@@ -18,11 +18,12 @@ fn isbn_13_check_digit(digits: &[u32]) -> u32 {
 }
 
 fn isbn_10_check_digit(digits: &[u32]) -> u32 {
-  let mut sum = 0;
-  for i in 0..9 {
-    sum += digits[i] * (10 - i as u32);
-  }
-
+  let sum = digits
+    .iter()
+    .enumerate()
+    .take(9)
+    .map(|(i, digit)| digit * (10 - i as u32))
+    .sum::<u32>();
   let sum_m = sum % 11;
   if sum_m == 0 { 0 } else { 11 - sum_m }
 }
@@ -51,7 +52,7 @@ pub fn normalize_isbn(isbn: &str) -> Option<Vec<String>> {
   let mut isbn = isbn.to_ascii_uppercase();
   isbn.retain(char::is_alphanumeric);
 
-  if isbn.len() == 10 && isbn.starts_with("B") {
+  if isbn.len() == 10 && isbn.starts_with('B') {
     return Some(vec![isbn]);
   }
 
@@ -102,26 +103,24 @@ fn get_opf_path(manifest: &str) -> Result<String> {
           xml_version = version;
         }
       }
-      Ok(Event::Empty(e)) => {
-        if e.name().as_ref() == b"rootfile" {
-          let media_type = e
-            .try_get_attribute("media-type")
-            .context("Failed to decode <i>media-type</i> attribute")?;
-          if let Some(media_type) = media_type
-            && media_type
+      Ok(Event::Empty(e)) if e.name().as_ref() == b"rootfile" => {
+        let media_type = e
+          .try_get_attribute("media-type")
+          .context("Failed to decode <i>media-type</i> attribute")?;
+        if let Some(media_type) = media_type
+          && media_type
+            .normalized_value(xml_version)
+            .context("Failed to decode <i>media-type</i> attribute value")?
+            == "application/oebps-package+xml"
+        {
+          return Ok(
+            e.try_get_attribute("full-path")
+              .context("Failed to decode <i>full-path</i> attribute")?
+              .context("Failed to find <i>full-path</i> attribute")?
               .normalized_value(xml_version)
-              .context("Failed to decode <i>media-type</i> attribute value")?
-              == "application/oebps-package+xml"
-          {
-            return Ok(
-              e.try_get_attribute("full-path")
-                .context("Failed to decode <i>full-path</i> attribute")?
-                .context("Failed to find <i>full-path</i> attribute")?
-                .normalized_value(xml_version)
-                .context("Failed to decode <i>full-path</i> attribute value")?
-                .to_string(),
-            );
-          }
+              .context("Failed to decode <i>full-path</i> attribute value")?
+              .to_string(),
+          );
         }
       }
       _ => (),
@@ -132,12 +131,6 @@ fn get_opf_path(manifest: &str) -> Result<String> {
 }
 
 fn read_opf(opf: &str) -> Result<(Vec<String>, Vec<String>)> {
-  let mut reader = Reader::from_str(opf);
-
-  let mut xml_version = XmlVersion::Implicit1_0;
-  let mut isbns = Vec::<String>::new();
-  let mut items = Vec::<String>::new();
-
   #[derive(Debug)]
   enum State {
     Start,
@@ -145,6 +138,13 @@ fn read_opf(opf: &str) -> Result<(Vec<String>, Vec<String>)> {
     Identifier(String),
     Manifest,
   }
+
+  let mut reader = Reader::from_str(opf);
+
+  let mut xml_version = XmlVersion::Implicit1_0;
+  let mut isbns = Vec::<String>::new();
+  let mut items = Vec::<String>::new();
+
   let mut state = State::Start;
 
   loop {
@@ -205,7 +205,7 @@ fn read_opf(opf: &str) -> Result<(Vec<String>, Vec<String>)> {
       }
       (State::Manifest, Event::End(e)) if e.local_name().as_ref() == b"manifest" => State::Start,
       (State::Start, Event::Eof) => break,
-      (state, Event::Eof) => bail!("Unexpected end of file in {:?}", state),
+      (state, Event::Eof) => bail!("Unexpected end of file in {state:?}"),
       (state, _) => state,
     };
   }
@@ -214,6 +214,12 @@ fn read_opf(opf: &str) -> Result<(Vec<String>, Vec<String>)> {
 }
 
 fn read_item(item: &str) -> Result<Vec<String>> {
+  enum State {
+    Start,
+    Body,
+    Style,
+  }
+
   static RE: LazyLock<Result<Regex, regex::Error>> = LazyLock::new(|| {
     Regex::new(
       r"(?:-10 |-13 )?((?:[\u2010-\u2015\-\.\^ \t\u00a0\u00ad\u2212]?[0-9]){13}|(?:[\u2010-\u2015\-\.\^ \t\u00a0\u00ad\u2212]?[0-9]){9}[\u2010-\u2015\-\.\^ \t\u00a0\u00ad\u2212]]?[0-9xX])",
@@ -221,14 +227,7 @@ fn read_item(item: &str) -> Result<Vec<String>> {
   });
 
   let mut reader = Reader::from_str(item);
-
   let mut text = String::new();
-
-  enum State {
-    Start,
-    Body,
-    Style,
-  }
   let mut state = State::Start;
 
   loop {

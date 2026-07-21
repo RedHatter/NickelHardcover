@@ -1,4 +1,5 @@
 use std::fmt::Debug;
+use std::fmt::Write;
 use std::fs::write;
 use std::sync::{LazyLock, Mutex};
 
@@ -15,9 +16,9 @@ use crate::hardcover::send_request;
 #[allow(clippy::crate_in_macro_def)]
 #[macro_export]
 macro_rules! debug_log {
-  ($($t:tt)*) => {{
-    crate::utils::debug_log(&format!($($t)*));
-  }};
+  ($($t:tt)*) => {
+    crate::utils::debug_log(&format!($($t)*))
+  };
 }
 
 #[allow(clippy::crate_in_macro_def)]
@@ -25,8 +26,8 @@ macro_rules! debug_log {
 macro_rules! log {
   ($($t:tt)*) => {{
     let msg = format!($($t)*);
-    crate::utils::debug_log(&msg);
     println!("{}", msg);
+    crate::utils::debug_log(&msg)
   }};
 }
 
@@ -34,11 +35,8 @@ pub static VERSION: LazyLock<&str> = LazyLock::new(|| option_env!("VERSION").unw
 
 static LOG: LazyLock<Mutex<String>> = LazyLock::new(|| Mutex::new(String::new()));
 
-pub fn debug_log(msg: &str) {
-  LOG
-    .lock()
-    .unwrap()
-    .push_str(&format!("{} {msg}\n", Local::now().format("%c")));
+pub fn debug_log(msg: &str) -> Result<()> {
+  writeln!(LOG.lock().unwrap(), "{} {msg}", Local::now().format("%c")).context("Failed to write to log")
 }
 
 pub fn write_logfile() {
@@ -89,7 +87,8 @@ pub fn book_not_found(msg: &str) -> ! {
   log!(
     "BEGIN_JSON\n{{\"error_code\": \"BOOK_NOT_FOUND\", \"message\": \"{}\"}}",
     msg
-  );
+  )
+  .expect("Failed to log `BOOK_NOT_FOUND` error");
 
   if CONFIG.debug {
     write_logfile();
@@ -99,11 +98,11 @@ pub fn book_not_found(msg: &str) -> ! {
 }
 
 pub trait AggregateErrors {
-  fn errors<'a>(&'a self) -> impl Iterator<Item = &'a str>;
+  fn errors(&self) -> impl Iterator<Item = &str>;
 }
 
 impl<Data: AggregateErrors> AggregateErrors for graphql_client::Response<Data> {
-  fn errors<'a>(&'a self) -> impl Iterator<Item = &'a str> {
+  fn errors(&self) -> impl Iterator<Item = &str> {
     self
       .errors
       .iter()
@@ -114,7 +113,7 @@ impl<Data: AggregateErrors> AggregateErrors for graphql_client::Response<Data> {
 }
 
 impl<T: AggregateErrors> AggregateErrors for Vec<T> {
-  fn errors<'a>(&'a self) -> impl Iterator<Item = &'a str> {
+  fn errors(&self) -> impl Iterator<Item = &str> {
     self.iter().flat_map(AggregateErrors::errors)
   }
 }
@@ -133,7 +132,7 @@ where
 {
   fn send_request(variables: Self::Variables) -> Result<Self::ResponseData> {
     let body = Self::build_query(variables);
-    debug_log!("{}, {:?}", body.operation_name, body.variables);
+    debug_log!("{}, {:?}", body.operation_name, body.variables)?;
     send_request::<_, Response<Self::ResponseData>>(body.operation_name, &body)?
       .data
       .context(format!("{} response is None", body.operation_name))

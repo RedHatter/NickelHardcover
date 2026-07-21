@@ -40,8 +40,8 @@ pub struct ListJournal {
   offset: i64,
 }
 
-pub fn run(args: ListJournal) -> Result<()> {
-  log!("{} {:?}", &*VERSION, args);
+pub fn run(args: &ListJournal) -> Result<()> {
+  log!("{} {:?}", &*VERSION, args)?;
 
   let (linked_id, isbn) = normalize_identifiers(args.linked_id, args.content_id.as_deref());
   let user_id = get_user()?.id;
@@ -69,14 +69,14 @@ pub fn run(args: ListJournal) -> Result<()> {
   })
   .collect::<Vec<_>>();
 
-  log!("Found {}", journals.len());
-  log!("BEGIN_JSON\n{}", json!({ "reading_journals": journals}));
+  log!("Found {}", journals.len())?;
+  log!("BEGIN_JSON\n{}", json!({ "reading_journals": journals}))?;
 
   Ok(())
 }
 
 pub fn reduce_slate(data: &Value) -> String {
-  return match data {
+  match data {
     Value::Array(array) => array.iter().map(reduce_slate).collect::<String>(),
     Value::Object(map) => {
       let mut str = match map.get("type").and_then(Value::as_str) {
@@ -93,5 +93,5 @@ pub fn reduce_slate(data: &Value) -> String {
       str
     }
     _ => String::new(),
-  };
+  }
 }

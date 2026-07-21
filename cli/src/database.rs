@@ -6,6 +6,7 @@ use crate::{config::CONFIG, epub::normalize_isbn};
 
 #[derive(Debug)]
 pub struct Bookmark {
+  #[allow(dead_code)]
   pub id: String,
   pub text: String,
   pub annotation: Option<String>,

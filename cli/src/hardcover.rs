@@ -27,9 +27,9 @@ pub mod scalars {
   pub type jsonb = serde_json::Value;
   pub type json = serde_json::Value;
   pub type numeric = f32;
-  pub type bigint = i64;
   pub type float8 = f32;
-  pub type smallint = i8;
+  pub type bigint = i64;
+  pub type smallint = i16;
   pub type timestamp = String;
   pub type timestamptz = DateTime<Utc>;
 }
@@ -46,7 +46,7 @@ fn try_request<T: Serialize>(request_body: &T) -> Result<Response<Body>> {
   let res = CLIENT
     .post("https://api.hardcover.app/v1/graphql")
     .header("authorization", &CONFIG.authorization)
-    .send_json(&request_body)
+    .send_json(request_body)
     .context("Failed to send request")?;
 
   match res.status() {
@@ -64,8 +64,9 @@ fn try_request<T: Serialize>(request_body: &T) -> Result<Response<Body>> {
         .signed_duration_since(chrono::Utc::now())
         .to_std()
         .context("Timestamp is in the past")?;
-      log!("Encountered http 429 sleeping for {}", duration.as_secs());
+      log!("Encountered http 429 sleeping for {}", duration.as_secs())?;
       sleep(duration);
+      bail!("Rate limited, retrying");
     }
     StatusCode::UNAUTHORIZED => {
       panic!(
@@ -99,7 +100,7 @@ pub fn send_request<T: Serialize, R: DeserializeOwned + Debug + AggregateErrors>
   .read_json::<R>()
   .context(format!("Failed to parse <i>{operation_name}</i> response"))?;
 
-  debug_log!("{:?}", data);
+  debug_log!("{:?}", data)?;
 
   let errors = data.errors().join("<br>>");
   if !errors.is_empty() {
