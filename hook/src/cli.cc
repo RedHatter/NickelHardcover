@@ -112,7 +112,6 @@ QStringList CLI::getIdentifier(Options options) {
 
 CLI::CLI(QStringList arguments, Options options, QObject *parent)
     : QObject(parent), arguments(arguments), options(options) {
-
   WirelessWorkflowManager *wfm = WirelessWorkflowManager__sharedInstance();
 
   if (WirelessWorkflowManager__isInternetAccessible(wfm)) {
@@ -122,10 +121,11 @@ CLI::CLI(QStringList arguments, Options options, QObject *parent)
 
     showIcon(Files::wifi);
 
+    // The `networkConnected` signal can be unreliable so we also poll the
+    // connection status every second for 30 seconds
     timer = new QTimer(this);
-    connect(timer, &QTimer::timeout, this, &CLI::connectingFailed);
-    timer->setSingleShot(true);
-    timer->start(30000);
+    connect(timer, &QTimer::timeout, this, &CLI::checkConnected);
+    timer->start(1000);
 
     WirelessManager *wm = WirelessManager__sharedInstance();
     QObject::connect(wm, SIGNAL(networkConnected()), this, SLOT(networkConnected()));
@@ -146,6 +146,20 @@ CLI::CLI(QStringList arguments, Options options, QObject *parent)
 CLI::~CLI() {
   if (icon != nullptr) {
     icon->deleteLater();
+  }
+}
+
+void CLI::checkConnected() {
+  WirelessWorkflowManager *wfm = WirelessWorkflowManager__sharedInstance();
+
+  if (WirelessWorkflowManager__isInternetAccessible(wfm)) {
+    networkConnected();
+  }
+
+  counter++;
+
+  if (counter > 30) {
+    connectingFailed();
   }
 }
 

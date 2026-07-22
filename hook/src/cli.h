@@ -41,6 +41,7 @@ public:
   static CLI *update(int percentage, Options options = Options());
 
 public Q_SLOTS:
+  void checkConnected();
   void networkConnected();
   void connectingFailed();
   void processFinished(int exitCode);
@@ -62,6 +63,7 @@ private:
 
   QLabel *icon = nullptr;
   QTimer *timer = nullptr;
+  int counter = 0;
   QStringList arguments;
   Options options;
 };
