@@ -15,6 +15,7 @@ constexpr char const *arrow_menu = ":/images/menu/settings_menu_arrow.png";
 constexpr char const *arrow_right = ":/images/menu/label_arrow_right.png";
 constexpr char const *arrow_up = ":/images/widgets/settings_date_time_up.png";
 constexpr char const *clear = ":/nickelhardcover/clear.png";
+constexpr char const *error = ":/nickelhardcover/error.png";
 constexpr char const *icon = ":/nickelhardcover/icon.png";
 constexpr char const *icon_hit = ":/nickelhardcover/icon_hit.png";
 constexpr char const *left_star = ":/nickelhardcover/left_star.png";

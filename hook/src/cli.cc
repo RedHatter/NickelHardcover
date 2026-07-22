@@ -162,8 +162,10 @@ void CLI::connectingFailed() {
     timer = nullptr;
   }
 
-  deleteLater();
+  showIcon(Files::error);
+
   failure(FailureReason::Network);
+  QTimer::singleShot(800, this, &SyncQueue::deleteLater);
 }
 
 void CLI::showIcon(const char *path) {
