@@ -130,7 +130,7 @@ pub struct Config {
   pub retry_on_network: bool,
   pub sqlite_path: String,
   pub sync_bookmarks: SyncBookmarks,
-  pub sync_daily: u8,
+  pub sync_daily: i8,
   pub sync_on_close: SyncOnClose,
   pub threshold: u8,
 }
@@ -145,7 +145,7 @@ impl Default for Config {
       retry_on_network: false,
       sqlite_path: "/mnt/onboard/.kobo/KoboReader.sqlite".into(),
       sync_bookmarks: SyncBookmarks::Never,
-      sync_daily: 0,
+      sync_daily: -1,
       sync_on_close: SyncOnClose::Never,
       threshold: 0,
     }

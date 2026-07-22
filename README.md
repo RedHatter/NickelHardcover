@@ -82,8 +82,8 @@ auto_sync_default = false
 sync_bookmarks = always
 
 ; Run auto-sync at the specified hour even if the Kobo is asleep. Possible
-; values are 1-24 where 1 is 1am, 22 is 10pm, etc. Set to 0 to disable.
-; sync_daily = 2
+; values are 0-23 where 0 is midnight, 1 is 1am, 22 is 10pm, etc. Set to -1 to disable.
+; sync_daily = 11
 
 ; Whether to run auto-sync after closing a book or the Kobo is put to sleep.
 ; - always    Run auto-sync every time a book is closed

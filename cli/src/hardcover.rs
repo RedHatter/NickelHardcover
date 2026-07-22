@@ -8,6 +8,7 @@ use retry::{
   retry,
 };
 use serde::{Serialize, de::DeserializeOwned};
+use serde_json::Value;
 use ureq::{
   Agent, Body,
   http::{Response, StatusCode},
@@ -77,7 +78,7 @@ fn try_request<T: Serialize>(request_body: &T) -> Result<Response<Body>> {
       let body = res.into_body().read_to_string()?;
       let msg = format!(
         "Request failed <i>{code}: {}</i>",
-        serde_json::from_str::<serde_json::Value>(&body)
+        serde_json::from_str::<Value>(&body)
           .ok()
           .as_ref()
           .and_then(|v| v.get("error"))

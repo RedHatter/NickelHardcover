@@ -252,26 +252,17 @@ QFrame *SettingsDialog::buildAutoSync() {
   bool is24HourClock = settings->is24HourClock();
 
   QList<Item> hours;
-  for (int hour = 1; hour <= 24; hour++) {
-    QString text;
-
-    if (is24HourClock) {
-      text = QString("%1:00").arg(hour == 24 ? 0 : hour, 2, 10, QChar('0'));
-    } else if (hour < 12) {
-      text = QString::number(hour).append(" AM");
-    } else if (hour == 12) {
-      text = "12 PM";
-    } else if (hour == 24) {
-      text = "12 AM";
-    } else {
-      text = QString::number(hour - 12).append(" PM");
-    }
-
+  for (int hour = 0; hour <= 23; hour++) {
+    QString text = is24HourClock ? QString("%1:00").arg(hour, 2, 10, QChar('0'))
+                   : hour == 0   ? "12 AM"
+                   : hour < 12   ? QString::number(hour).append(" AM")
+                   : hour == 12  ? "12 PM"
+                                 : QString::number(hour - 12).append(" PM");
     hours.append(Item{text, hour});
   }
 
   MenuRow *menuRow =
-      new MenuRow("Once per day", MenuRowType::Menu, {{"Never", 0}, {"Set time of day", MenuRow::OPEN_DIALOG}}, hours,
+      new MenuRow("Once per day", MenuRowType::Menu, {{"Never", -1}, {"Set time of day", MenuRow::OPEN_DIALOG}}, hours,
                   settings->getSyncDaily());
   QObject::connect(menuRow, &MenuRow::triggered, this, &SettingsDialog::setSyncDaily);
   layout->addWidget(menuRow);

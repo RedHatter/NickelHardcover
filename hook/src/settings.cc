@@ -69,16 +69,8 @@ int Settings::getLastProgress(QString contentId) { return getValue(contentId, "p
 void Settings::setSyncDaily(int value) { config->setValue("sync_daily", value); }
 
 int Settings::getSyncDaily() {
-  int hour = config->value("sync_daily").toInt();
-  if (hour <= 0) {
-    return 0;
-  }
-
-  if (hour <= 24) {
-    return hour;
-  }
-
-  return 0;
+  int hour = config->value("sync_daily", -1).toInt();
+  return hour >= 0 && hour <= 23 ? hour : -1;
 }
 
 void Settings::setAutoSyncDefault(bool value) { config->setValue("auto_sync_default", value); }

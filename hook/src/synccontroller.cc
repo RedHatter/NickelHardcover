@@ -90,7 +90,7 @@ void SyncController::pageChanged() {
 
   lastSyncDaily = syncDaily;
 
-  if (timer == nullptr && syncDaily > 0 && queue->checkThreshold(contentId, 1)) {
+  if (timer == nullptr && syncDaily >= 0 && queue->checkThreshold(contentId, 1)) {
     timer = construct_PowerTimer("NickelHardcover-alarm", this);
 
     QDateTime time = QDateTime::currentDateTime();
