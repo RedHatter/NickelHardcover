@@ -176,7 +176,7 @@ static struct nh_dlsym NickelHardcoverDlsym[] = {
   { .name = "_ZNK7Content8getTitleEv",                                         .out = nh_symoutptr(Content__getTitle) },
   { .name = "_ZNK7Content14getAttributionEv",                                  .out = nh_symoutptr(Content__getAttribution) },
   { .name = "_ZNK7Content20isFullBookAccessibleEv",                            .out = nh_symoutptr(Content__isFullBookAccessible) },
-  { .name = "_ZNK6Volume12isInstapaperEv",                                     .out = nh_symoutptr(Volume__isInstapaper) },
+  { .name = "_ZNK6Volume12isInstapaperEv",                                     .out = nh_symoutptr(Volume__isInstapaper), .desc = "", .optional = true  },
 
   { .name = "_ZN20MainWindowController14sharedInstanceEv",                     .out = nh_symoutptr(MainWindowController__sharedInstance) },
   { .name = "_ZNK20MainWindowController11currentViewEv",                       .out = nh_symoutptr(MainWindowController__currentView) },
@@ -265,7 +265,7 @@ _nh_ReadingController__setVolume(ReadingController *_this, Volume *volume, Bookm
   syncController->contentId = Content__getId(volume);
   syncController->title = Content__getTitle(volume);
   syncController->author = Content__getAttribution(volume);
-  syncController->syncDisabled = !Content__isFullBookAccessible(volume) || Volume__isInstapaper(volume);
+  syncController->syncDisabled = !Content__isFullBookAccessible(volume) || (Volume__isInstapaper && Volume__isInstapaper(volume));
 
   MainWindowController *mwc = MainWindowController__sharedInstance();
   QWidget *cv = MainWindowController__currentView(mwc);
