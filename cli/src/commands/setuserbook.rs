@@ -4,7 +4,7 @@ use graphql_client::GraphQLQuery;
 
 use macros::AggregateErrors;
 
-use crate::commands::getuserbook::{get_book, get_edition::GetEditionEditionsBook};
+use crate::commands::getuserbook::{Book, get_book};
 use crate::log;
 use crate::utils::{GraphQLQueryExt, VERSION, normalize_identifiers};
 
@@ -69,11 +69,10 @@ pub fn run(args: SetUserBook) -> Result<()> {
   log!("{} {:?}", &*VERSION, args)?;
 
   let (linked_id, isbn) = normalize_identifiers(args.linked_id, args.content_id.as_deref());
-  let (book, edition_id, _) = get_book(isbn, linked_id)?;
+  let book = get_book(isbn, linked_id)?;
 
   update_or_insert_user_book(
-    book,
-    edition_id,
+    &book,
     update_user_book::UserBookUpdateInput {
       status_id: args.status,
       review_has_spoilers: args.spoilers,
@@ -112,22 +111,22 @@ pub fn run(args: SetUserBook) -> Result<()> {
 }
 
 pub fn update_or_insert_user_book(
-  book: GetEditionEditionsBook,
-  edition_id: i64,
+  book: &Book,
   object: update_user_book::UserBookUpdateInput,
 ) -> Result<(i64, Option<i64>, Option<String>)> {
-  let (user_book_id, user_read_id, started_at) = if let Some(user_book) = book.user_books.into_iter().next() {
-    if object.review_slate.is_some()
-      || (object.rating.is_some() && object.rating != user_book.rating)
-      || object
-        .review_has_spoilers
-        .is_some_and(|review_has_spoilers| review_has_spoilers != user_book.review_has_spoilers)
-      || object
-        .sponsored_review
-        .is_some_and(|sponsored_review| sponsored_review != user_book.sponsored_review)
-      || object
-        .status_id
-        .is_some_and(|status_id| status_id != user_book.status_id)
+  let (user_book_id, user_read_id, started_at) = match book.user_book.as_ref() {
+    Some(user_book)
+      if object.review_slate.is_some()
+        || (object.rating.is_some() && object.rating != user_book.rating)
+        || object
+          .review_has_spoilers
+          .is_some_and(|review_has_spoilers| review_has_spoilers != user_book.review_has_spoilers)
+        || object
+          .sponsored_review
+          .is_some_and(|sponsored_review| sponsored_review != user_book.sponsored_review)
+        || object
+          .status_id
+          .is_some_and(|status_id| status_id != user_book.status_id) =>
     {
       log!("Update user book `{}`", user_book.id)?;
 
@@ -144,7 +143,37 @@ pub fn update_or_insert_user_book(
       .map_or((user_book.id, None, None), |read| {
         (user_book.id, Some(read.id), read.started_at)
       })
-    } else {
+    }
+    Some(user_book) => user_book
+      .user_book_reads
+      .first()
+      .map_or((user_book.id, None, None), |read| {
+        (user_book.id, Some(read.id), read.started_at.clone())
+      }),
+    None => {
+      // Insert new user book
+      log!(
+        "Insert user book for book `{}` and edition `{}`",
+        book.book_id,
+        book.edition_id
+      )?;
+
+      let user_book = InsertUserBook::send_request(insert_user_book::Variables {
+        object: insert_user_book::UserBookCreateInput {
+          book_id: book.book_id,
+          edition_id: Some(book.edition_id),
+          status_id: object.status_id,
+          rating: object.rating,
+          review_slate: object.review_slate,
+          sponsored_review: object.sponsored_review,
+          reviewed_at: object.reviewed_at,
+          review_has_spoilers: object.review_has_spoilers,
+          ..insert_user_book::UserBookCreateInput::default()
+        },
+      })?
+      .insert_user_book
+      .and_then(|update| update.user_book)
+      .context("Failed to find inserted user book")?;
       user_book
         .user_book_reads
         .into_iter()
@@ -153,33 +182,6 @@ pub fn update_or_insert_user_book(
           (user_book.id, Some(read.id), read.started_at)
         })
     }
-  } else {
-    // Insert new user book
-    log!("Insert user book for book `{}` and edition `{edition_id}`", book.id)?;
-
-    let user_book = InsertUserBook::send_request(insert_user_book::Variables {
-      object: insert_user_book::UserBookCreateInput {
-        book_id: book.id,
-        edition_id: Some(edition_id),
-        status_id: object.status_id,
-        rating: object.rating,
-        review_slate: object.review_slate,
-        sponsored_review: object.sponsored_review,
-        reviewed_at: object.reviewed_at,
-        review_has_spoilers: object.review_has_spoilers,
-        ..insert_user_book::UserBookCreateInput::default()
-      },
-    })?
-    .insert_user_book
-    .and_then(|update| update.user_book)
-    .context("Failed to find inserted user book")?;
-    user_book
-      .user_book_reads
-      .into_iter()
-      .next()
-      .map_or((user_book.id, None, None), |read| {
-        (user_book.id, Some(read.id), read.started_at)
-      })
   };
 
   if let Some(id) = user_read_id {

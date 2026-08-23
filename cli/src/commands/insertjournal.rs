@@ -49,18 +49,18 @@ pub fn run(args: InsertJournal) -> Result<()> {
   log!("{} {:?}", &*VERSION, args)?;
 
   let (linked_id, isbn) = normalize_identifiers(args.linked_id, args.content_id.as_deref());
-  let (book, edition_id, pages) = get_book(isbn, linked_id)?;
+  let book = get_book(isbn, linked_id)?;
 
   InsertReadingJournal::send_request(insert_reading_journal::Variables {
-    book_id: book.id,
-    edition_id,
+    book_id: book.book_id,
+    edition_id: book.edition_id,
     event: "note".into(),
     privacy_setting_id: args.privacy.unwrap_or(CONFIG.journal_privacy).get_value()?,
     entry: args.text,
     action_at: None,
     metadata: Some(json!({
-      "page": (pages as f64 * (args.percentage / 100.0)).round() as i64,
-      "possible": pages,
+      "page": (book.pages as f64 * (args.percentage / 100.0)).round() as i64,
+      "possible": book.pages,
       "percent": args.percentage,
     })),
   })?;

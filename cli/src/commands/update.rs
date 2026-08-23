@@ -53,11 +53,9 @@ pub fn run(args: &Update) -> Result<()> {
   log!("{} {:?}", &*VERSION, args)?;
 
   let (linked_id, isbn) = normalize_identifiers(args.linked_id, Some(&args.content_id));
-  let (book, edition_id, pages) = get_book(isbn, linked_id)?;
-  let book_id = book.id;
+  let book = get_book(isbn, linked_id)?;
   let (user_book_id, user_read_id, started_at) = update_or_insert_user_book(
-    book,
-    edition_id,
+    &book,
     UserBookUpdateInput {
       status_id: Some(2),
       ..UserBookUpdateInput::default()
@@ -65,23 +63,29 @@ pub fn run(args: &Update) -> Result<()> {
   )?;
   let started_at = started_at.unwrap_or(Local::now().format("%Y-%m-%d").to_string());
 
-  let progress_pages = (pages as f64 * (args.value as f64 / 100.0)).round() as i64;
+  let progress_pages = (book.pages as f64 * (args.value as f64 / 100.0)).round() as i64;
 
   if let Some(user_read_id) = user_read_id {
-    log!("Update read `{user_read_id}` for edition `{edition_id}` to page `{progress_pages}`")?;
+    log!(
+      "Update read `{user_read_id}` for edition `{}` to page `{progress_pages}`",
+      book.edition_id
+    )?;
 
     UpdateRead::send_request(update_read::Variables {
       id: user_read_id,
       progress_pages,
-      edition_id,
+      edition_id: book.edition_id,
       started_at,
     })?;
   } else {
-    log!("Insert new read for edition `{edition_id}` at page `{progress_pages}`")?;
+    log!(
+      "Insert new read for edition `{}` at page `{progress_pages}`",
+      book.edition_id
+    )?;
 
     InsertRead::send_request(insert_read::Variables {
       user_book_id,
-      edition_id,
+      edition_id: book.edition_id,
       progress_pages,
       started_at,
     })?;
@@ -93,7 +97,7 @@ pub fn run(args: &Update) -> Result<()> {
     return Ok(());
   }
 
-  update_journal(&args.content_id, book_id, edition_id, pages)?;
+  update_journal(&args.content_id, &book)?;
 
   Ok(())
 }

@@ -10,7 +10,7 @@ use serde_json::json;
 use macros::AggregateErrors;
 
 use crate::commands::getuser::get_user;
-use crate::commands::getuserbook::get_book;
+use crate::commands::getuserbook::{Book, get_book};
 use crate::config::{CONFIG, SyncBookmarks};
 use crate::database::{Bookmark, get_bookmarks};
 use crate::hardcover::send_request;
@@ -64,13 +64,13 @@ pub fn run(args: &UpdateJournal) -> Result<()> {
   log!("{} {:?}", &*VERSION, args)?;
 
   let (linked_id, isbn) = normalize_identifiers(args.linked_id, Some(&args.content_id));
-  let (book, edition_id, pages) = get_book(isbn, linked_id)?;
-  update_journal(&args.content_id, book.id, edition_id, pages)?;
+  let book = get_book(isbn, linked_id)?;
+  update_journal(&args.content_id, &book)?;
 
   Ok(())
 }
 
-pub fn update_journal(content_id: &str, book_id: i64, edition_id: i64, pages: i64) -> Result<()> {
+pub fn update_journal(content_id: &str, book: &Book) -> Result<()> {
   let mut bookmarks = get_bookmarks(content_id)?;
 
   log!("{} bookmarks", bookmarks.len())?;
@@ -94,7 +94,7 @@ pub fn update_journal(content_id: &str, book_id: i64, edition_id: i64, pages: i6
 
     loop {
       let entries = GetJournalQuotes::send_request(get_journal_quotes::Variables {
-        book_id,
+        book_id: book.book_id,
         user_id,
         offset,
       })?
@@ -122,10 +122,10 @@ pub fn update_journal(content_id: &str, book_id: i64, edition_id: i64, pages: i6
         reading_journals
           .iter()
           .find(|journal| journal.action_at.sub(bookmark.date_created).num_seconds() == 0),
-        book_id,
-        edition_id,
+        book.book_id,
+        book.edition_id,
         privacy_setting_id,
-        pages,
+        book.pages,
       )
     });
 
@@ -133,8 +133,8 @@ pub fn update_journal(content_id: &str, book_id: i64, edition_id: i64, pages: i6
     log!(
       "Insert {} quotes for book `{}` and edition `{}`",
       insert_bookmarks.len(),
-      book_id,
-      edition_id,
+      book.book_id,
+      book.edition_id,
     )?;
     debug_log!("InsertReadingJournal, {:?}", insert_bookmarks)?;
 
@@ -157,8 +157,8 @@ pub fn update_journal(content_id: &str, book_id: i64, edition_id: i64, pages: i6
     log!(
       "Update {} quotes for book `{}` and edition `{}`",
       update_bookmarks.len(),
-      book_id,
-      edition_id,
+      book.book_id,
+      book.edition_id,
     )?;
     debug_log!("UpdateReadingJournal, {:?}", update_bookmarks)?;
 

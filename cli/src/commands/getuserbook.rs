@@ -49,9 +49,9 @@ pub fn run(args: &GetUserBook) -> Result<()> {
   log!("{} {:?}", &*VERSION, args)?;
 
   let (linked_id, isbn) = normalize_identifiers(args.linked_id, args.content_id.as_deref());
-  let (book, _, _) = get_book(isbn, linked_id)?;
+  let book = get_book(isbn, linked_id)?;
 
-  let user_book = book.user_books.first().map_or(json!({}), |user_book| {
+  let user_book = book.user_book.map_or(json!({}), |user_book| {
     json!( {
       "user_book_id": user_book.id,
       "status_id": user_book.status_id,
@@ -68,7 +68,14 @@ pub fn run(args: &GetUserBook) -> Result<()> {
   Ok(())
 }
 
-pub fn get_book(isbn: Vec<String>, linked_id: i64) -> Result<(get_edition::GetEditionEditionsBook, i64, i64)> {
+pub struct Book {
+  pub user_book: Option<get_edition::GetEditionBooksUserBooks>,
+  pub book_id: i64,
+  pub edition_id: i64,
+  pub pages: i64,
+}
+
+pub fn get_book(isbn: Vec<String>, linked_id: i64) -> Result<Book> {
   let user_id = get_user()?.id;
   let isbn_display = isbn.join(", ");
 
@@ -78,11 +85,11 @@ pub fn get_book(isbn: Vec<String>, linked_id: i64) -> Result<(get_edition::GetEd
     linked_id,
     user_id,
   })?
-  .editions
+  .books
   .into_iter()
   .next()
   {
-    Some(edition) => edition.book,
+    Some(book) => book,
     None => book_not_found(&if linked_id != 0 {
       format!(
         "Unable to find book or edition with id <i>{linked_id}</i> on Hardcover.app. Please manually un-link and re-link book."
@@ -93,19 +100,18 @@ pub fn get_book(isbn: Vec<String>, linked_id: i64) -> Result<(get_edition::GetEd
       )
     }),
   };
+  let user_book = book.user_books.into_iter().next();
 
-  let edition_id = book
-    .user_books
-    .first()
+  let edition_id = user_book
+    .as_ref()
     .and_then(|user_book| user_book.user_book_reads.first())
     .and_then(|read| read.edition.as_ref())
     .filter(filter_edition)
     .or(book.id_edition.first().filter(filter_edition))
     .or(book.isbn_edition.first().filter(filter_edition))
     .or(
-      book
-        .user_books
-        .first()
+      user_book
+        .as_ref()
         .and_then(|user_book| user_book.edition.as_ref())
         .filter(filter_edition),
     )
@@ -121,18 +127,14 @@ pub fn get_book(isbn: Vec<String>, linked_id: i64) -> Result<(get_edition::GetEd
     })
     .id;
 
-  let pages = book
-    .user_books
-    .first()
+  let pages = user_book.as_ref()
     .and_then(|user_book| user_book.user_book_reads.first())
     .and_then(|read| read.edition.as_ref())
     .and_then(map_pages)
     .or(book.id_edition.first().and_then(map_pages))
     .or(book.isbn_edition.first().and_then(map_pages))
     .or(
-      book
-        .user_books
-        .first()
+      user_book.as_ref()
         .and_then(|user_book| user_book.edition.as_ref()).and_then(map_pages),
     )
     .or(book.default_ebook_edition.as_ref().and_then(map_pages))
@@ -143,5 +145,10 @@ pub fn get_book(isbn: Vec<String>, linked_id: i64) -> Result<(get_edition::GetEd
     .unwrap_or_else(|| panic!("Unable to find the total page count for book <i>{}</i>. Please update the book on Hardcover.app with the correct page count.",
         book.id));
 
-  Ok((book, edition_id, pages))
+  Ok(Book {
+    user_book,
+    book_id: book.id,
+    edition_id,
+    pages,
+  })
 }
