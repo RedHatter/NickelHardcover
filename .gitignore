@@ -2,8 +2,8 @@
 *.o
 *.moc
 *.rcc
-.env
 *.log
+mise.local.toml
 cli/target
 KoboRoot.tgz
 files

@@ -5,5 +5,7 @@ ENV RUSTUP_HOME=/usr/local/rustup \
     PATH=/usr/local/cargo/bin:$PATH
 
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path --profile minimal --target arm-unknown-linux-gnueabihf && \
-    cargo install resvg just && \
-    chmod -R a+w $RUSTUP_HOME $CARGO_HOME
+    cargo install cargo-binstall && \
+    cargo binstall mise resvg && \
+    mkdir /.local /.cache && \
+    chmod -R a+w $RUSTUP_HOME $CARGO_HOME /.local /.cache

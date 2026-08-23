@@ -1,0 +1,96 @@
+[env]
+VERSION = '{{ exec(command="git describe --tags --long --dirty 2>/dev/null") }}'
+
+[tasks.build]
+description = 'Build KoboRoot.tgz within the NickelTC docker container'
+depends = ['toolchain build::package']
+
+[tasks.'build::cli']
+description = 'Build the rust CLI'
+dir = 'cli'
+run = 'cargo build --release --target=arm-unknown-linux-gnueabihf'
+
+[tasks.'build::hook']
+description = 'Build the nickel QT plugin'
+dir = 'hook'
+run = 'make'
+
+[tasks.'build::package']
+description = 'Package files into installable KoboRoot.tgz'
+depends = ['build::hook', 'build::cli']
+run = '''
+#!/usr/bin/env sh
+mkdir KoboRoot
+cd KoboRoot
+mkdir -p usr/local/Kobo/imageformats/ mnt/onboard/.adds/NickelHardcover
+cp ../hook/libhardcover.so                                                usr/local/Kobo/imageformats/
+cp ../cli/target/arm-unknown-linux-gnueabihf/release/nickel-hardcover-cli mnt/onboard/.adds/NickelHardcover/cli
+cp ../hook/res/config_example.ini                                         mnt/onboard/.adds/NickelHardcover
+tar -vczf ../KoboRoot.tgz . | grep '[^/]$'
+cd ..
+rm -r KoboRoot
+'''
+
+[tasks.clean]
+description = 'Remove all build artifacts'
+run = [
+  'cd hook && make clean',
+  'cd cli && cargo clean',
+  'rm -fv KoboRoot.tgz',
+]
+
+[tasks.dump]
+description = 'Dump raw and demangled symbols from a libnickel.so file'
+usage = 'arg "<file>" help="The shared object file to dump"'
+run = [
+  'nm -D --demangle "{{usage_file}}" > "{{usage_file}}".log',
+  'nm -D "{{usage_file}}" > "{{usage_file}}"-raw.log'
+]
+
+[tasks.format]
+description = 'Format all source files'
+run = [
+  'cd cli && cargo fmt',
+  'clang-format -i hook/src/**/*.cc hook/src/*.cc',
+  'clang-format -i hook/src/**/*.h hook/src/*.h'
+]
+
+# Kobo devices ship with a broken SSH config that uses ForceCommand to
+# override client commands, causing non-interactive SSH to fail. Fix this by
+# commenting out the offending line in `/etc/ssh/sshd_config`.
+# > sed -i '/ForceCommand/s/^/#/' /etc/ssh/sshd_config
+
+[tasks.install]
+description = 'Copy and install the built KoboRoot.tgz onto a Kobo device over SSH'
+depends = ['build']
+env = {
+  KOBO_SERVER = { required = true },
+  KOBO_PASSWORD = { required = true, redact = true }
+}
+# No scp or sftp on Kobo devices
+run = 'pv KoboRoot.tgz | sshpass -p "$KOBO_PASSWORD" ssh "root@$KOBO_SERVER" "cat > /mnt/onboard/.kobo/KoboRoot.tgz && reboot"'
+
+[tasks.logs]
+description = 'Read logs over SSH'
+env = {
+  KOBO_SERVER = { required = true },
+  KOBO_PASSWORD = { required = true, redact = true }
+}
+run = 'sshpass -p "$KOBO_PASSWORD" ssh -t "root@$KOBO_SERVER" "logread -F | grep NickelHardcover"'
+
+[tasks.schema]
+description = 'Fetch Hardcover.app GraphQL schema'
+tools.node = "26"
+env = { HARDCOVER_AUTHORIZATION = { required = true, redact = true } }
+run = [
+  'npx get-graphql-schema',
+  'npx get-graphql-schema --header "authorization=$HARDCOVER_AUTHORIZATION" https://api.hardcover.app/v1/graphql > cli/src/graphql/schema.graphql'
+]
+
+[tasks.toolchain]
+description = 'Run mise tasks within the NickelTC docker container'
+run = 'docker run --volume="$PWD:$PWD" --workdir="$PWD" -u $(id --user):$(id --group) --rm -e "TERM=$TERM" -it strayrose/nickeltc mise run'
+
+[tasks.'toolchain::build']
+description = 'Build the toolchain docker image'
+run = 'docker buildx build . --tag strayrose/nickeltc'
