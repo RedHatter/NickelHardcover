@@ -18,10 +18,14 @@ public:
   bool syncDisabled;
   QNetworkAccessManager *network = new QNetworkAccessManager();
 
-  int getReadProgress();
-  void clearReadProgress();
+  int getCurrentProgress() const { return queue->getProgress().value(contentId); }
+
+  const QHash<QString, int> &getProgress() const { return queue->getProgress(); }
+
+  void clearReadProgress() { queue->clearReadProgress(contentId); }
+
   void manualSync();
-  QDateTime getAlarm();
+  QDateTime getAlarm() const;
 
 public Q_SLOTS:
   void currentViewIndexChanged(int index);
@@ -29,7 +33,7 @@ public Q_SLOTS:
   void alarm();
 
 Q_SIGNALS:
-  void currentViewChanged(QString name);
+  void currentViewChanged(const QString &name);
 
 private:
   SyncController(QObject *parent = nullptr);

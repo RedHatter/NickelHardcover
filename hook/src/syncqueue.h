@@ -12,13 +12,15 @@ class SyncQueue : public QObject {
 public:
   SyncQueue(QObject *parent = nullptr);
 
-  void updateReadProgress(QString contentId);
-  int getReadProgress(QString contentId);
-  void clearReadProgress(QString contentId);
-  bool checkThreshold(QString contentId, int threshold);
+  const QHash<QString, int> &getProgress() const { return progress; }
+
+  void clearReadProgress(const QString &contentId) { progress.remove(contentId); }
+
+  void updateReadProgress(const QString &contentId);
+  bool checkThreshold (const QString &contentId, int threshold) const;
 
   void runAll();
-  void run(QString contentId, bool manual = false);
+  void run(const QString &contentId, bool manual = false);
 
   bool failed = false;
 

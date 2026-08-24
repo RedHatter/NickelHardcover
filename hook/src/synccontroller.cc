@@ -104,7 +104,7 @@ void SyncController::pageChanged() {
     QObject::connect(timer, SIGNAL(timeout()), this, SLOT(alarm()));
   }
 
-  if (!queue->failed && ((queue->getReadProgress(contentId) == 100 && settings->getLastProgress(contentId) != 100) ||
+  if (!queue->failed && ((getCurrentProgress() == 100 && settings->getLastProgress(contentId) != 100) ||
                          queue->checkThreshold(contentId, settings->getPageThreshold()))) {
     nh_log("Triggered threshold auto-sync");
     queue->run(contentId);
@@ -119,17 +119,13 @@ void SyncController::alarm() {
   queue->runAll();
 }
 
-int SyncController::getReadProgress() { return queue->getReadProgress(contentId); }
-
-void SyncController::clearReadProgress() { queue->clearReadProgress(contentId); }
-
 void SyncController::manualSync() {
   nh_log("SyncController::manualSync()");
   queue->updateReadProgress(contentId);
   queue->run(contentId, true);
 }
 
-QDateTime SyncController::getAlarm() {
+QDateTime SyncController::getAlarm() const {
   if (timer != nullptr && PowerTimer__timeRemaining(timer) > 0) {
     return QDateTime::currentDateTime().addMSecs(PowerTimer__timeRemaining(timer));
   }

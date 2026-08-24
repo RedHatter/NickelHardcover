@@ -1,8 +1,9 @@
-#include <NickelHook.h>
 #include <QDateTime>
 #include <QLabel>
 #include <QSettings>
 #include <QTimer>
+
+#include <NickelHook.h>
 
 #include "settings.h"
 #include "syncqueue.h"
@@ -12,7 +13,7 @@ SyncQueue::SyncQueue(QObject *parent) : QObject(parent) {
   QObject::connect(wm, SIGNAL(networkConnected()), this, SLOT(networkConnected()));
 };
 
-void SyncQueue::updateReadProgress(QString contentId) {
+void SyncQueue::updateReadProgress(const QString &contentId) {
   MainWindowController *mwc = MainWindowController__sharedInstance();
   QWidget *cv = MainWindowController__currentView(mwc);
 
@@ -21,22 +22,18 @@ void SyncQueue::updateReadProgress(QString contentId) {
     newProgress = 100;
   }
 
-  if (newProgress < 2 || newProgress == progress[contentId]) {
+  if (newProgress < 2 || newProgress == progress.value(contentId)) {
     return;
   }
 
   progress[contentId] = newProgress;
 
-  nh_log("Update %s queued progress to %d%%", qPrintable(contentId), progress[contentId]);
+  nh_log("Update %s queued progress to %d%%", qPrintable(contentId), progress.value(contentId));
 }
 
-int SyncQueue::getReadProgress(QString contentId) { return progress[contentId]; }
-
-void SyncQueue::clearReadProgress(QString contentId) { progress.remove(contentId); }
-
-bool SyncQueue::checkThreshold(QString contentId, int threshold) {
-  return threshold > 0 && progress[contentId] > 0 &&
-         abs(Settings::getInstance()->getLastProgress(contentId) - progress[contentId]) >= threshold;
+bool SyncQueue::checkThreshold(const QString &contentId, int threshold) const {
+  return threshold > 0 && progress.value(contentId) > 0 &&
+         abs(Settings::getInstance()->getLastProgress(contentId) - progress.value(contentId)) >= threshold;
 }
 
 void SyncQueue::networkConnected() {
@@ -78,9 +75,9 @@ void SyncQueue::prepareNext() {
   }
 }
 
-void SyncQueue::run(QString contentId, bool manual) {
+void SyncQueue::run(const QString &contentId, bool manual) {
   retryQueue.remove(contentId);
-  currentProgress = progress[contentId];
+  currentProgress = progress.value(contentId);
 
   if (currentProgress == 0) {
     nh_log("Attempted to sync %s with no saved reading progress", qPrintable(contentId));

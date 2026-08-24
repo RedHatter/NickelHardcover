@@ -303,7 +303,7 @@ QFrame *SettingsDialog::buildInformation() {
   layout->addWidget(row);
   row->setProperty("noBorder", true);
 
-  row = new StaticRow("Current progress", QString::number(ctl->getReadProgress()).append("%"), true);
+  row = new StaticRow("Current progress", QString::number(ctl->getCurrentProgress()).append("%"), true);
   layout->addWidget(row);
   QObject::connect(row, &StaticRow::clear, this, &SettingsDialog::clearReadProgress);
 
@@ -356,7 +356,7 @@ void SettingsDialog::clearReadProgress() {
   ctl->clearReadProgress();
 
   StaticRow *row = qobject_cast<StaticRow *>(sender());
-  row->setValue(QString::number(ctl->getReadProgress()).append("%"));
+  row->setValue(QString::number(ctl->getCurrentProgress()).append("%"));
 }
 
 void SettingsDialog::clearLastSynced() {
