@@ -76,29 +76,31 @@ fn try_request<T: Serialize>(request_body: &T) -> Result<Response<Body>> {
     sleep(duration);
   }
 
-  match res.status() {
-    StatusCode::UNAUTHORIZED => {
-      println!("{:?} {:?}", &CONFIG.authorization, res.into_body().read_to_string()?);
+  let code = res.status();
+  if !code.is_success() {
+    let body = res.into_body().read_to_string()?;
 
+    let msg = if let Some(json) = serde_json::from_str::<Value>(&body).ok()
+      && let Some(error) = json.get("error").and_then(Value::as_str)
+    {
+      json
+        .get("error_description")
+        .or(json.get("message"))
+        .and_then(Value::as_str)
+        .map_or_else(|| error.to_string(), |desc| format!("{error} — {desc}"))
+    } else {
+      body
+    };
+    let msg = format!("Request failed <i>{code}: {msg}</i>");
+    log!("{msg}")?;
+
+    if code == StatusCode::UNAUTHORIZED {
       panic!(
-        "Authorization token is invalid. Please set a valid Hardcover.app authorization token in <i>.adds/NickelHardcover/config.ini</i>."
-      );
+        "Please set a valid Hardcover.app authorization token in <i>.adds/NickelHardcover/config.ini</i>.<br>>{msg}"
+      )
+    } else {
+      bail!(msg);
     }
-    code if !code.is_success() => {
-      let body = res.into_body().read_to_string()?;
-      let msg = format!(
-        "Request failed <i>{code}: {}</i>",
-        serde_json::from_str::<Value>(&body)
-          .ok()
-          .as_ref()
-          .and_then(|v| v.get("error"))
-          .and_then(Value::as_str)
-          .unwrap_or(&body)
-      );
-      log!("{msg}")?;
-      bail!("{msg}");
-    }
-    _ => {}
   }
 
   Ok(res)
