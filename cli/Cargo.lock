@@ -865,6 +865,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serini",
+ "sfparse",
  "ureq",
  "zip",
 ]
@@ -1219,6 +1220,12 @@ dependencies = [
  "serde",
  "thiserror 2.0.18",
 ]
+
+[[package]]
+name = "sfparse"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aa43026ed1c44ad75582cfce650e384c3d57168e2aa03f3a826580cc2fa30bf5"
 
 [[package]]
 name = "sha1"

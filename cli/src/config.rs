@@ -126,6 +126,7 @@ pub struct Config {
   pub authorization: String,
   pub auto_sync_default: bool,
   pub debug: bool,
+  pub hardcover_endpoint: String,
   pub journal_privacy: JournalPrivacy,
   pub retry_on_network: bool,
   pub sqlite_path: String,
@@ -141,6 +142,7 @@ impl Default for Config {
       authorization: String::new(),
       auto_sync_default: false,
       debug: false,
+      hardcover_endpoint: "https://api.hardcover.app/v1/graphql".into(),
       journal_privacy: JournalPrivacy::Account,
       retry_on_network: false,
       sqlite_path: "/mnt/onboard/.kobo/KoboReader.sqlite".into(),
@@ -175,7 +177,7 @@ pub static CONFIG: LazyLock<Config> = LazyLock::new(|| {
       authorization: if config.authorization.is_empty() || config.authorization.starts_with("Bearer ") {
         config.authorization
       } else {
-        "Bearer ".to_string() + &config.authorization
+        format!("Bearer {}", config.authorization)
       },
       sqlite_path: exe_dir
         .join(config.sqlite_path)

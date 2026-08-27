@@ -10,6 +10,7 @@ use crate::utils::{VERSION, write_logfile};
 
 mod commands;
 mod hardcover;
+mod rate_limit;
 
 mod config;
 mod database;

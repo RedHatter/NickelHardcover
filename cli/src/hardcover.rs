@@ -1,4 +1,5 @@
 use std::thread::sleep;
+use std::time::Duration;
 use std::{fmt::Debug, sync::LazyLock};
 
 use anyhow::{Context, Result, bail};
@@ -15,6 +16,7 @@ use ureq::{
 };
 
 use crate::config::CONFIG;
+use crate::rate_limit::RateLimit;
 use crate::utils::{AggregateErrors, VERSION};
 use crate::{debug_log, log};
 
@@ -45,31 +47,39 @@ fn try_request<T: Serialize>(request_body: &T) -> Result<Response<Body>> {
   });
 
   let res = CLIENT
-    .post("https://api.hardcover.app/v1/graphql")
+    .post(&CONFIG.hardcover_endpoint)
     .header("authorization", &CONFIG.authorization)
     .send_json(request_body)
     .context("Failed to send request")?;
 
+  if let Some(retry_after) = res.headers().get("Retry-After") {
+    let retry_after = retry_after
+      .to_str()
+      .context("Failed to get <i>Retry-After</i> header value")?
+      .parse::<u64>()
+      .context("Failed to parse <i>Retry-After</i> header")?;
+    let duration = Duration::from_secs(retry_after);
+    log!("Encountered Retry-After header sleeping for {}", duration.as_secs())?;
+    sleep(duration);
+    bail!("Rate limited, retrying");
+  }
+
+  let rate_limit = RateLimit::from_headers(res.headers()).context("Failed to parse rate limit")?;
+
+  if let Some(daily_limit) = rate_limit.iter().find(|rl| rl.name().eq_ignore_ascii_case("daily"))
+    && daily_limit.remaining() == 0
+  {
+    panic!("Exceeded daily rate limit. Please try again tomorrow.");
+  } else if let Some(limit) = rate_limit.iter().find(|rl| rl.remaining() == 0) {
+    let duration = limit.reset().unwrap_or(Duration::from_secs(1));
+    log!("Reached rate limit sleeping for {}", duration.as_secs())?;
+    sleep(duration);
+  }
+
   match res.status() {
-    StatusCode::TOO_MANY_REQUESTS => {
-      let timestamp = res
-        .headers()
-        .get("ratelimit-reset")
-        .context("Failed to get <i>ratelimit-reset</i> header from HTTP 429")?
-        .to_str()
-        .context("Failed to get <i>ratelimit-reset</i> header value")?
-        .parse::<i64>()
-        .context("Failed to parse <i>ratelimit-reset</i> header")?;
-      let duration = chrono::DateTime::from_timestamp(timestamp, 0)
-        .context(format!("Failed to create DateTime from timestamp <i>{timestamp}</i>"))?
-        .signed_duration_since(chrono::Utc::now())
-        .to_std()
-        .context("Timestamp is in the past")?;
-      log!("Encountered http 429 sleeping for {}", duration.as_secs())?;
-      sleep(duration);
-      bail!("Rate limited, retrying");
-    }
     StatusCode::UNAUTHORIZED => {
+      println!("{:?} {:?}", &CONFIG.authorization, res.into_body().read_to_string()?);
+
       panic!(
         "Authorization token is invalid. Please set a valid Hardcover.app authorization token in <i>.adds/NickelHardcover/config.ini</i>."
       );
