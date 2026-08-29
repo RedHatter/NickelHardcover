@@ -1,3 +1,4 @@
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::thread::sleep;
 use std::time::Duration;
 use std::{fmt::Debug, sync::LazyLock};
@@ -37,22 +38,43 @@ pub mod scalars {
   pub type timestamptz = DateTime<Utc>;
 }
 
-fn try_request<T: Serialize>(request_body: &T) -> Result<Response<Body>> {
-  static CLIENT: LazyLock<Agent> = LazyLock::new(|| {
-    Agent::config_builder()
-      .user_agent(format!("{}/{}", env!("CARGO_PKG_NAME"), &*VERSION))
-      .http_status_as_error(false)
-      .build()
-      .into()
-  });
+struct HardcoverContext {
+  agent: Agent,
+  rate_limit: AtomicUsize,
+}
 
-  let res = CLIENT
+impl HardcoverContext {
+  fn rate_limit(&self) -> usize {
+    self.rate_limit.load(Ordering::Relaxed)
+  }
+
+  fn set_rate_limit(&self, val: usize) {
+    self.rate_limit.store(val.max(1), Ordering::Relaxed);
+  }
+}
+
+static HARDCOVER_AGENT: LazyLock<HardcoverContext> = LazyLock::new(|| HardcoverContext {
+  agent: Agent::config_builder()
+    .user_agent(format!("{}/{}", env!("CARGO_PKG_NAME"), &*VERSION))
+    .http_status_as_error(false)
+    .build()
+    .into(),
+  rate_limit: AtomicUsize::new(0),
+});
+
+fn try_request<T: Serialize>(request_body: &T) -> Result<Response<Body>> {
+  let res = HARDCOVER_AGENT
+    .agent
     .post(&CONFIG.hardcover_endpoint)
     .header("authorization", &CONFIG.authorization)
     .send_json(request_body)
     .context("Failed to send request")?;
 
-  if let Some(retry_after) = res.headers().get("Retry-After") {
+  let code = res.status();
+
+  if code == StatusCode::TOO_MANY_REQUESTS
+    && let Some(retry_after) = res.headers().get("Retry-After")
+  {
     let retry_after = retry_after
       .to_str()
       .context("Failed to get <i>Retry-After</i> header value")?
@@ -64,19 +86,27 @@ fn try_request<T: Serialize>(request_body: &T) -> Result<Response<Body>> {
     bail!("Rate limited, retrying");
   }
 
-  let rate_limit = RateLimit::from_headers(res.headers()).context("Failed to parse rate limit")?;
+  let (daily, rate_limit): (Vec<_>, Vec<_>) = RateLimit::from_headers(res.headers())
+    .context("Failed to parse rate limit")?
+    .into_iter()
+    .partition(|limit| limit.name().eq_ignore_ascii_case("daily"));
 
-  if let Some(daily_limit) = rate_limit.iter().find(|rl| rl.name().eq_ignore_ascii_case("daily"))
-    && daily_limit.remaining() == 0
+  if let Some(daily) = daily.first()
+    && daily.remaining() == 0
   {
     panic!("Exceeded daily rate limit. Please try again tomorrow.");
-  } else if let Some(limit) = rate_limit.iter().find(|rl| rl.remaining() == 0) {
-    let duration = limit.reset().unwrap_or(Duration::from_secs(1));
-    log!("Reached rate limit sleeping for {}", duration.as_secs())?;
-    sleep(duration);
   }
 
-  let code = res.status();
+  if let Some(rate_limit) = rate_limit.first() {
+    HARDCOVER_AGENT.set_rate_limit(rate_limit.remaining() as usize);
+
+    if rate_limit.remaining() == 0 {
+      let duration = rate_limit.reset().unwrap_or(Duration::from_secs(1));
+      log!("Reached rate limit sleeping for {}", duration.as_secs())?;
+      sleep(duration);
+    }
+  }
+
   if !code.is_success() {
     let body = res.into_body().read_to_string()?;
 
@@ -132,4 +162,21 @@ pub fn send_request<T: Serialize, R: DeserializeOwned + Debug + AggregateErrors>
   }
 
   Ok(data)
+}
+
+pub fn batch_requests<T: Serialize, I: Iterator<Item = T>, R: DeserializeOwned + Debug + AggregateErrors>(
+  operation_name: &str,
+  request_bodies: I,
+) -> Result<Vec<R>> {
+  request_bodies
+    .batching(|it| {
+      let chunk = it.take(HARDCOVER_AGENT.rate_limit()).collect::<Vec<_>>();
+      if chunk.is_empty() {
+        None
+      } else {
+        Some(send_request::<_, Vec<R>>(operation_name, chunk))
+      }
+    })
+    .flatten_ok()
+    .collect()
 }

@@ -5,6 +5,7 @@ use std::sync::{LazyLock, Mutex};
 
 use anyhow::{Context, Result};
 use chrono::Local;
+use either::Either;
 use graphql_client::{GraphQLQuery, Response};
 use itertools::Itertools;
 
@@ -115,6 +116,14 @@ impl<Data: AggregateErrors> AggregateErrors for graphql_client::Response<Data> {
 impl<T: AggregateErrors> AggregateErrors for Vec<T> {
   fn errors(&self) -> impl Iterator<Item = &str> {
     self.iter().flat_map(AggregateErrors::errors)
+  }
+}
+
+impl<L: AggregateErrors, R: AggregateErrors> AggregateErrors for Either<L, R> {
+  fn errors(&self) -> impl Iterator<Item = &str> {
+    self
+      .as_ref()
+      .map_either(AggregateErrors::errors, AggregateErrors::errors)
   }
 }
 
