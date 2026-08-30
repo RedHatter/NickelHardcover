@@ -1,10 +1,8 @@
-use std::ops::Sub;
-
 use anyhow::Result;
 use argh::FromArgs;
-use chrono::{Duration, Utc};
 use graphql_client::GraphQLQuery;
 use itertools::{Either, Itertools};
+use jiff::{SignedDuration, Timestamp};
 use serde_json::json;
 
 use macros::AggregateErrors;
@@ -121,7 +119,7 @@ pub fn update_journal(content_id: &str, book: &Book) -> Result<()> {
         bookmark,
         reading_journals
           .iter()
-          .find(|journal| journal.action_at.sub(bookmark.date_created).num_seconds() == 0),
+          .find(|journal| journal.action_at.duration_since(bookmark.date_created).abs().as_secs() == 0),
         book,
       )
     })
@@ -188,11 +186,10 @@ fn build_journal_quote(
       entry,
       action_at: Some(
         if CONFIG.sync_bookmarks == SyncBookmarks::Finished {
-          Utc::now() + Duration::seconds(i as i64)
+          Timestamp::now() + SignedDuration::from_secs(i as i64)
         } else {
           bookmark.date_created
         }
-        .format("%+")
         .to_string(),
       ),
       metadata: bookmark.location.map(|location| {

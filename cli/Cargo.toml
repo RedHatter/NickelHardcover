@@ -22,17 +22,17 @@ serini = "0.2.0"
 sfparse = "0.1.1"
 zip = "8.6.0"
 
+[dependencies.jiff]
+version = "0.2.35"
+features = ["serde"]
+
 [dependencies.either]
 version = "1.18.0"
 features = ["serde"]
 
-[dependencies.chrono]
-version = "0.4.41"
-features = ["serde"]
-
 [dependencies.rusqlite]
 version = "0.40.0"
-features = ["bundled", "chrono"]
+features = ["bundled", "jiff"]
 
 [dependencies.serde]
 version = "1.0.219"

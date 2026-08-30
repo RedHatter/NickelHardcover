@@ -1,13 +1,12 @@
-use std::fmt::Debug;
-use std::fmt::Write;
+use std::fmt::{Debug, Write};
 use std::fs::write;
 use std::sync::{LazyLock, Mutex};
 
 use anyhow::{Context, Result};
-use chrono::Local;
 use either::Either;
 use graphql_client::{GraphQLQuery, Response};
 use itertools::Itertools;
+use jiff::Zoned;
 
 use crate::config::CONFIG;
 use crate::database::get_sqlite_isbn;
@@ -37,7 +36,7 @@ pub static VERSION: LazyLock<&str> = LazyLock::new(|| option_env!("VERSION").unw
 static LOG: LazyLock<Mutex<String>> = LazyLock::new(|| Mutex::new(String::new()));
 
 pub fn debug_log(msg: &str) -> Result<()> {
-  writeln!(LOG.lock().unwrap(), "{} {msg}", Local::now().format("%c")).context("Failed to write to log")
+  writeln!(LOG.lock().unwrap(), "{} {msg}", Zoned::now().strftime("%a %b %e %T %Y")).context("Failed to write to log")
 }
 
 pub fn write_logfile() {
@@ -48,7 +47,7 @@ pub fn write_logfile() {
         .as_path()
         .parent()
         .context("Failed to get current binary directory")?
-        .join(Local::now().format("nickelhardcover_%Y-%m-%d_%H-%M-%S.log").to_string()),
+        .join(Zoned::now().strftime("nickelhardcover_%F_%T.log").to_string()),
       LOG.lock().unwrap().as_str(),
     )
     .context("Failed to write log file")

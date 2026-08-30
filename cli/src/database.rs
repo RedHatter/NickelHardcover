@@ -1,5 +1,5 @@
 use anyhow::{Context, Result, anyhow};
-use chrono::{DateTime, Utc};
+use jiff::Timestamp;
 use rusqlite::{Connection, OpenFlags};
 
 use crate::{config::CONFIG, epub::normalize_isbn};
@@ -10,7 +10,7 @@ pub struct Bookmark {
   pub id: String,
   pub text: String,
   pub annotation: Option<String>,
-  pub date_created: DateTime<Utc>,
+  pub date_created: Timestamp,
   pub location: Option<f64>,
 }
 

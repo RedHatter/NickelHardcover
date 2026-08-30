@@ -1,7 +1,7 @@
 use anyhow::Result;
 use argh::FromArgs;
-use chrono::Local;
 use graphql_client::GraphQLQuery;
+use jiff::Zoned;
 
 use macros::AggregateErrors;
 
@@ -61,7 +61,7 @@ pub fn run(args: &Update) -> Result<()> {
       ..UserBookUpdateInput::default()
     },
   )?;
-  let started_at = started_at.unwrap_or(Local::now().format("%Y-%m-%d").to_string());
+  let started_at = started_at.unwrap_or(Zoned::now().strftime("%F").to_string());
 
   let progress_pages = (book.pages as f64 * (args.value as f64 / 100.0)).round() as i64;
 

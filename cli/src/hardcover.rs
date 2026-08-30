@@ -24,7 +24,7 @@ use crate::{debug_log, log};
 pub mod scalars {
   #![allow(non_camel_case_types)]
 
-  use chrono::{DateTime, Utc};
+  use jiff::Timestamp;
 
   pub type date = String;
   pub type citext = String;
@@ -35,7 +35,7 @@ pub mod scalars {
   pub type bigint = i64;
   pub type smallint = i16;
   pub type timestamp = String;
-  pub type timestamptz = DateTime<Utc>;
+  pub type timestamptz = Timestamp;
 }
 
 struct HardcoverContext {

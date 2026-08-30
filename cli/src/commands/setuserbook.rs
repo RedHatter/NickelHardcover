@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
-use chrono::Local;
 use graphql_client::GraphQLQuery;
+use jiff::Zoned;
 
 use macros::AggregateErrors;
 
@@ -78,7 +78,7 @@ pub fn run(args: SetUserBook) -> Result<()> {
       review_has_spoilers: args.spoilers,
       sponsored_review: args.sponsored,
       rating: args.rating,
-      reviewed_at: args.text.as_ref().map(|_| Local::now().format("%Y-%m-%d").to_string()),
+      reviewed_at: args.text.as_ref().map(|_| Zoned::now().strftime("%F").to_string()),
       review_slate: args.text.map(|text| {
         serde_json::json!({
           "document": {
