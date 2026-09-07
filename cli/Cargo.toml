@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["macros"]
+members = ["macros", "qt_codegen"]
 
 [package]
 name = "nickel-hardcover-cli"

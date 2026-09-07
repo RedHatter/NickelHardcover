@@ -5,6 +5,11 @@ VERSION = '{{ exec(command="git describe --tags --long --dirty 2>/dev/null") }}'
 description = 'Build KoboRoot.tgz within the NickelTC docker container'
 depends = ['toolchain build::package']
 
+[tasks.'build::codegen']
+description = 'Generate QT deserialization code from the rust structs'
+dir = 'cli/qt_codegen'
+run = 'cargo run -q -- ../src/messages.rs > ../../hook/src/messages.h'
+
 [tasks.'build::cli']
 description = 'Build the rust CLI'
 dir = 'cli'
@@ -12,6 +17,7 @@ run = 'cargo build --release --target=arm-unknown-linux-gnueabihf'
 
 [tasks.'build::hook']
 description = 'Build the nickel QT plugin'
+depends = ['build::codegen']
 dir = 'hook'
 run = 'make'
 
