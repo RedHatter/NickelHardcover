@@ -1,129 +1,103 @@
 #pragma once
 
-template <typename T>
-class Optional {
+template <typename T> class Optional {
 public:
-    Optional() : has(false) {}
+  Optional() : has(false) {}
 
-    Optional(const T& value) : has(true) {
-        construct(value);
+  Optional(const T &value) : has(true) { construct(value); }
+
+  Optional(T &&value) : has(true) { construct(static_cast<T &&>(value)); }
+
+  Optional(const Optional &other) : has(false) {
+    if (other.has) {
+      construct(*other.ptr());
+      has = true;
     }
+  }
 
-    Optional(T&& value) : has(true) {
-        construct(static_cast<T&&>(value));
+  Optional(Optional &&other) : has(false) {
+    if (other.has) {
+      construct(static_cast<T &&>(*other.ptr()));
+      has = true;
     }
+  }
 
-    Optional(const Optional& other) : has(false) {
-        if (other.has) {
-            construct(*other.ptr());
-            has = true;
-        }
-    }
+  ~Optional() { reset(); }
 
-    Optional(Optional&& other) : has(false) {
-        if (other.has) {
-            construct(static_cast<T&&>(*other.ptr()));
-            has = true;
-        }
-    }
+  Optional &operator=(const Optional &other) {
+    if (this != &other) {
+      reset();
 
-    ~Optional() {
-        reset();
-    }
-
-    Optional& operator=(const Optional& other) {
-        if (this != &other) {
-            reset();
-
-            if (other.has) {
-                construct(*other.ptr());
-                has = true;
-            }
-        }
-
-        return *this;
-    }
-
-    Optional& operator=(Optional&& other) {
-        if (this != &other) {
-            reset();
-
-            if (other.has) {
-                construct(static_cast<T&&>(*other.ptr()));
-                has = true;
-            }
-        }
-
-        return *this;
-    }
-
-    template <typename... Args>
-    void emplace(Args&&... args) {
-        reset();
-        construct(static_cast<Args&&>(args)...);
+      if (other.has) {
+        construct(*other.ptr());
         has = true;
+      }
     }
 
-    void reset() {
-        if (has) {
-            ptr()->~T();
-            has = false;
-        }
+    return *this;
+  }
+
+  Optional &operator=(Optional &&other) {
+    if (this != &other) {
+      reset();
+
+      if (other.has) {
+        construct(static_cast<T &&>(*other.ptr()));
+        has = true;
+      }
     }
 
-    bool has_value() const {
-        return has;
-    }
+    return *this;
+  }
 
-    explicit operator bool() const {
-        return has;
-    }
+  template <typename... Args> void emplace(Args &&...args) {
+    reset();
+    construct(static_cast<Args &&>(args)...);
+    has = true;
+  }
 
-    template <typename U>
-    T value_or(U&& fallback) const {
-        if (has) {
-            return *ptr();
-        }
-        return static_cast<T>(static_cast<U&&>(fallback));
+  void reset() {
+    if (has) {
+      ptr()->~T();
+      has = false;
     }
+  }
 
-    T value_or_default() const {
-        if (has) {
-            return *ptr();
-        }
-        return T();
-    }
+  bool has_value() const { return has; }
 
-    T& operator*() {
-        return *ptr();
-    }
+  explicit operator bool() const { return has; }
 
-    const T& operator*() const {
-        return *ptr();
+  template <typename U> T value_or(U &&fallback) const {
+    if (has) {
+      return *ptr();
     }
+    return static_cast<T>(static_cast<U &&>(fallback));
+  }
 
-    T* operator->() {
-        return ptr();
+  T value_or_default() const {
+    if (has) {
+      return *ptr();
     }
+    return T();
+  }
 
-    const T* operator->() const {
-        return ptr();
-    }
+  T &operator*() { return *ptr(); }
+
+  const T &operator*() const { return *ptr(); }
+
+  T *operator->() { return ptr(); }
+
+  const T *operator->() const { return ptr(); }
 
 private:
-    bool has;
-    alignas(T) unsigned char storage[sizeof(T)];
+  bool has;
+  alignas(T) unsigned char storage[sizeof(T)];
 
-    T* ptr() {
-        return static_cast<T*>(static_cast<void*>(storage));
-    }
+  T *ptr() { return static_cast<T *>(static_cast<void *>(storage)); }
 
-    const T* ptr() const {
-        return static_cast<const T*>(static_cast<const void*>(storage));
-    }
+  const T *ptr() const { return static_cast<const T *>(static_cast<const void *>(storage)); }
 
-    template <typename... Args>
-    void construct(Args&&... args) {
-        ::new (static_cast<void*>(storage)) T(static_cast<Args&&>(args)...);
-    }
+  template <typename... Args> void construct(Args &&...args) {
+    ::new (static_cast<void *>(storage)) T(static_cast<Args &&>(args)...);
+  }
 };

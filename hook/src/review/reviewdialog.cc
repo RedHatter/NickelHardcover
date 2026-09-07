@@ -61,13 +61,18 @@ ReviewDialog::ReviewDialog() : Dialog("Write your review") {
   QObject::connect(cli, &CLI::failure, dialog, &QDialog::deleteLater);
 }
 
-void ReviewDialog::response(QJsonObject doc) {
+void ReviewDialog::response(Messages message) {
+  if (!message.isUserBook()) {
+    ConfirmationDialogFactory__showErrorDialog("Hardcover.app", "Unexpected CLI response for <i>getUserBook</i>");
+    return;
+  }
+
   QLayout *column = layout();
   column->takeAt(0)->widget()->deleteLater();
 
-  rating = doc.value("rating").toDouble(0);
-  spoilers = doc.value("review_has_spoilers").toBool(false);
-  sponsored = doc.value("sponsored_review").toBool(false);
+  rating = message.user_book->rating.value_or_default();
+  spoilers = message.user_book->review_has_spoilers;
+  sponsored = message.user_book->sponsored_review;
 
   SyncController *ctl = SyncController::getInstance();
 
@@ -104,7 +109,7 @@ void ReviewDialog::response(QJsonObject doc) {
   TouchTextEdit__setCustomPlaceholderText(touchText, "Share you thoughts about this book with the world. Make "
                                                      "sure to Mark any spoilers!");
   QTextEdit *textEdit = touchText->findChild<QTextEdit *>();
-  textEdit->setText(doc.value("review_raw").toString(""));
+  textEdit->setText(message.user_book->review_raw.value_or_default());
   column->addWidget(touchText);
 
   buildKeyboardFrame(textEdit, "Submit");

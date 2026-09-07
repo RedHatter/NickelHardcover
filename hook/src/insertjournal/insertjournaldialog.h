@@ -2,6 +2,7 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
+#include "../messages.h"
 #include "../widgets/buttongroup.h"
 #include "../widgets/dialog.h"
 
@@ -18,5 +19,5 @@ private:
 
   ButtonGroup *privacy;
 
-  void setPrivacy(QJsonObject response);
+  void response(Messages message);
 };

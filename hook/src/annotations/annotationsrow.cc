@@ -10,7 +10,7 @@
 #include "annotationsrow.h"
 #include "qnamespace.h"
 
-AnnotationsRow::AnnotationsRow(QJsonObject doc, QWidget *parent) : QFrame(parent), doc(doc) {
+AnnotationsRow::AnnotationsRow(Annotation annotation, QWidget *parent) : QFrame(parent), annotation(annotation) {
   setStyleSheet(R"(
     [qApp_deviceIsTrilogy=true] AnnotationsRow {
       padding: 12px;
@@ -45,14 +45,14 @@ AnnotationsRow::AnnotationsRow(QJsonObject doc, QWidget *parent) : QFrame(parent
   vbox->setSpacing(0);
   hbox->addLayout(vbox, 1);
 
-  vbox->addWidget(new ElidedLabel(Label::Large, doc.value("title").toString()));
+  vbox->addWidget(new ElidedLabel(Label::Large, annotation.title));
 
-  vbox->addWidget(new ElidedLabel(Label::Small, doc.value("attribution").toString()));
+  vbox->addWidget(new ElidedLabel(Label::Small, annotation.attribution));
 
   vbox->addSpacing(10);
 
-  int n = doc.value("count").toInt();
-  vbox->addWidget(new Label(Label::Small, n == 1 ? "1 annotation" : QString::number(n) + " annotations"));
+  vbox->addWidget(new Label(Label::Small, annotation.count == 1 ? "1 annotation"
+                                                                : QString::number(annotation.count) + " annotations"));
 
   N3ButtonLabel *button = construct_N3ButtonLabel(this);
   button->setText("Sync Now");
@@ -68,8 +68,8 @@ void AnnotationsRow::tapped() {
 
   CLI::Options options;
   options.icon = true;
-  options.contentId = doc.value("volume_id").toString();
-  options.query = doc.value("title").toString() + " " + doc.value("author").toString();
+  options.contentId = annotation.volume_id;
+  options.query = annotation.title + " " + annotation.attribution;
 
   CLI *cli = CLI::updateJournal(options);
   QObject::connect(cli, &CLI::success, this, &AnnotationsRow::success);

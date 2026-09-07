@@ -17,7 +17,7 @@ public:
   void clearReadProgress(const QString &contentId) { progress.remove(contentId); }
 
   void updateReadProgress(const QString &contentId);
-  bool checkThreshold (const QString &contentId, int threshold) const;
+  bool checkThreshold(const QString &contentId, int threshold) const;
 
   void runAll();
   void run(const QString &contentId, bool manual = false);

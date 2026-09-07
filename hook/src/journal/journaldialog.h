@@ -2,6 +2,7 @@
 #include <QStackedLayout>
 #include <QWidget>
 
+#include "../messages.h"
 #include "../widgets/dialog.h"
 #include "../widgets/pagedstack.h"
 
@@ -12,7 +13,7 @@ public:
   static void show();
 
 public Q_SLOTS:
-  void response(QJsonObject doc);
+  void response(Messages message);
   void annotations();
   void newEntry();
   void requestPage(int index);

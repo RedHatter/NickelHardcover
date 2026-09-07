@@ -1,6 +1,7 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
+#include "../messages.h"
 #include "../nickelhardcover.h"
 #include "../widgets/dialog.h"
 #include "../widgets/pagedstack.h"
@@ -15,7 +16,7 @@ public:
 
 public Q_SLOTS:
   void requestPage(int index);
-  void response(QJsonObject doc);
+  void response(Messages message);
   void selected(QString id);
   void editions(QString id);
 

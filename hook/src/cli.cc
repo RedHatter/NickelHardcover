@@ -6,6 +6,7 @@
 
 #include "cli.h"
 #include "files.h"
+#include "messages.h"
 #include "search/searchdialog.h"
 #include "settings.h"
 #include "synccontroller.h"
@@ -221,54 +222,52 @@ void CLI::processFinished(int exitCode) {
 
   QByteArray stdout = process->readAllStandardOutput();
 
-  int index = stdout.indexOf("BEGIN_JSON");
-
-  QByteArray bytes = stdout;
-  if (index >= 0) {
-    bytes = stdout.left(index);
-  }
-
-  QList<QByteArray> lines = bytes.split('\n');
+  QList<QByteArray> lines = stdout.split('\n');
   for (QByteArray &line : lines) {
     if (line.length() == 0)
       continue;
 
-    nh_log("%s", qPrintable(line));
-  }
+    Messages msg = Messages::fromJson(QJsonDocument::fromJson(line).object());
 
-  if (exitCode > 0) {
-    QByteArray stderr = process->readAllStandardError();
-    nh_log("Error from command line \"%s\"", qPrintable(stderr));
-    ConfirmationDialogFactory__showErrorDialog("Hardcover.app", QString(stderr));
-    failure(FailureReason::Error);
-    deleteLater();
-    return;
-  }
+    switch (msg.kind) {
+    case Messages::Kind::Log:
+      nh_log("%s", qPrintable(msg.log->message));
+      break;
 
-  if (index >= 0) {
-    QByteArray json = stdout.right(stdout.size() - index - 10);
-    QJsonObject obj = QJsonDocument::fromJson(json).object();
+    case Messages::Kind::Error:
+      if (msg.error->error_code == "BOOK_NOT_FOUND") {
+        QString message = msg.error->message;
+        nh_log("%s", qPrintable(message));
 
-    if (obj.value("error_code").toString() == "BOOK_NOT_FOUND") {
-      QString message = obj.value("message").toString();
-      nh_log("%s", qPrintable(message));
+        ConfirmationDialog *dialog = ConfirmationDialogFactory__getConfirmationDialog(nullptr);
+        ConfirmationDialog__setAcceptButtonText(
+            dialog,
+            Settings::getInstance()->getLinkedId(options.getContentId()).isEmpty() ? "Link book" : "Unlink book");
+        ConfirmationDialog__setRejectButtonText(dialog, "Cancel");
+        ConfirmationDialog__setTitle(dialog, "Hardcover.app");
+        ConfirmationDialog__setText(dialog, message);
 
-      ConfirmationDialog *dialog = ConfirmationDialogFactory__getConfirmationDialog(nullptr);
-      ConfirmationDialog__setAcceptButtonText(
-          dialog, Settings::getInstance()->getLinkedId(options.getContentId()).isEmpty() ? "Link book" : "Unlink book");
-      ConfirmationDialog__setRejectButtonText(dialog, "Cancel");
-      ConfirmationDialog__setTitle(dialog, "Hardcover.app");
-      ConfirmationDialog__setText(dialog, message);
+        QObject::connect(dialog, &QDialog::accepted, this, &CLI::linkBook);
+        QObject::connect(dialog, &QDialog::rejected, this, &CLI::deleteLater);
+        dialog->open();
 
-      QObject::connect(dialog, &QDialog::accepted, this, &CLI::linkBook);
-      QObject::connect(dialog, &QDialog::rejected, this, &CLI::deleteLater);
-      dialog->open();
+        failure(FailureReason::BookNotFound);
+        return;
+      } else {
+        nh_log("Error from command line \"%s\"", qPrintable(msg.error->message));
+        ConfirmationDialogFactory__showErrorDialog("Hardcover.app", msg.error->message);
+        failure(FailureReason::Error);
+        deleteLater();
+        return;
+      }
 
-      failure(FailureReason::BookNotFound);
-      return;
+      break;
+
+    default:
+      response(msg);
+
+      break;
     }
-
-    response(obj);
   }
 
   success();

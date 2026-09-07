@@ -4,6 +4,7 @@
 #include <QSettings>
 #include <QWidgetAction>
 
+#include "messages.h"
 #include "nickelhardcover.h"
 
 struct Item {
@@ -25,7 +26,7 @@ public Q_SLOTS:
                                    bool decorated = true);
 
   void showMainMenu();
-  void showStatusMenu(QJsonObject doc);
+  void showStatusMenu(Messages message);
   void triggered(QAction *action);
 
 private:

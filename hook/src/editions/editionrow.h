@@ -3,12 +3,14 @@
 #include <QJsonObject>
 #include <QLabel>
 
+#include "../messages.h"
+
 class EditionRow : public QFrame {
   Q_OBJECT
   Q_PROPERTY(int verticalSpacing READ verticalSpacing WRITE setVerticalSpacing)
 
 public:
-  EditionRow(QJsonObject json, QWidget *parent = nullptr);
+  EditionRow(Edition edition, QWidget *parent = nullptr);
 
   QGridLayout *layout() const;
 
@@ -26,5 +28,5 @@ private:
   QString id;
   QLabel *cover = nullptr;
 
-  QLabel *buildCover(QJsonObject json);
+  QLabel *buildCover(Edition edition);
 };

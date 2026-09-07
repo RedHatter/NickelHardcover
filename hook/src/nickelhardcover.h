@@ -95,3 +95,5 @@ typedef QObject PowerTimer;
 PowerTimer *construct_PowerTimer(QString const &name, QObject *parent);
 extern void (*PowerTimer__fireAt)(PowerTimer *__this, QDateTime const &datatime);
 extern int (*PowerTimer__timeRemaining)(PowerTimer *__this);
+
+QString join(QVector<QString> list, QString separator);

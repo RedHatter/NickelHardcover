@@ -23,7 +23,7 @@ InsertJournalDialog::InsertJournalDialog() : Dialog("Add New Journal Entry") {
     options.silent = true;
 
     CLI *cli = CLI::getUser(options);
-    QObject::connect(cli, &CLI::response, this, &InsertJournalDialog::setPrivacy);
+    QObject::connect(cli, &CLI::response, this, &InsertJournalDialog::response);
   }
 
   privacy = new ButtonGroup({{"Public", "public"}, {"Follows", "follows"}, {"Private", "private"}}, journalPrivacy,
@@ -44,14 +44,19 @@ void InsertJournalDialog::commit() {
 
   QTextEdit *textEdit = findChild<QTextEdit *>();
 
-  CLI *cli = CLI::insertJournal(textEdit->toPlainText(), SyncController::getInstance()->getReadProgress(),
+  CLI *cli = CLI::insertJournal(textEdit->toPlainText(), SyncController::getInstance()->getCurrentProgress(),
                                 privacy->value().toString());
   QObject::connect(cli, &CLI::success, dialog, &QDialog::deleteLater);
   QObject::connect(cli, &CLI::failure, dialog, &QDialog::deleteLater);
 }
 
-void InsertJournalDialog::setPrivacy(QJsonObject response) {
+void InsertJournalDialog::response(Messages message) {
+  if (!message.isUser()) {
+    ConfirmationDialogFactory__showErrorDialog("Hardcover.app", "Unexpected CLI response for <i>getUser</i>");
+    return;
+  }
+
   if (privacy->value().toString() == "account") {
-    privacy->setValue(response["account_privacy_setting"].toString());
+    privacy->setValue(message.user->account_privacy_setting);
   }
 }

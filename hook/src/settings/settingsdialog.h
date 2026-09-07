@@ -1,5 +1,6 @@
 #include <QJsonObject>
 
+#include "../messages.h"
 #include "../widgets/dialog.h"
 #include "../widgets/pagedstack.h"
 #include "staticrow.h"
@@ -27,7 +28,7 @@ public Q_SLOTS:
   void clearReadProgress();
   void clearLastSynced();
 
-  void setUsername(QJsonObject doc);
+  void setUsername(Messages user);
 
 private:
   SettingsDialog();

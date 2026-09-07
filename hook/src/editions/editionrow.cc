@@ -1,7 +1,5 @@
 #include <QGridLayout>
 #include <QHBoxLayout>
-#include <QJsonArray>
-#include <QJsonObject>
 #include <QNetworkReply>
 
 #include <NickelHook.h>
@@ -12,8 +10,7 @@
 #include "../widgets/elidedlabel.h"
 #include "editionrow.h"
 
-EditionRow::EditionRow(QJsonObject json, QWidget *parent)
-    : QFrame(parent), id(QString::number(json.value("id").toInt())) {
+EditionRow::EditionRow(Edition edition, QWidget *parent) : QFrame(parent), id(QString::number(edition.id)) {
   QGridLayout *layout = new QGridLayout(this);
   layout->setContentsMargins(0, 0, 0, 0);
 
@@ -93,7 +90,7 @@ EditionRow::EditionRow(QJsonObject json, QWidget *parent)
   hbox->setSpacing(0);
   layout->addLayout(hbox, 0, 0, 1, -1);
 
-  cover = buildCover(json);
+  cover = buildCover(edition);
   hbox->addWidget(cover);
 
   QVBoxLayout *vbox = new QVBoxLayout();
@@ -102,12 +99,13 @@ EditionRow::EditionRow(QJsonObject json, QWidget *parent)
   hbox->addLayout(vbox, 1);
   vbox->addStretch(1);
 
-  vbox->addWidget(new ElidedLabel(Label::Medium, json.value("title").toString()));
-  vbox->addWidget(
-      new ElidedLabel(Label::ExtraSmall, json.value("contributions").toVariant().toStringList().join(", ")));
+  if (edition.title) {
+    vbox->addWidget(new ElidedLabel(Label::Medium, *edition.title));
+  }
 
-  QString publisher = json.value("publisher").toString();
-  vbox->addWidget(new Label(Label::ExtraSmall, "<b>Publisher:</b> " + (publisher.isEmpty() ? "No data" : publisher)));
+  vbox->addWidget(new ElidedLabel(Label::ExtraSmall, join(edition.contributions, ", ")));
+
+  vbox->addWidget(new Label(Label::ExtraSmall, "<b>Publisher:</b> " + edition.publisher.value_or("No data")));
 
   vbox->addStretch(1);
 
@@ -118,18 +116,18 @@ EditionRow::EditionRow(QJsonObject json, QWidget *parent)
   QObject::connect(button, SIGNAL(tapped(bool)), this, SLOT(tapped()));
 
   QList<QPair<QString, QString>> list = {
-      {"Type", json.value("reading_format").toString()},
-      {"Format", json.value("edition_format").toString()},
-      {"Information", json.value("edition_information").toString()},
-      {"Pages", QString::number(json.value("pages").toInt())},
-      {"Release Date", json.value("release_date").toString()},
-      {"ISBN 10", json.value("isbn_10").toString()},
-      {"ISBN 13", json.value("isbn_13").toString()},
-      {"ASIN", json.value("asin").toString()},
-      {"Data Score", QString::number(json.value("score").toInt())},
-      {"Language", json.value("language").toString()},
-      {"Country", json.value("country").toString()},
-      {"Readers", QString::number(json.value("users_count").toInt())},
+      {"Type", edition.reading_format},
+      {"Format", edition.edition_format.value_or_default()},
+      {"Information", edition.edition_information.value_or_default()},
+      {"Pages", QString::number(edition.pages.value_or_default())},
+      {"Release Date", edition.release_date.value_or_default()},
+      {"ISBN 10", edition.isbn_10.value_or_default()},
+      {"ISBN 13", edition.isbn_13.value_or_default()},
+      {"ASIN", edition.asin.value_or_default()},
+      {"Data Score", QString::number(edition.score)},
+      {"Language", edition.language.value_or_default()},
+      {"Country", edition.country.value_or_default()},
+      {"Readers", QString::number(edition.users_count)},
   };
 
   for (int i = 0; i < list.size(); i++) {
@@ -146,19 +144,18 @@ void EditionRow::setVerticalSpacing(int value) { layout()->setVerticalSpacing(va
 
 int EditionRow::verticalSpacing() const { return layout()->verticalSpacing(); };
 
-QLabel *EditionRow::buildCover(QJsonObject json) {
+QLabel *EditionRow::buildCover(Edition edition) {
   QLabel *label = new QLabel();
   label->setObjectName("cover");
   label->setScaledContents(true);
 
-  QString imageUrl = json.value("image").toString();
-  if (imageUrl.isEmpty()) {
-    label->setProperty("blank", true);
-  } else {
+  if (edition.image && !edition.image->isEmpty()) {
     label->setPixmap(QPixmap(Files::loading_cover));
 
-    QNetworkReply *reply = SyncController::getInstance()->network->get(QNetworkRequest(QUrl(imageUrl)));
+    QNetworkReply *reply = SyncController::getInstance()->network->get(QNetworkRequest(QUrl(*edition.image)));
     QObject::connect(reply, &QNetworkReply::finished, this, &EditionRow::loadCover);
+  } else {
+    label->setProperty("blank", true);
   }
 
   return label;

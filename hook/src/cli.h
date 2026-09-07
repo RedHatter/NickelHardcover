@@ -1,5 +1,6 @@
 #pragma once
 
+#include "messages.h"
 #include <QJsonObject>
 #include <QLabel>
 #include <QObject>
@@ -48,7 +49,7 @@ public Q_SLOTS:
   void linkBook();
 
 Q_SIGNALS:
-  void response(QJsonObject doc);
+  void response(Messages message);
   void success();
   void failure(FailureReason reason);
 

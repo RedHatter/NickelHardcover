@@ -335,7 +335,18 @@ QFrame *SettingsDialog::buildAdvanced() {
   return frame;
 }
 
-void SettingsDialog::setUsername(QJsonObject doc) { username->setValue(doc.value("username").toString().prepend("@")); }
+void SettingsDialog::setUsername(Messages message) {
+  if (!message.isUser()) {
+    ConfirmationDialogFactory__showErrorDialog("Hardcover.app", "Unexpected CLI response for <i>getUser</i>");
+    return;
+  }
+
+  Optional<QString> usernameValue = message.user->username;
+
+  if (usernameValue) {
+    username->setValue(usernameValue->prepend("@"));
+  }
+}
 
 void SettingsDialog::setAutoSyncDefault(bool value) { Settings::getInstance()->setAutoSyncDefault(value); }
 

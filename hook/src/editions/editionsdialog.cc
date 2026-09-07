@@ -82,26 +82,29 @@ EditionsDialog::EditionsDialog(QString bookId) : Dialog("Manually link book"), b
 
 void EditionsDialog::request() {
   offset = 0;
-  editionsInitialized = false;
+  editionList.reset();
   pages->clear();
 
   CLI *cli = CLI::listEditions(bookId, readingFormat.toInt(), lang);
   QObject::connect(cli, &CLI::response, this, &EditionsDialog::response);
 }
 
-void EditionsDialog::response(QJsonObject doc) {
-  languages = doc.value("languages").toArray();
-  editions = doc.value("editions").toArray();
-  editionsInitialized = true;
+void EditionsDialog::response(Messages message) {
+  if (!message.isEditionList()) {
+    ConfirmationDialogFactory__showErrorDialog("Hardcover.app", "Unexpected CLI response for <i>listEditions</i>");
+    return;
+  }
+
+  editionList = message.edition_list;
   pages->next();
 }
 
 void EditionsDialog::requestPage(int index) {
-  if (!editionsInitialized) {
+  if (!editionList) {
     return;
   }
 
-  int length = editions.size();
+  int length = editionList->editions.size();
 
   if (length < 1) {
     pages->setStatusText("No editions found.");
@@ -116,8 +119,7 @@ void EditionsDialog::requestPage(int index) {
   int availableHeight = pages->getAvailableHeight();
   bool isFirst = true;
   for (; offset < length; offset++) {
-    QJsonObject obj = editions.at(offset).toObject();
-    EditionRow *row = new EditionRow(obj, this);
+    EditionRow *row = new EditionRow(editionList->editions.at(offset), this);
 
     if (isFirst) {
       row->setProperty("noBorder", true);
@@ -145,11 +147,14 @@ void EditionsDialog::requestPage(int index) {
 }
 
 void EditionsDialog::showLangMenu() {
+  if (!editionList) {
+    return;
+  }
+
   QList<Item> items = {{"Any language", ""}};
 
-  for (QJsonValue value : languages) {
-    QString languages = value.toString();
-    items.append({languages, languages});
+  for (QString language : editionList->languages) {
+    items.append({language, language});
   }
 
   NickelTouchMenu *menu = MenuController::showMenu(items, langButton, 0);

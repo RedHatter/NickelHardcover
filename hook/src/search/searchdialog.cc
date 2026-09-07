@@ -77,7 +77,7 @@ void SearchDialog::commit() {
 void SearchDialog::requestPage(int index) {
   QString query = lineEdit->text();
 
-  BookRow *dummy = new BookRow(QJsonObject(), this);
+  BookRow *dummy = new BookRow(SearchResult(), this);
   int limit = pages->getAvailableHeight() / dummy->sizeHint().height();
   dummy->deleteLater();
 
@@ -85,16 +85,20 @@ void SearchDialog::requestPage(int index) {
   QObject::connect(cli, &CLI::response, this, &SearchDialog::response);
 }
 
-void SearchDialog::response(QJsonObject doc) {
-  QJsonArray resultsArray = doc.value("results").toArray();
-  int length = resultsArray.size();
+void SearchDialog::response(Messages message) {
+  if (!message.isSearchPages()) {
+    ConfirmationDialogFactory__showErrorDialog("Hardcover.app", "Unexpected CLI response for <i>search</i>");
+    return;
+  }
+
+  int length = message.search_pages->results.size();
 
   if (length < 1) {
     pages->setStatusText("No results found.");
     return;
   }
 
-  pages->setTotal(doc.value("total").toInt(1));
+  pages->setTotal(message.search_pages->total);
 
   QWidget *box = new QWidget(pages);
   QVBoxLayout *results = new QVBoxLayout(box);
@@ -102,7 +106,7 @@ void SearchDialog::response(QJsonObject doc) {
   results->setSpacing(0);
 
   for (int i = 0; i < length; i++) {
-    BookRow *row = new BookRow(resultsArray.at(i).toObject());
+    BookRow *row = new BookRow(message.search_pages->results.at(i));
     if (i == 0) {
       row->setProperty("noBorder", true);
     }

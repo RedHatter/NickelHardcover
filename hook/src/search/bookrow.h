@@ -2,11 +2,13 @@
 #include <QJsonObject>
 #include <QLabel>
 
+#include "../messages.h"
+
 class BookRow : public QFrame {
   Q_OBJECT
 
 public:
-  BookRow(QJsonObject json, QWidget *parent = nullptr);
+  BookRow(SearchResult result, QWidget *parent = nullptr);
 
 public Q_SLOTS:
   void selectTapped();
@@ -21,7 +23,7 @@ private:
   QString id;
   QLabel *cover = nullptr;
 
-  QLabel *buildCover(QJsonObject json);
-  QString getSeries(QJsonObject json);
-  QString getMeta(QJsonObject json);
+  QLabel *buildCover(SearchResult result);
+  QString getSeries(SearchResult result);
+  QString getMeta(SearchResult result);
 };

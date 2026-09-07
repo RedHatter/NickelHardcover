@@ -1,9 +1,11 @@
 #include <QFrame>
 #include <QJsonObject>
 
+#include "../messages.h"
+
 class JournalEntry : public QFrame {
   Q_OBJECT
 
 public:
-  JournalEntry(QJsonObject doc, QWidget *parent = nullptr);
+  JournalEntry(Journal doc, QWidget *parent = nullptr);
 };

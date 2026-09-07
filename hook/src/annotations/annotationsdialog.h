@@ -2,6 +2,7 @@
 #include <QJsonObject>
 #include <QStackedLayout>
 
+#include "../messages.h"
 #include "../widgets/dialog.h"
 #include "../widgets/pagedstack.h"
 
@@ -12,14 +13,13 @@ public:
   static void show();
 
 public Q_SLOTS:
-  void response(QJsonObject doc);
+  void response(Messages message);
   void requestPage(int index);
 
 private:
   AnnotationsDialog();
 
   int offset = 0;
-  bool bookmarksInitialized = false;
-  QJsonArray bookmarks;
+  Optional<AnnotationList> annotationList;
   PagedStack *pages;
 };

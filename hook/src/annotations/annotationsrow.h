@@ -1,13 +1,14 @@
 #include <QFrame>
 #include <QJsonObject>
 
+#include "../messages.h"
 #include "../nickelhardcover.h"
 
 class AnnotationsRow : public QFrame {
   Q_OBJECT
 
 public:
-  AnnotationsRow(QJsonObject doc, QWidget *parent = nullptr);
+  AnnotationsRow(Annotation annotation, QWidget *parent = nullptr);
 
 public Q_SLOTS:
   void tapped();
@@ -15,6 +16,6 @@ public Q_SLOTS:
   void closeDialog();
 
 private:
-  QJsonObject doc;
+  Annotation annotation;
   ConfirmationDialog *dialog = nullptr;
 };

@@ -1,5 +1,6 @@
 #include <QJsonArray>
 
+#include "../messages.h"
 #include "../nickelhardcover.h"
 #include "../widgets/dialog.h"
 #include "../widgets/pagedstack.h"
@@ -15,7 +16,7 @@ public Q_SLOTS:
   void showLangMenu();
   void langTriggered(QAction *action);
   void requestPage(int index);
-  void response(QJsonObject doc);
+  void response(Messages messages);
 
 Q_SIGNALS:
   void closed();
@@ -34,7 +35,5 @@ private:
   QString lang = "";
 
   int offset = 0;
-  bool editionsInitialized = false;
-  QJsonArray editions;
-  QJsonArray languages;
+  Optional<EditionList> editionList;
 };

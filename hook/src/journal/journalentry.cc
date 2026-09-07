@@ -10,7 +10,7 @@
 #include "../widgets/elidedlabel.h"
 #include "journalentry.h"
 
-JournalEntry::JournalEntry(QJsonObject doc, QWidget *parent) : QFrame(parent) {
+JournalEntry::JournalEntry(Journal journal, QWidget *parent) : QFrame(parent) {
   setStyleSheet(R"(
     [qApp_deviceIsTrilogy=true] JournalEntry {
       padding: 12px 0;
@@ -40,14 +40,18 @@ JournalEntry::JournalEntry(QJsonObject doc, QWidget *parent) : QFrame(parent) {
   QVBoxLayout *layout = new QVBoxLayout(this);
   layout->setContentsMargins(0, 0, 0, 0);
 
-  QString event = doc.value("event").toString();
-
   QHBoxLayout *line = new QHBoxLayout();
   layout->addLayout(line);
   QLabel *icon = new QLabel(this);
   line->addWidget(icon);
   Label *label = new Label(Label::Small, "");
   line->addWidget(label, 1);
+
+  if (!journal.event) {
+    return;
+  }
+
+  QString event = *journal.event;
 
   if (event == "status_want_to_read") {
     icon->setPixmap(QPixmap(Files::status_want_to_read));
@@ -69,38 +73,35 @@ JournalEntry::JournalEntry(QJsonObject doc, QWidget *parent) : QFrame(parent) {
     label->setText("Paused reading");
   } else if (event == "progress_updated") {
     icon->setPixmap(QPixmap(Files::progress_updated));
-    QJsonObject metadata = doc.value("metadata").toObject();
+    Metadata metadata = journal.metadata;
     label->setText(QString("Updated progress from %1% → %2%")
-                       .arg(metadata.value("progress_was").toInt())
-                       .arg(metadata.value("progress").toInt()));
+                       .arg(metadata.progress_was.value_or_default())
+                       .arg(metadata.progress.value_or_default()));
   } else if (event == "rated") {
     icon->setPixmap(QPixmap(Files::rated));
-    QJsonObject metadata = doc.value("metadata").toObject();
-    label->setText("Rated " + metadata.value("rating").toString());
+    Metadata metadata = journal.metadata;
+    label->setText(QString("Rated %1").arg(metadata.rating.value_or_default()));
   } else if (event == "list_book") {
     icon->setPixmap(QPixmap(Files::list_book));
-    QJsonObject metadata = doc.value("metadata").toObject();
-    label->setText(QString("Added to list <i>%1</i>").arg(metadata.value("list_name").toString()));
+    label->setText(QString("Added to list <i>%1</i>").arg(journal.metadata.list_name.value_or("Unknown")));
   } else if (event == "prompt_book") {
     icon->setPixmap(QPixmap(Files::prompt_book));
-    QJsonObject metadata = doc.value("metadata").toObject();
-    label->setText(QString("Answered prompt <i>%1</i>").arg(metadata.value("prompt").toString()));
+    label->setText(QString("Answered prompt <i>%1</i>").arg(journal.metadata.prompt.value_or("Unknown")));
   } else if (event == "note") {
     icon->setPixmap(QPixmap(Files::note));
     label->setText("Saved a Note");
 
-    layout->addWidget(new ElidedLabel(Label::Medium, doc.value("entry").toString(), 5, this));
+    layout->addWidget(new ElidedLabel(Label::Medium, journal.entry.value_or("Content missing"), 5, this));
   } else if (event == "quote") {
     icon->setPixmap(QPixmap(Files::quote));
     label->setText("Saved a Quote");
 
-    layout->addWidget(new ElidedLabel(Label::Medium, doc.value("entry").toString(), 5, this));
+    layout->addWidget(new ElidedLabel(Label::Medium, journal.entry.value_or("Content missing"), 5, this));
   } else if (event == "reviewed") {
     icon->setPixmap(QPixmap(Files::reviewed));
     label->setText("Reviewed");
 
-    QJsonObject metadata = doc.value("metadata").toObject();
-    layout->addWidget(new ElidedLabel(Label::Medium, metadata.value("review").toString(), 5, this));
+    layout->addWidget(new ElidedLabel(Label::Medium, journal.metadata.review.value_or("Content missing"), 5, this));
   } else {
     label->setText("Unknown journal type " + event);
   }
@@ -117,7 +118,7 @@ JournalEntry::JournalEntry(QJsonObject doc, QWidget *parent) : QFrame(parent) {
     }
   }
 
-  QString actionAt = QDateTime::fromString(doc.value("action_at").toString(), Qt::ISODate).toLocalTime().toString(fmt);
+  QString actionAt = QDateTime::fromString(journal.action_at, Qt::ISODate).toLocalTime().toString(fmt);
   Label *actionAtLabel = new Label(Label::ExtraSmall, actionAt);
   layout->addWidget(actionAtLabel, 0, Qt::AlignRight);
   actionAtLabel->lower();

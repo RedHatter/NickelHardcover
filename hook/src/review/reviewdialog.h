@@ -2,6 +2,7 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
+#include "../messages.h"
 #include "../widgets/dialog.h"
 
 class ReviewDialog : public Dialog {
@@ -13,7 +14,7 @@ public:
   void commit() override;
 
 public Q_SLOTS:
-  void response(QJsonObject doc);
+  void response(Messages message);
 
   void setRating(float value);
   void setSpoilers(int state);

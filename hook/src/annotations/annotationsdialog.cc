@@ -43,17 +43,21 @@ AnnotationsDialog::AnnotationsDialog() : Dialog("Annotations") {
   QObject::connect(cli, &CLI::response, this, &AnnotationsDialog::response);
 }
 
-void AnnotationsDialog::response(QJsonObject doc) {
-  bookmarks = doc.value("bookmarks").toArray();
-  bookmarksInitialized = true;
+void AnnotationsDialog::response(Messages message) {
+  if (!message.isAnnotationList()) {
+    ConfirmationDialogFactory__showErrorDialog("Hardcover.app", "Unexpected CLI response for <i>listBookmarks</i>");
+    return;
+  }
+
+  annotationList = message.annotation_list;
   pages->next();
 }
 
 void AnnotationsDialog::requestPage(int index) {
-  if (!bookmarksInitialized)
+  if (!annotationList)
     return;
 
-  int length = bookmarks.size();
+  int length = annotationList->annotations.size();
 
   if (length < 1) {
     pages->setStatusText("No annotations found.");
@@ -68,8 +72,7 @@ void AnnotationsDialog::requestPage(int index) {
   int availableHeight = pages->getAvailableHeight();
   bool isFirst = true;
   for (; offset < length; offset++) {
-    QJsonObject obj = bookmarks.at(offset).toObject();
-    AnnotationsRow *row = new AnnotationsRow(obj, this);
+    AnnotationsRow *row = new AnnotationsRow(annotationList->annotations.at(offset), this);
 
     if (isFirst) {
       row->setProperty("noBorder", true);

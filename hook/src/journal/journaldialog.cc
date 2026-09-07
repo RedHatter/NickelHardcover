@@ -1,5 +1,6 @@
 #include <QJsonArray>
 #include <QVBoxLayout>
+#include <QVector>
 
 #include <NickelHook.h>
 
@@ -79,19 +80,25 @@ void JournalDialog::requestPage(int index) {
   QObject::connect(cli, &CLI::response, this, &JournalDialog::response);
 }
 
-void JournalDialog::response(QJsonObject doc) {
+void JournalDialog::response(Messages message) {
+  if (!message.isJournalList()) {
+    ConfirmationDialogFactory__showErrorDialog("Hardcover.app", "Unexpected CLI response for <i>listJournal</i>");
+    return;
+  }
+
+  QVector<Journal> reading_journals = message.journal_list->reading_journals;
+
   QWidget *box = new QWidget(this);
   QVBoxLayout *rows = new QVBoxLayout(box);
   rows->setContentsMargins(0, 0, 0, 0);
   rows->setSpacing(0);
 
-  QJsonArray results = doc.value("reading_journals").toArray();
-  int length = results.size();
+  int length = reading_journals.size();
   int availableHeight = pages->getAvailableHeight();
 
   int i = 0;
   for (; i < length; i++) {
-    QJsonObject obj = results.at(i).toObject();
+    Journal obj = reading_journals.at(i);
     JournalEntry *entry = new JournalEntry(obj, pages);
     if (i == 0) {
       entry->setProperty("noBorder", true);

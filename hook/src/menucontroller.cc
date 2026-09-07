@@ -116,8 +116,13 @@ void MenuController::showMainMenu() {
   }
 }
 
-void MenuController::showStatusMenu(QJsonObject doc) {
-  int status = doc.value("status_id").toInt(0);
+void MenuController::showStatusMenu(Messages message) {
+  if (!message.isUserBook()) {
+    ConfirmationDialogFactory__showErrorDialog("Hardcover.app", "Unexpected CLI response for <i>getUserBook</i>");
+    return;
+  }
+
+  int status = message.user_book->status_id;
   nh_log("MenuController::showStatusMenu(%d)", status);
 
   setSelected(true);

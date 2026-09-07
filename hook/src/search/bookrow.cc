@@ -11,7 +11,7 @@
 #include "../widgets/elidedlabel.h"
 #include "bookrow.h"
 
-BookRow::BookRow(QJsonObject json, QWidget *parent) : QFrame(parent), id(json.value("id").toString()) {
+BookRow::BookRow(SearchResult result, QWidget *parent) : QFrame(parent), id(result.id.value_or_default()) {
   setStyleSheet(R"(
     [qApp_deviceIsTrilogy=true] BookRow {
       padding: 12px;
@@ -76,7 +76,7 @@ BookRow::BookRow(QJsonObject json, QWidget *parent) : QFrame(parent), id(json.va
   QHBoxLayout *layout = new QHBoxLayout(this);
   layout->setContentsMargins(0, 0, 0, 0);
 
-  cover = buildCover(json);
+  cover = buildCover(result);
   layout->addWidget(cover);
 
   QVBoxLayout *textLayout = new QVBoxLayout();
@@ -85,10 +85,10 @@ BookRow::BookRow(QJsonObject json, QWidget *parent) : QFrame(parent), id(json.va
   layout->addLayout(textLayout, 1);
   textLayout->addStretch(1);
 
-  textLayout->addWidget(new ElidedLabel(Label::Large, json.value("title").toString()));
-  textLayout->addWidget(new ElidedLabel(Label::Avenir, getSeries(json)));
-  textLayout->addWidget(new ElidedLabel(Label::Small, json.value("authors").toVariant().toStringList().join(", ")));
-  textLayout->addWidget(new ElidedLabel(Label::Small, getMeta(json)));
+  textLayout->addWidget(new ElidedLabel(Label::Large, result.title.value_or("Unknown")));
+  textLayout->addWidget(new ElidedLabel(Label::Avenir, getSeries(result)));
+  textLayout->addWidget(new ElidedLabel(Label::Small, join(result.authors, ", ")));
+  textLayout->addWidget(new ElidedLabel(Label::Small, getMeta(result)));
 
   textLayout->addStretch(1);
 
@@ -110,52 +110,50 @@ BookRow::BookRow(QJsonObject json, QWidget *parent) : QFrame(parent), id(json.va
   buttons->addStretch(1);
 }
 
-QLabel *BookRow::buildCover(QJsonObject json) {
+QLabel *BookRow::buildCover(SearchResult result) {
   QLabel *label = new QLabel();
   label->setObjectName("cover");
   label->setScaledContents(true);
 
-  QString imageUrl = json.value("image").toString();
-  if (imageUrl.isEmpty()) {
-    label->setProperty("blank", true);
-  } else {
+  if (result.image) {
     label->setPixmap(QPixmap(Files::loading_cover));
 
-    QNetworkReply *reply = SyncController::getInstance()->network->get(QNetworkRequest(QUrl(imageUrl)));
+    QNetworkReply *reply = SyncController::getInstance()->network->get(QNetworkRequest(QUrl(*result.image)));
     QObject::connect(reply, &QNetworkReply::finished, this, &BookRow::loadCover);
+  } else {
+    label->setProperty("blank", true);
   }
 
   return label;
 }
 
-QString BookRow::getSeries(QJsonObject json) {
-  QJsonObject series = json.value("series").toObject();
-  QString seriesName = series.value("name").toString();
+QString BookRow::getSeries(SearchResult result) {
+  if (!result.series || !result.series->name) {
+    return "";
+  }
 
-  QJsonValue position = series.value("position");
-  if (!seriesName.isEmpty() && position.isDouble()) {
-    seriesName.append(" - ").append(QString::number(position.toDouble()));
+  QString seriesName = *result.series->name;
+
+  if (!seriesName.isEmpty() && result.series->position) {
+    seriesName.append(" - ").append(QString::number(*result.series->position));
   }
 
   return seriesName;
 }
 
-QString BookRow::getMeta(QJsonObject json) {
+QString BookRow::getMeta(SearchResult result) {
   QStringList meta;
 
-  QJsonValue year = json.value("release_year");
-  if (year.isDouble()) {
-    meta.append(QString::number(year.toDouble()));
+  if (result.release_year) {
+    meta.append(QString::number(*result.release_year));
   }
 
-  double usersCount = json.value("users_count").toDouble();
-  if (usersCount > 0) {
-    meta.append(QString::number(usersCount).append(" Readers"));
+  if (result.users_count && *result.users_count > 0) {
+    meta.append(QString::number(*result.users_count).append(" Readers"));
   }
 
-  double rating = json.value("rating").toDouble();
-  if (rating > 0) {
-    meta.append(QString::number(rating, 'f', 1).append(" ★"));
+  if (result.rating && *result.rating > 0) {
+    meta.append(QString::number(*result.rating, 'f', 1).append(" ★"));
   }
 
   return meta.join(" • ");
