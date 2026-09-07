@@ -55,14 +55,13 @@ No need to uninstall before updating. Configuration will be retained.
 
 ## Configuring
 
-To function, NickelHardcover needs to be configured with an authorization token from your Hardcover.app account.
+To function, NickelHardcover needs to be configured with an API key from your Hardcover.app account.
 
-1. Visit [hardcover.app/account/api](https://hardcover.app/account/api) and sign in
-2. Copy the contents of the text box starting with "Bearer”  
-   ![Authorization token](https://codeberg.org/StrayRose/NickelHardcover/raw/branch/main/screenshots/authorization_token.png)
-3. Connect your Kobo and edit the file `.adds/NickelHardcover/config_example.ini`
-4. On the second line, labeled "authorization”, remove the starting semicolon and paste the token (copied in step 2) after the equals sign
-5. Modify any other settings to suit your preferences
+1. Visit [this link](https://hardcover.app/account/api/keys/new?scope=read%3Acatalog+read%3Alibrary+read%3Ajournal+read%3Ame%3Acontent+write%3Alibrary+write%3Areviews) and sign in. You should see the "New API Key" page with some scopes pre-selected
+2. Choose a name and expiration (e.g. "NickelHardcover" and "never") and click "Create Key" at the bottom of the page
+3. You should see a section titled "Your new API key", copy the key from the text box underneath
+4. Connect your Kobo and edit the file `.adds/NickelHardcover/config_example.ini`
+5. On the second line, labeled "authorization”, remove the starting semicolon and paste the API key (copied in step 3) after the equals sign
 6. Save the file as `config.ini`
 7. Eject/disconnect your Kobo
 
@@ -70,7 +69,7 @@ Once the above steps are complete, you should have a file named `config.ini` wit
 
 ```ini
 ; Your Hardcover.app authorization token copied from https://hardcover.app/account/api.
-authorization = Bearer MrDIPsXoT02KrqumxgFsZ.dDxWNFxqotRGJcFvNm68mergYHi2uWSEobGa4S2P5PUMr6Gj8P4SV9hUq4dl2PDJJoggxFuSFf1MQEm8BM1a7mb6IcCokea4x1V9POQqD6bpBH0pJ5nHQVRpKLfqVOzKWpAcLS4OOpZZSlwPJIBisZMaVsJOYe6ujxgzIX5V1sDTWRtq1r4IapP0r9q7oVrq5rZjz9GrGT1rl87nnh91Plncr7u2zLMsfxK1PHGkArbPt1PZ7VL7jiTM2JsrhuV7kHawAxCZHfxONQw4wCVdRssDUhL4JDnljDk2qvMURPfkY4sctYyWturhAKjdwmuvQmfOqoXeT1sxi8qoUDsnQaJ9VexX199cYHcM2wxQn2LOYSa3OtKQ6SKCP4YR1WKKrGn4UBwebnkbZKVmDy8YFLu9h7WwfQgl8QvDT7d4LKXYCRC4ZhHoFlF27VQrLpqaglSQdDInkyUy0Z8MnDh7mxzpKy4O9WQftm2NkqxZEW4z2wmRTeVbdVyo2DdLT82K7
+authorization = hc_pat_pm1HiC9W8Wv6Zs2ihG7P2cVnrfEYP7J4ACH4EYZyoHpb
 
 ; Whether auto-sync is enabled or disabled by default for each book.
 auto_sync_default = false
