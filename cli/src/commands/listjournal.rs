@@ -1,13 +1,14 @@
 use anyhow::Result;
 use argh::FromArgs;
 use graphql_client::GraphQLQuery;
-use serde_json::{Value, json};
+use serde_json::Value;
 
 use macros::AggregateErrors;
 
 use crate::commands::getuser::get_user;
 use crate::log;
-use crate::utils::{GraphQLQueryExt, VERSION, normalize_identifiers};
+use crate::messages::{Journal, JournalList, Messages, Metadata};
+use crate::utils::{GraphQLQueryExt, VERSION, normalize_identifiers, send_msg};
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -46,7 +47,7 @@ pub fn run(args: &ListJournal) -> Result<()> {
   let (linked_id, isbn) = normalize_identifiers(args.linked_id, args.content_id.as_deref());
   let user_id = get_user()?.id;
 
-  let journals = GetReadingJournal::send_request(get_reading_journal::Variables {
+  let reading_journals = GetReadingJournal::send_request(get_reading_journal::Variables {
     isbn,
     linked_id,
     user_id,
@@ -55,24 +56,35 @@ pub fn run(args: &ListJournal) -> Result<()> {
   })?
   .reading_journals
   .iter()
-  .map(|journal| {
-    json!({
-      "id": journal.id,
-      "event": journal.event,
-      "entry": journal.entry,
-      "action_at": journal.action_at,
-      "metadata": match journal.metadata.get("review") {
-        Some(review) => json!({ "review": reduce_slate(review).trim() }),
-        None => json!(journal.metadata)
-      },
-    })
+  .map(|journal| Journal {
+    id: journal.id,
+    event: journal.event.clone(),
+    entry: journal.entry.clone(),
+    action_at: journal.action_at,
+    metadata: Metadata {
+      list_name: journal
+        .metadata
+        .get("list_name")
+        .and_then(Value::as_str)
+        .map(str::to_string),
+      progress: journal.metadata.get("progress").and_then(Value::as_u64),
+      progress_was: journal.metadata.get("progress_was").and_then(Value::as_u64),
+      prompt: journal
+        .metadata
+        .get("prompt")
+        .and_then(Value::as_str)
+        .map(str::to_string),
+      rating: journal.metadata.get("rating").and_then(Value::as_u64),
+      review: journal
+        .metadata
+        .get("review")
+        .map(|review| reduce_slate(review).trim().to_string()),
+    },
   })
   .collect::<Vec<_>>();
 
-  log!("Found {}", journals.len())?;
-  log!("BEGIN_JSON\n{}", json!({ "reading_journals": journals}))?;
-
-  Ok(())
+  log!("Found {}", reading_journals.len())?;
+  send_msg(&Messages::JournalList(JournalList { reading_journals }))
 }
 
 pub fn reduce_slate(data: &Value) -> String {

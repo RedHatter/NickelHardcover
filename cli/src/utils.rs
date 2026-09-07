@@ -12,6 +12,7 @@ use crate::config::CONFIG;
 use crate::database::get_sqlite_isbn;
 use crate::epub::read_epub_isbn;
 use crate::hardcover::send_request;
+use crate::messages::{Error, Messages};
 
 #[allow(clippy::crate_in_macro_def)]
 #[macro_export]
@@ -25,15 +26,29 @@ macro_rules! debug_log {
 #[macro_export]
 macro_rules! log {
   ($($t:tt)*) => {{
-    let msg = format!($($t)*);
-    println!("{msg}");
-    crate::utils::debug_log(&msg)
+    crate::utils::send_msg(&crate::messages::Messages::Log(crate::messages::Log {
+      message: format!($($t)*),
+    }))
   }};
 }
 
 pub static VERSION: LazyLock<&str> = LazyLock::new(|| option_env!("VERSION").unwrap_or(env!("CARGO_PKG_VERSION")));
 
 static LOG: LazyLock<Mutex<String>> = LazyLock::new(|| Mutex::new(String::new()));
+
+pub fn send_msg(value: &Messages) -> Result<()> {
+  let message = serde_json::to_string(value).context("Failed to serialize message")?;
+
+  debug_log(match value {
+    Messages::Log(log) => &log.message,
+    Messages::Error(err) => &err.message,
+    _ => &message,
+  })?;
+
+  println!("{message}");
+
+  Ok(())
+}
 
 pub fn debug_log(msg: &str) -> Result<()> {
   writeln!(LOG.lock().unwrap(), "{} {msg}", Zoned::now().strftime("%a %b %e %T %Y")).context("Failed to write to log")
@@ -83,11 +98,11 @@ pub fn normalize_identifiers(linked_id: Option<i64>, content_id: Option<&str>) -
   }
 }
 
-pub fn book_not_found(msg: &str) -> ! {
-  log!(
-    "BEGIN_JSON\n{{\"error_code\": \"BOOK_NOT_FOUND\", \"message\": \"{}\"}}",
-    msg
-  )
+pub fn book_not_found(message: &str) -> ! {
+  send_msg(&Messages::Error(Error {
+    error_code: "BOOK_NOT_FOUND".to_string(),
+    message: message.to_string(),
+  }))
   .expect("Failed to log `BOOK_NOT_FOUND` error");
 
   if CONFIG.debug {

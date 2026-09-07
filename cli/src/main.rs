@@ -6,15 +6,18 @@ use crate::commands::listeditions;
 use crate::commands::updatejournal;
 use crate::commands::{getuser, getuserbook, insertjournal, listjournal, search, setuserbook, update};
 use crate::config::CONFIG;
+use crate::messages::Error;
+use crate::messages::Messages;
+use crate::utils::send_msg;
 use crate::utils::{VERSION, write_logfile};
 
 mod commands;
-mod hardcover;
-mod rate_limit;
-
 mod config;
 mod database;
 mod epub;
+mod hardcover;
+mod messages;
+mod rate_limit;
 mod utils;
 
 use argh::FromArgs;
@@ -49,11 +52,13 @@ enum Commands {
 fn main() {
   if env::var("RUST_BACKTRACE").is_err() {
     panic::set_hook(Box::new(|info| {
-      let msg = info.payload_as_str().unwrap_or("An unknown error occurred");
-      eprintln!("{msg}");
-      if let Err(e) = debug_log!("{msg}") {
+      if let Err(e) = send_msg(&Messages::Error(Error {
+        error_code: "UNEXPECTED".into(),
+        message: info.payload_as_str().unwrap_or("An unknown error occurred").into(),
+      })) {
         eprintln!("{e}");
       }
+
       write_logfile();
     }));
   }

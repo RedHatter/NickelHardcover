@@ -1,12 +1,13 @@
 use anyhow::{Context, Result};
 use argh::FromArgs;
 use graphql_client::GraphQLQuery;
-use serde_json::{Value, json};
+use serde_json::Value;
 
 use macros::AggregateErrors;
 
 use crate::log;
-use crate::utils::{GraphQLQueryExt, VERSION};
+use crate::messages::{Messages, SearchPages, SearchResult, Series};
+use crate::utils::{GraphQLQueryExt, VERSION, send_msg};
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -38,7 +39,7 @@ pub struct Search {
 pub fn run(args: Search) -> Result<()> {
   log!("{} {:?}", &*VERSION, args)?;
 
-  let results = SearchBooks::send_request(search_books::Variables {
+  let res = SearchBooks::send_request(search_books::Variables {
     query: args.query,
     limit: args.limit,
     page: args.page,
@@ -48,49 +49,60 @@ pub fn run(args: Search) -> Result<()> {
   .results
   .context("Failed to find field <i>results</i> in Hardcover.app results")?;
 
-  let hits = results
+  let results = res
     .get("hits")
     .and_then(Value::as_array)
     .context("Failed to find field <i>hits</i> in Hardcover.app results")?
     .iter()
-    .map(|hit| {
-      hit.get("document").map(|doc| {
-        json!({
-          "id": doc.get("id"),
-          "title": doc.get("title"),
-          "release_year": doc.get("release_year"),
-          "users_count": doc.get("users_count"),
-          "rating": doc.get("rating"),
-          "authors": doc.get("contributions").and_then(Value::as_array).map(|contributions|
-            contributions.iter()
-              .filter_map(|item| match item.get("contribution") {
-                Some(Value::Null) | None => item.get("author").and_then(|author| author.get("name")),
-                _ => None
-              })
-              .collect::<Vec<_>>()
-          ),
-          "image": doc.get("image").and_then(|image| image.get("url")),
-          "series": doc.get("featured_series").map(|featured_series| json!({
-            "name": featured_series.get("series").map(|s| s.get("name")),
-            "position": featured_series.get("position"),
-            "primary_books_count": featured_series.get("series").and_then(|series| series.get("primary_books_count"))
-          }))
+    .filter_map(|hit| hit.get("document"))
+    .map(|doc| SearchResult {
+      authors: doc
+        .get("contributions")
+        .and_then(Value::as_array)
+        .iter()
+        .flat_map(|contributions| {
+          contributions.iter().filter_map(|item| match item.get("contribution") {
+            Some(Value::Null) | None => item
+              .get("author")
+              .and_then(|author| author.get("name"))
+              .and_then(Value::as_str)
+              .map(str::to_string),
+            _ => None,
+          })
         })
-      })
+        .collect::<Vec<_>>(),
+      id: doc.get("id").and_then(Value::as_str).map(str::to_string),
+      image: doc
+        .get("image")
+        .and_then(|image| image.get("url"))
+        .and_then(Value::as_str)
+        .map(str::to_string),
+      rating: doc.get("rating").and_then(Value::as_u64),
+      release_year: doc.get("release_year").and_then(Value::as_i64),
+      series: doc.get("featured_series").map(|featured_series| Series {
+        name: featured_series
+          .get("series")
+          .and_then(|s| s.get("name"))
+          .and_then(Value::as_str)
+          .map(str::to_string),
+        position: featured_series.get("position").and_then(Value::as_u64),
+        primary_books_count: featured_series
+          .get("series")
+          .and_then(|series| series.get("primary_books_count"))
+          .and_then(Value::as_u64),
+      }),
+      title: doc.get("title").and_then(Value::as_str).map(str::to_string),
+      users_count: doc.get("users_count").and_then(Value::as_u64),
     })
     .collect::<Vec<_>>();
 
-  log!(
-    "BEGIN_JSON\n{}",
-    json!({
-      "results": hits,
-      "page": results.get("page"),
-      "total": match results.get("found").and_then(Value::as_f64) {
-        Some(0.0) => 0,
-        Some(n) => ((n / args.limit as f64).ceil() as i64).max(1),
-        None => 1,
-      }
-    })
-    .to_string()
-  )
+  send_msg(&Messages::SearchPages(SearchPages {
+    results,
+    page: res.get("page").and_then(Value::as_u64).unwrap_or(0),
+    total: match res.get("found").and_then(Value::as_f64) {
+      Some(0.0) => 0,
+      Some(n) => ((n / args.limit as f64).ceil() as u64).max(1),
+      None => 1,
+    },
+  }))
 }

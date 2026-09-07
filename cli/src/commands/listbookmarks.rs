@@ -1,11 +1,11 @@
 use anyhow::{Context, Result};
 use argh::FromArgs;
 use rusqlite::{Connection, OpenFlags};
-use serde_json::json;
 
 use crate::config::CONFIG;
 use crate::log;
-use crate::utils::VERSION;
+use crate::messages::{Annotation, AnnotationList, Messages};
+use crate::utils::{VERSION, send_msg};
 
 /// List aggregated bookmarks.
 #[derive(FromArgs, PartialEq, Debug)]
@@ -15,7 +15,7 @@ pub struct ListBookmarks {}
 pub fn run(args: &ListBookmarks) -> Result<()> {
   log!("{} {:?}", &*VERSION, args)?;
 
-  let bookmarks = Connection::open_with_flags(&CONFIG.sqlite_path, OpenFlags::SQLITE_OPEN_READ_ONLY)
+  let annotations = Connection::open_with_flags(&CONFIG.sqlite_path, OpenFlags::SQLITE_OPEN_READ_ONLY)
     .context(format!(
       "Failed to connect to the database <i>{}</i>",
       &CONFIG.sqlite_path
@@ -37,23 +37,23 @@ pub fn run(args: &ListBookmarks) -> Result<()> {
     )
     .context("Failed to prepare list bookmarks query")?
     .query_map([], |row| {
-      Ok(json!({
-         "title": row.get::<_, String>(0)?,
-         "attribution": row.get::<_, String>(1)?,
-         "volume_id": row.get::<_, String>(2)?,
-         "count": row.get::<_, u32>(3)?,
-         "last_modified": row.get::<_, String>(4)?,
-      }))
+      Ok(Annotation {
+        title: row.get::<_, String>(0)?,
+        attribution: row.get::<_, String>(1)?,
+        volume_id: row.get::<_, String>(2)?,
+        count: row.get::<_, u32>(3)?,
+        last_modified: row.get::<_, String>(4)?,
+      })
     })
     .context("Failed to run list bookmarks query")?
     .collect::<Result<Vec<_>, _>>()
     .context("Failed to map list bookmarks query result")?;
 
-  if bookmarks.is_empty() {
+  if annotations.is_empty() {
     return Ok(());
   }
 
-  log!("BEGIN_JSON\n{}", json!({ "bookmarks": bookmarks}))?;
+  send_msg(&Messages::AnnotationList(AnnotationList { annotations }))?;
 
   Ok(())
 }

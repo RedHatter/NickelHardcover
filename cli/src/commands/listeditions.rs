@@ -6,7 +6,8 @@ use serde_json::Value;
 use macros::AggregateErrors;
 
 use crate::log;
-use crate::utils::{GraphQLQueryExt, VERSION};
+use crate::messages::{Edition, EditionList, Messages};
+use crate::utils::{GraphQLQueryExt, VERSION, send_msg};
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -70,44 +71,40 @@ pub fn run(args: ListEditions) -> Result<()> {
   languages.sort();
   languages.dedup();
 
-  log!(
-    "BEGIN_JSON\n{}",
-    serde_json::json!({
-      "languages": languages,
-      "editions": res
-        .editions
+  let editions = res
+    .editions
+    .into_iter()
+    .map(|o| Edition {
+      asin: o.asin,
+      contributions: o
+        .contributions
         .into_iter()
-        .map(|o|
-          serde_json::json!({
-            "asin": o.asin,
-            "contributions": o.contributions
-              .into_iter()
-              .filter_map(|c| c.author)
-              .map(|a| a.name)
-              .collect::<Vec<_>>(),
-            "country": o.country.and_then(|c| c.name),
-            "edition_format": o.edition_format,
-            "edition_information": o.edition_information,
-            "id": o.id,
-            "image": o.image.and_then(|i| i.url),
-            "isbn_10": o.isbn_10,
-            "isbn_13": o.isbn_13,
-            "language": o.language.map(|l| l.language),
-            "pages": o.pages,
-            "publisher": o.publisher.and_then(|p| p.name),
-            "reading_format": match o.reading_format_id {
-              1 => "Physical Book",
-              2 => "Audiobook",
-              4 => "E-Book",
-              _ => "Unknown"
-            },
-            "release_date": o.release_date,
-            "score": o.score,
-            "title": o.title,
-            "users_count": o.users_count
-          })
-        )
-        .collect::<Vec<_>>()
+        .filter_map(|c| c.author)
+        .map(|a| a.name)
+        .collect::<Vec<_>>(),
+      country: o.country.and_then(|c| c.name),
+      edition_format: o.edition_format,
+      edition_information: o.edition_information,
+      id: o.id,
+      image: o.image.and_then(|i| i.url),
+      isbn_10: o.isbn_10,
+      isbn_13: o.isbn_13,
+      language: o.language.map(|l| l.language),
+      pages: o.pages,
+      publisher: o.publisher.and_then(|p| p.name),
+      reading_format: match o.reading_format_id {
+        1 => "Physical Book",
+        2 => "Audiobook",
+        4 => "E-Book",
+        _ => "Unknown",
+      }
+      .to_string(),
+      release_date: o.release_date,
+      score: o.score,
+      title: o.title,
+      users_count: o.users_count,
     })
-  )
+    .collect::<Vec<_>>();
+
+  send_msg(&Messages::EditionList(EditionList { languages, editions }))
 }

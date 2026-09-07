@@ -1,13 +1,13 @@
 use anyhow::Result;
 use argh::FromArgs;
 use graphql_client::GraphQLQuery;
-use serde_json::json;
 
 use macros::AggregateErrors;
 
 use crate::commands::getuser::get_user;
 use crate::log;
-use crate::utils::{GraphQLQueryExt, VERSION, book_not_found, normalize_identifiers};
+use crate::messages::{Messages, UserBook};
+use crate::utils::{GraphQLQueryExt, VERSION, book_not_found, normalize_identifiers, send_msg};
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -51,19 +51,17 @@ pub fn run(args: &GetUserBook) -> Result<()> {
   let (linked_id, isbn) = normalize_identifiers(args.linked_id, args.content_id.as_deref());
   let book = get_book(isbn, linked_id)?;
 
-  let user_book = book.user_book.map_or(json!({}), |user_book| {
-    json!( {
-      "user_book_id": user_book.id,
-      "status_id": user_book.status_id,
-      "rating": user_book.rating,
-      "review_has_spoilers": user_book.review_has_spoilers,
-      "review_raw": user_book.review_raw,
-      "reviewed_at": user_book.reviewed_at,
-      "sponsored_review": user_book.sponsored_review,
-    })
-  });
-
-  log!("BEGIN_JSON\n{user_book}")?;
+  if let Some(user_book) = book.user_book {
+    send_msg(&Messages::UserBook(UserBook {
+      user_book_id: user_book.id,
+      status_id: user_book.status_id,
+      rating: user_book.rating,
+      review_has_spoilers: user_book.review_has_spoilers,
+      review_raw: user_book.review_raw,
+      reviewed_at: user_book.reviewed_at,
+      sponsored_review: user_book.sponsored_review,
+    }))?;
+  }
 
   Ok(())
 }

@@ -3,13 +3,13 @@ use std::sync::OnceLock;
 use anyhow::{Context, Result};
 use argh::FromArgs;
 use graphql_client::GraphQLQuery;
-use serde_json::json;
 
 use macros::AggregateErrors;
 
 use crate::config::JournalPrivacy;
 use crate::log;
-use crate::utils::{GraphQLQueryExt, VERSION};
+use crate::messages::{Messages, User};
+use crate::utils::{GraphQLQueryExt, VERSION, send_msg};
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -49,16 +49,14 @@ pub fn run(args: &GetUser) -> Result<()> {
 
   let user = get_user()?;
 
-  log!(
-    "BEGIN_JSON\n{}",
-    json!({
-      "id": user.id,
-      "username": user.username,
-      "account_privacy_setting_id": user.account_privacy_setting_id,
-      "account_privacy_setting": JournalPrivacy::try_from(user.account_privacy_setting_id)
+  send_msg(&Messages::User(User {
+    id: user.id,
+    username: user.username.clone(),
+    account_privacy_setting_id: user.account_privacy_setting_id,
+    account_privacy_setting: serde_json::to_string(
+      &JournalPrivacy::try_from(user.account_privacy_setting_id)
         .context("Failed to parse <i>account_privacy_setting_id</i>")?,
-    })
-  )?;
-
-  Ok(())
+    )
+    .context("Failed to serialize JournalPrivacy")?,
+  }))
 }
