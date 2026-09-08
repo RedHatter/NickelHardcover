@@ -3,8 +3,6 @@ use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 
-use macros::AggregateErrors;
-
 use crate::log;
 use crate::messages::{Edition, EditionList, Messages};
 use crate::utils::{GraphQLQueryExt, VERSION, send_msg};
@@ -14,7 +12,7 @@ use crate::utils::{GraphQLQueryExt, VERSION, send_msg};
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/queries/geteditions.graphql",
   custom_scalars_module = "crate::hardcover::scalars"
-  response_derives = "Debug,AggregateErrors,Serialize",
+  response_derives = "Debug,Serialize",
   variables_derives = "Debug,Deserialize",
   variable_types("Int","Vec<Int>","Value"),
 )]

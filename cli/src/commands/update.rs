@@ -3,8 +3,6 @@ use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 use jiff::Zoned;
 
-use macros::AggregateErrors;
-
 use crate::commands::getuserbook::get_book;
 use crate::commands::setuserbook::{update_or_insert_user_book, update_user_book::UserBookUpdateInput};
 use crate::commands::updatejournal::update_journal;
@@ -17,7 +15,7 @@ use crate::utils::{GraphQLQueryExt, VERSION, normalize_identifiers};
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/mutations/updateread.graphql",
   custom_scalars_module = "crate::hardcover::scalars"
-  response_derives = "Debug,AggregateErrors",
+  response_derives = "Debug",
   variables_derives = "Debug"
 )]
 struct UpdateRead;
@@ -27,7 +25,7 @@ struct UpdateRead;
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/mutations/insertread.graphql",
   custom_scalars_module = "crate::hardcover::scalars"
-  response_derives = "Debug,AggregateErrors",
+  response_derives = "Debug",
   variables_derives = "Debug"
 )]
 struct InsertRead;

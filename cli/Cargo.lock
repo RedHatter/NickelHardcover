@@ -869,14 +869,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "macros"
-version = "0.1.0"
-dependencies = [
- "quote",
- "syn",
-]
-
-[[package]]
 name = "memchr"
 version = "2.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -903,7 +895,6 @@ dependencies = [
  "graphql_client",
  "itertools 0.14.0",
  "jiff",
- "macros",
  "quick-xml",
  "regex",
  "retry",

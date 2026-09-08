@@ -1,11 +1,9 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 use itertools::{Either, Itertools};
 use jiff::{SignedDuration, Timestamp};
 use serde_json::json;
-
-use macros::AggregateErrors;
 
 use crate::commands::getuser::get_user;
 use crate::commands::getuserbook::{Book, get_book};
@@ -20,7 +18,7 @@ use crate::{debug_log, log};
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/mutations/insertreadingjournal.graphql",
   custom_scalars_module = "crate::hardcover::scalars"
-  response_derives = "Debug,AggregateErrors",
+  response_derives = "Debug",
   variables_derives = "Debug"
 )]
 struct InsertReadingJournal;
@@ -30,7 +28,7 @@ struct InsertReadingJournal;
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/mutations/updatereadingjournal.graphql",
   custom_scalars_module = "crate::hardcover::scalars"
-  response_derives = "Debug,AggregateErrors",
+  response_derives = "Debug",
   variables_derives = "Debug"
 )]
 struct UpdateReadingJournal;
@@ -40,7 +38,7 @@ struct UpdateReadingJournal;
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/queries/getjournalquotes.graphql",
   custom_scalars_module = "crate::hardcover::scalars"
-  response_derives = "Debug,AggregateErrors",
+  response_derives = "Debug",
   variables_derives = "Debug"
 )]
 struct GetJournalQuotes;
@@ -134,18 +132,18 @@ pub fn update_journal(content_id: &str, book: &Book) -> Result<()> {
       book.edition_id,
     )?;
     debug_log!("UpdateReadingJournal / InsertReadingJournal, {:?}", mutations)?;
-    batch_requests::<
-      _,
-      _,
-      Either<
-        graphql_client::Response<update_reading_journal::ResponseData>,
-        graphql_client::Response<insert_reading_journal::ResponseData>,
-      >,
-    >(
+    batch_requests::<_, serde_json::Value>(
       "UpdateReadingJournal / InsertReadingJournal",
       mutations
         .into_iter()
-        .map(|m| m.map_either(UpdateReadingJournal::build_query, InsertReadingJournal::build_query)),
+        .map(|m| {
+          m.either(
+            |left| serde_json::to_value(UpdateReadingJournal::build_query(left)),
+            |right| serde_json::to_value(InsertReadingJournal::build_query(right)),
+          )
+        })
+        .collect::<Result<Vec<_>, _>>()
+        .context("Failed to serialize <i>UpdateReadingJournal / InsertReadingJournal</i> bodies")?,
     )?;
   }
 

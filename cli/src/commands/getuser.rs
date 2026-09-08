@@ -4,8 +4,6 @@ use anyhow::{Context, Result};
 use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 
-use macros::AggregateErrors;
-
 use crate::config::JournalPrivacy;
 use crate::log;
 use crate::messages::{Messages, User};
@@ -16,7 +14,7 @@ use crate::utils::{GraphQLQueryExt, VERSION, send_msg};
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/queries/getme.graphql",
   custom_scalars_module = "crate::hardcover::scalars"
-  response_derives = "Debug,AggregateErrors,Serialize",
+  response_derives = "Debug,Serialize",
   variables_derives = "Debug"
 )]
 pub struct GetMe;

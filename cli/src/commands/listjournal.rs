@@ -3,8 +3,6 @@ use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 
-use macros::AggregateErrors;
-
 use crate::commands::getuser::get_user;
 use crate::log;
 use crate::messages::{Journal, JournalList, Messages, Metadata};
@@ -15,7 +13,7 @@ use crate::utils::{GraphQLQueryExt, VERSION, normalize_identifiers, send_msg};
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/queries/getreadingjournal.graphql",
   custom_scalars_module = "crate::hardcover::scalars"
-  response_derives = "Debug,AggregateErrors",
+  response_derives = "Debug",
   variables_derives = "Debug"
 )]
 struct GetReadingJournal;

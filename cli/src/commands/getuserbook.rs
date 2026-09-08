@@ -2,8 +2,6 @@ use anyhow::Result;
 use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 
-use macros::AggregateErrors;
-
 use crate::commands::getuser::get_user;
 use crate::log;
 use crate::messages::{Messages, UserBook};
@@ -14,7 +12,7 @@ use crate::utils::{GraphQLQueryExt, VERSION, book_not_found, normalize_identifie
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/queries/getedition.graphql",
   custom_scalars_module = "crate::hardcover::scalars"
-  response_derives = "Debug,AggregateErrors",
+  response_derives = "Debug",
   variables_derives = "Debug"
 )]
 pub struct GetEdition;

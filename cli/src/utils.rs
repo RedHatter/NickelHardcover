@@ -112,35 +112,6 @@ pub fn book_not_found(message: &str) -> ! {
   std::process::exit(0);
 }
 
-pub trait AggregateErrors {
-  fn errors(&self) -> impl Iterator<Item = &str>;
-}
-
-impl<Data: AggregateErrors> AggregateErrors for graphql_client::Response<Data> {
-  fn errors(&self) -> impl Iterator<Item = &str> {
-    self
-      .errors
-      .iter()
-      .flatten()
-      .map(|e| e.message.as_str())
-      .chain(self.data.iter().flat_map(AggregateErrors::errors))
-  }
-}
-
-impl<T: AggregateErrors> AggregateErrors for Vec<T> {
-  fn errors(&self) -> impl Iterator<Item = &str> {
-    self.iter().flat_map(AggregateErrors::errors)
-  }
-}
-
-impl<L: AggregateErrors, R: AggregateErrors> AggregateErrors for Either<L, R> {
-  fn errors(&self) -> impl Iterator<Item = &str> {
-    self
-      .as_ref()
-      .map_either(AggregateErrors::errors, AggregateErrors::errors)
-  }
-}
-
 pub trait GraphQLQueryExt
 where
   Self: GraphQLQuery,
@@ -151,7 +122,7 @@ where
 impl<T: GraphQLQuery> GraphQLQueryExt for T
 where
   <T as GraphQLQuery>::Variables: Debug,
-  <T as GraphQLQuery>::ResponseData: Debug + AggregateErrors,
+  <T as GraphQLQuery>::ResponseData: Debug,
 {
   fn send_request(variables: Self::Variables) -> Result<Self::ResponseData> {
     let body = Self::build_query(variables);

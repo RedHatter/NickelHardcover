@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["macros", "qt_codegen"]
+members = ["qt_codegen"]
 
 [package]
 name = "nickel-hardcover-cli"
@@ -13,7 +13,6 @@ argh = "0.1.13"
 cookie_store = "0.22.1"
 graphql_client = "0.16.0"
 itertools = "0.14.0"
-macros = { path = "./macros" }
 quick-xml = "0.40.1"
 regex = "1.12.3"
 retry = "2.2.0"

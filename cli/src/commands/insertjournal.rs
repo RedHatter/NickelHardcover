@@ -3,8 +3,6 @@ use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 use serde_json::json;
 
-use macros::AggregateErrors;
-
 use crate::commands::getuserbook::get_book;
 use crate::config::{CONFIG, JournalPrivacy};
 use crate::log;
@@ -15,7 +13,7 @@ use crate::utils::{GraphQLQueryExt, VERSION, normalize_identifiers};
   schema_path = "src/graphql/schema.graphql",
   query_path = "src/graphql/mutations/insertreadingjournal.graphql",
   custom_scalars_module = "crate::hardcover::scalars"
-  response_derives = "Debug,AggregateErrors",
+  response_derives = "Debug",
   variables_derives = "Debug"
 )]
 struct InsertReadingJournal;

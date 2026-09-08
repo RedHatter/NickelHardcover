@@ -1,7 +1,7 @@
+use std::sync::LazyLock;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::thread::sleep;
 use std::time::Duration;
-use std::{fmt::Debug, sync::LazyLock};
 
 use anyhow::{Context, Result, bail};
 use itertools::Itertools;
@@ -18,7 +18,7 @@ use ureq::{
 
 use crate::config::CONFIG;
 use crate::rate_limit::RateLimit;
-use crate::utils::{AggregateErrors, VERSION};
+use crate::utils::VERSION;
 use crate::{debug_log, log};
 
 pub mod scalars {
@@ -136,44 +136,73 @@ fn try_request<T: Serialize>(request_body: &T) -> Result<Response<Body>> {
   Ok(res)
 }
 
-pub fn send_request<T: Serialize, R: DeserializeOwned + Debug + AggregateErrors>(
-  operation_name: &str,
-  request_body: T,
-) -> Result<R> {
+fn collect_errors<'a>(value: &'a serde_json::Value, errors: &mut Vec<&'a str>) {
+  match value {
+    Value::Array(arr) => {
+      arr.iter().for_each(|val| collect_errors(val, errors));
+    }
+    Value::Object(map) => {
+      if let Some(val) = map.get("error") {
+        if let Some(e) = val.as_str() {
+          errors.push(e);
+        } else if let Some(vec) = val.as_array() {
+          errors.extend(vec.iter().filter_map(Value::as_str));
+        }
+      }
+
+      if let Some(val) = map.get("errors") {
+        if let Some(e) = val.as_str() {
+          errors.push(e);
+        } else if let Some(vec) = val.as_array() {
+          errors.extend(vec.iter().filter_map(Value::as_str));
+        }
+      }
+
+      map.values().for_each(|val| collect_errors(val, errors));
+    }
+    _ => {}
+  }
+}
+
+pub fn send_request<T: Serialize, R: DeserializeOwned>(operation_name: &str, request_body: T) -> Result<R> {
   assert!(
     !CONFIG.authorization.is_empty(),
     "Please set the Hardcover.app authorization token in <i>.adds/NickelHardcover/config.ini</i>."
   );
 
-  let data = retry(Exponential::from_millis(10).map(jitter).take(3), || {
+  let json = retry(Exponential::from_millis(10).map(jitter).take(3), || {
     try_request(&request_body)
   })
   .map_err(|err| err.error)
   .context(format!("<i>{operation_name}</i> request failed"))?
   .body_mut()
-  .read_json::<R>()
+  .read_json::<Value>()
   .context(format!("Failed to parse <i>{operation_name}</i> response"))?;
 
-  debug_log!("{:?}", data)?;
+  debug_log!("{:?}", json)?;
 
-  let errors = data.errors().join("<br>>");
+  let mut errors = Vec::<&str>::new();
+  collect_errors(&json, &mut errors);
+
   if !errors.is_empty() {
-    bail!("{operation_name} has errors<br>{errors}");
+    bail!("{operation_name} has errors<br>{}", errors.join("<br>>"));
   }
 
-  Ok(data)
+  serde_json::from_value(json).context(format!("Failed to deserialize <i>{operation_name}</i> response"))
 }
 
-pub fn batch_requests<T: Serialize, I: Iterator<Item = T>, R: DeserializeOwned + Debug + AggregateErrors>(
+pub fn batch_requests<T: Serialize, R: DeserializeOwned>(
   operation_name: &str,
-  request_bodies: I,
+  request_bodies: Vec<T>,
 ) -> Result<Vec<R>> {
   request_bodies
+    .iter()
     .batching(|it| {
       let chunk = it.take(HARDCOVER_AGENT.rate_limit()).collect::<Vec<_>>();
       if chunk.is_empty() {
         None
       } else {
+        debug_log!("Batching {}", chunk.len()).unwrap();
         Some(send_request::<_, Vec<R>>(operation_name, chunk))
       }
     })
