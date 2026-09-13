@@ -59,7 +59,9 @@ fn main() {
         eprintln!("{e}");
       }
 
-      write_logfile();
+      if let Err(e) = write_logfile() {
+        eprintln!("{e}");
+      }
     }));
   }
 
@@ -93,7 +95,12 @@ fn main() {
     );
   }
 
-  if CONFIG.debug {
-    write_logfile();
+  if CONFIG.debug
+    && let Err(e) = write_logfile()
+  {
+    panic!(
+      "Encountered an unexpected error. Please report this.<br><br>{:#}",
+      e.chain().join("<br>> ")
+    );
   }
 }

@@ -1,3 +1,4 @@
+use core::fmt;
 use std::fs;
 use std::str::FromStr;
 use std::sync::LazyLock;
@@ -85,6 +86,19 @@ impl<'de> Deserialize<'de> for JournalPrivacy {
     D: Deserializer<'de>,
   {
     Self::from_str(&String::deserialize(deserializer)?).map_err(de::Error::custom)
+  }
+}
+
+impl fmt::Display for JournalPrivacy {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    let s = match self {
+      JournalPrivacy::Account => "account",
+      JournalPrivacy::Public => "public",
+      JournalPrivacy::Follows => "follows",
+      JournalPrivacy::Private => "private",
+    };
+
+    write!(f, "{s}")
   }
 }
 

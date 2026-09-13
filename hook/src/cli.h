@@ -45,7 +45,7 @@ public Q_SLOTS:
   void checkConnected();
   void networkConnected();
   void connectingFailed();
-  void processFinished(int exitCode);
+  void processFinished();
   void linkBook();
 
 Q_SIGNALS:

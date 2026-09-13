@@ -82,7 +82,7 @@ env = {
   KOBO_SERVER = { required = true },
   KOBO_PASSWORD = { required = true, redact = true }
 }
-run = 'sshpass -p "$KOBO_PASSWORD" ssh -t "root@$KOBO_SERVER" "logread -F | grep NickelHardcover"'
+run = 'sshpass -p "$KOBO_PASSWORD" ssh -t "root@$KOBO_SERVER" "logread -F" | grep --line-buffered NickelHardcover'
 
 [tasks.schema]
 description = 'Fetch Hardcover.app GraphQL schema'

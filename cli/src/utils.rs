@@ -3,7 +3,6 @@ use std::fs::write;
 use std::sync::{LazyLock, Mutex};
 
 use anyhow::{Context, Result};
-use either::Either;
 use graphql_client::{GraphQLQuery, Response};
 use itertools::Itertools;
 use jiff::Zoned;
@@ -54,26 +53,17 @@ pub fn debug_log(msg: &str) -> Result<()> {
   writeln!(LOG.lock().unwrap(), "{} {msg}", Zoned::now().strftime("%a %b %e %T %Y")).context("Failed to write to log")
 }
 
-pub fn write_logfile() {
-  let res = || -> Result<()> {
-    write(
-      std::env::current_exe()
-        .context("Failed to get current binary path")?
-        .as_path()
-        .parent()
-        .context("Failed to get current binary directory")?
-        .join(Zoned::now().strftime("nickelhardcover_%F_%T.log").to_string()),
-      LOG.lock().unwrap().as_str(),
-    )
-    .context("Failed to write log file")
-  }();
-
-  if let Err(e) = res {
-    eprintln!(
-      "Encountered an unexpected error. Please report this.<br><br>{:#}",
-      e.chain().join("<br>> ")
-    );
-  }
+pub fn write_logfile() -> Result<()> {
+  write(
+    std::env::current_exe()
+      .context("Failed to get current binary path")?
+      .as_path()
+      .parent()
+      .context("Failed to get current binary directory")?
+      .join(Zoned::now().strftime("nickelhardcover_%F_%H-%M-%S.log").to_string()),
+    LOG.lock().unwrap().as_str(),
+  )
+  .context("Failed to write log file")
 }
 
 pub fn normalize_identifiers(linked_id: Option<i64>, content_id: Option<&str>) -> (i64, Vec<String>) {
@@ -105,8 +95,13 @@ pub fn book_not_found(message: &str) -> ! {
   }))
   .expect("Failed to log `BOOK_NOT_FOUND` error");
 
-  if CONFIG.debug {
-    write_logfile();
+  if CONFIG.debug
+    && let Err(e) = write_logfile()
+  {
+    panic!(
+      "Encountered an unexpected error. Please report this.<br><br>{:#}",
+      e.chain().join("<br>> ")
+    );
   }
 
   std::process::exit(0);

@@ -1,5 +1,5 @@
 use anyhow::{Context, Result, anyhow};
-use jiff::Timestamp;
+use jiff::{Timestamp, civil::DateTime, tz::TimeZone};
 use rusqlite::{Connection, OpenFlags};
 
 use crate::{config::CONFIG, epub::normalize_isbn};
@@ -53,6 +53,7 @@ pub fn get_bookmarks(content_id: &str) -> Result<Vec<Bookmark>> {
     )
     .context("Failed to prepare bookmark query")?
     .query_map([content_id], |row| {
+      let date_created: DateTime = row.get(3)?;
       let chapter_progress: Option<f64> = row.get(4)?;
       let chapter_word_count: Option<f64> = row.get(5)?;
       let bookmark_word_count: Option<f64> = row.get(6)?;
@@ -60,7 +61,7 @@ pub fn get_bookmarks(content_id: &str) -> Result<Vec<Bookmark>> {
         id: row.get(0)?,
         text: row.get(1)?,
         annotation: row.get(2)?,
-        date_created: row.get(3)?,
+        date_created: date_created.to_zoned(TimeZone::UTC).unwrap().timestamp(),
         location: if let Some(chapter_progress) = chapter_progress
           && let Some(chapter_word_count) = chapter_word_count
           && let Some(total_word_count) = total_word_count

@@ -217,7 +217,7 @@ void CLI::networkConnected() {
   QObject::connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &CLI::processFinished);
 }
 
-void CLI::processFinished(int exitCode) {
+void CLI::processFinished() {
   QProcess *process = qobject_cast<QProcess *>(sender());
 
   QByteArray stdout = process->readAllStandardOutput();

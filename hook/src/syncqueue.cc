@@ -1,5 +1,3 @@
-#include <QDateTime>
-#include <QLabel>
 #include <QSettings>
 #include <QTimer>
 

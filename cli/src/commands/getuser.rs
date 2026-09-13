@@ -51,10 +51,8 @@ pub fn run(args: &GetUser) -> Result<()> {
     id: user.id,
     username: user.username.clone(),
     account_privacy_setting_id: user.account_privacy_setting_id,
-    account_privacy_setting: serde_json::to_string(
-      &JournalPrivacy::try_from(user.account_privacy_setting_id)
-        .context("Failed to parse <i>account_privacy_setting_id</i>")?,
-    )
-    .context("Failed to serialize JournalPrivacy")?,
+    account_privacy_setting: JournalPrivacy::try_from(user.account_privacy_setting_id)
+      .context("Failed to parse <i>account_privacy_setting_id</i>")?
+      .to_string(),
   }))
 }
