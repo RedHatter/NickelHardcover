@@ -1,6 +1,4 @@
 #include <QHBoxLayout>
-#include <QJsonDocument>
-#include <QJsonObject>
 #include <QStackedWidget>
 #include <QString>
 

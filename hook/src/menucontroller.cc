@@ -1,5 +1,3 @@
-#include <QJsonDocument>
-#include <QJsonObject>
 #include <QLabel>
 #include <QPixmap>
 #include <QTimer>
@@ -9,13 +7,14 @@
 
 #include "cli.h"
 #include "files.h"
-#include "journal/journaldialog.h"
 #include "menucontroller.h"
+#include "settings.h"
+#include "synccontroller.h"
+#include "journal/journaldialog.h"
 #include "review/reviewdialog.h"
 #include "search/searchdialog.h"
-#include "settings.h"
 #include "settings/settingsdialog.h"
-#include "synccontroller.h"
+#include "signin/signindialog.h"
 
 NickelTouchMenu *MenuController::showMenu(QList<Item> items, QWidget *anchor, int offset, bool checkable,
                                           bool decorated) {
@@ -84,6 +83,7 @@ enum MenuOption {
   JOURNAL,
   REVIEW,
   SETTINGS,
+  SIGNIN
 };
 
 void MenuController::showMainMenu() {
@@ -95,18 +95,23 @@ void MenuController::showMainMenu() {
   QString contentId = syncController->contentId;
   Settings *settings = Settings::getInstance();
 
-  NickelTouchMenu *menu = showMenu(
-      {
-          {"Sync now", MenuOption::SYNC_NOW, false, syncController->syncDisabled},
-          {!settings->isEnabled(contentId) || syncController->syncDisabled ? "Enable auto-sync" : "Disable auto-sync",
-           MenuOption::TOGGLE_ENABLED, false, syncController->syncDisabled},
-          {settings->getLinkedId(contentId).isEmpty() ? "Manually link book" : "Unlink book", MenuOption::LINK},
-          {"Update book status", MenuOption::BOOK_STATUS},
-          {"Open reading journal", MenuOption::JOURNAL},
-          {"Write a review", MenuOption::REVIEW},
-          {"Settings", MenuOption::SETTINGS},
-      },
-      icon, 6);
+  QList<Item> items;
+  if (settings->isAuthorized()) {
+    items = {
+        {"Sync now", MenuOption::SYNC_NOW, false, syncController->syncDisabled},
+        {!settings->isEnabled(contentId) || syncController->syncDisabled ? "Enable auto-sync" : "Disable auto-sync",
+         MenuOption::TOGGLE_ENABLED, false, syncController->syncDisabled},
+        {settings->getLinkedId(contentId).isEmpty() ? "Manually link book" : "Unlink book", MenuOption::LINK},
+        {"Update book status", MenuOption::BOOK_STATUS},
+        {"Open reading journal", MenuOption::JOURNAL},
+        {"Write a review", MenuOption::REVIEW},
+        {"Settings", MenuOption::SETTINGS},
+    };
+  } else {
+    items = {{"Sign in to Hardcover.app", MenuOption::SIGNIN}};
+  }
+
+  NickelTouchMenu *menu = showMenu(items, icon, 6);
   QWidget::connect(menu, &QMenu::aboutToHide, icon, [this] { setSelected(false); });
   QWidget::connect(menu, &QMenu::triggered, this, &MenuController::triggered);
 
@@ -214,6 +219,10 @@ void MenuController::triggered(QAction *action) {
 
   case MenuOption::SETTINGS:
     SettingsDialog::show();
+    break;
+
+  case MenuOption::SIGNIN:
+    SignInDialog::show();
     break;
   }
 }

@@ -42,6 +42,12 @@ CLI *CLI::listJournal(int limit, int offset, Options options) {
   return new CLI(arguments, options);
 }
 
+CLI *CLI::oauthRequest(Options options) { return new CLI({"oauth-request"}, options); }
+
+CLI *CLI::oauthSet(QString deviceCode, Options options) {
+  return new CLI({"oauth-set", "--device-code", deviceCode}, options);
+}
+
 CLI *CLI::insertJournal(QString text, int percentage, QString privacy, Options options) {
   QStringList arguments = {"insert-journal", "--text", text, "--percentage", QString::number(percentage),
                            "--privacy",      privacy};
@@ -235,7 +241,11 @@ void CLI::processFinished() {
       break;
 
     case Messages::Kind::Error:
-      if (msg.error->error_code == "BOOK_NOT_FOUND") {
+      if (msg.error->error_code == "UNAUTHORIZED") {
+        SignInDialog::show();
+        failure(FailureReason::Unauthorized);
+        return;
+      } else if (msg.error->error_code == "BOOK_NOT_FOUND") {
         QString message = msg.error->message;
         nh_log("%s", qPrintable(message));
 

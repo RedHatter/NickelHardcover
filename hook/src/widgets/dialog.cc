@@ -1,7 +1,3 @@
-#include <QApplication>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QScreen>
 #include <QTextEdit>
 
 #include <NickelHook.h>
@@ -12,10 +8,6 @@
 Dialog::Dialog(QString title) : QFrame() {
   dialog = N3DialogFactory__getDialog(this, true);
   N3Dialog__setTitle(dialog, title);
-
-  QScreen *screen = QApplication::primaryScreen();
-  QRect screenGeometry = screen->geometry();
-  dialog->setFixedSize(screenGeometry.width(), screenGeometry.height());
 
   MainWindowController *mwc = MainWindowController__sharedInstance();
   MainWindowController__pushView(mwc, dialog);

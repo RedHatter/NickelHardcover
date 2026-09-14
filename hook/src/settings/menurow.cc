@@ -6,7 +6,6 @@
 
 #include "../files.h"
 #include "../menucontroller.h"
-#include "../widgets/label.h"
 #include "menurow.h"
 
 QVariant MenuRow::OPEN_DIALOG = QVariant("OPEN_DIALOG");
@@ -24,7 +23,7 @@ MenuRow::MenuRow(QString heading, MenuRowType type, QList<Item> menuItems, QList
   QHBoxLayout *rowLayout = new QHBoxLayout(row);
   rowLayout->setContentsMargins(0, 0, 0, 0);
 
-  Label *headingLabel = new Label(Label::Medium, heading);
+  headingLabel = new Label(Label::Medium, heading);
   headingLabel->setWordWrap(true);
   rowLayout->addWidget(headingLabel, 1);
 
@@ -55,6 +54,10 @@ MenuRow::MenuRow(QString heading, MenuRowType type, QList<Item> menuItems, QList
       return;
     }
   }
+}
+
+void MenuRow::setHeading(QString heading) {
+  headingLabel->setText(heading);
 }
 
 void MenuRow::tapped() {

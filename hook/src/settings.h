@@ -32,6 +32,9 @@ public:
   void setRetryOnNetwork(bool value);
   bool isRetryOnNetwork();
 
+  void clearAuthorization();
+  bool isAuthorized();
+
   void setSyncDaily(int value);
   int getSyncDaily();
 

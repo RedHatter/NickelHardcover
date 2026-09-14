@@ -3,7 +3,7 @@
 #include "../messages.h"
 #include "../widgets/dialog.h"
 #include "../widgets/pagedstack.h"
-#include "staticrow.h"
+#include "menurow.h"
 
 class SettingsDialog : public Dialog {
   Q_OBJECT
@@ -24,6 +24,7 @@ public Q_SLOTS:
 
   void setDebug(bool value);
   void saveLogs();
+  void signOut();
 
   void clearReadProgress();
   void clearLastSynced();
@@ -34,7 +35,7 @@ private:
   SettingsDialog();
 
   PagedStack *pages = nullptr;
-  StaticRow *username = nullptr;
+  MenuRow *username = nullptr;
 
   QFrame *buildGeneral();
   QFrame *buildAutoSync();

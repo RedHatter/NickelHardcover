@@ -1,13 +1,14 @@
 #include "label.h"
 
 const QString Label::Avenir = QStringLiteral("Avenir");
+const QString Label::AvenirExtraLarge = QStringLiteral("AvenirExtraLarge");
 const QString Label::ExtraSmall = QStringLiteral("ExtraSmall");
 const QString Label::Small = QStringLiteral("Small");
 const QString Label::Medium = QStringLiteral("Medium");
 const QString Label::Large = QStringLiteral("Large");
 const QString Label::ExtraLarge = QStringLiteral("ExtraLarge");
 const QString Label::Stylesheet = QStringLiteral(R"(
-  [textSize="Avenir"] {
+  [textSize="Avenir"], [textSize="AvenirExtraLarge"] {
     font-family: Avenir, sans-serif;
     text-transform: uppercase;
   }
@@ -26,6 +27,26 @@ const QString Label::Stylesheet = QStringLiteral(R"(
   }
   [qApp_deviceIsDaylight=true] [textSize="Avenir"] {
     font-size: 32px;
+  }
+
+  [qApp_deviceIsTrilogy=true] [textSize="AvenirExtraLarge"] {
+    font-size: 30px;
+  }
+  [qApp_deviceIsPhoenix=true] [textSize="AvenirExtraLarge"] {
+    font-size: 36px;
+  }
+  [qApp_deviceIsDragon=true] [textSize="AvenirExtraLarge"] {
+    font-size: 46px;
+  }
+  [qApp_deviceIsAlyssum=true] [textSize="AvenirExtraLarge"],
+  [qApp_deviceIsNova=true] [textSize="AvenirExtraLarge"] {
+    font-size: 50px;
+  }
+  [qApp_deviceIsStorm=true] [textSize="AvenirExtraLarge"] {
+    font-size: 54px;
+  }
+  [qApp_deviceIsDaylight=true] [textSize="AvenirExtraLarge"] {
+    font-size: 60px;
   }
 
   [qApp_deviceIsTrilogy="true"] [textSize="ExtraSmall"] {

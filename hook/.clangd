@@ -1,9 +1,10 @@
 CompileFlags:
   Add:
-    - "--include-directory=/usr/include/x86_64-linux-gnu/qt5/"
-    - "--include-directory=/usr/include/x86_64-linux-gnu/qt5/QtNetwork/"
-    - "--include-directory=/usr/include/x86_64-linux-gnu/qt5/QtCore/"
-    - "--include-directory=/usr/include/x86_64-linux-gnu/qt5/QtGui/"
-    - "--include-directory=/usr/include/x86_64-linux-gnu/qt5/QtWidgets/"
+    - "--include-directory=/usr/include/qt/"
+    - "--include-directory=/usr/include/qt/QtNetwork/"
+    - "--include-directory=/usr/include/qt/QtCore/"
+    - "--include-directory=/usr/include/qt/QtGui/"
+    - "--include-directory=/usr/include/qt/QtWidgets/"
     - "--include-directory=../NickelHook"
     - "--include-directory=../../NickelHook"
+    - "--include-directory=../../qrcodegen/c"

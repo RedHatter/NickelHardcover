@@ -1,10 +1,12 @@
 #pragma once
 
-#include "messages.h"
 #include <QJsonObject>
 #include <QLabel>
 #include <QObject>
 #include <QStringList>
+
+#include "signin/signindialog.h"
+#include "messages.h"
 
 class CLI : public QObject {
   Q_OBJECT
@@ -14,6 +16,7 @@ public:
     Network,
     Error,
     BookNotFound,
+    Unauthorized
   };
 
   struct Options {
@@ -32,6 +35,8 @@ public:
   static CLI *listBookmarks(Options options = Options());
   static CLI *listEditions(QString bookId, int readingFormat, QString language, Options options = Options());
   static CLI *listJournal(int limit, int offset, Options options = Options());
+  static CLI *oauthRequest(Options options = Options());
+  static CLI *oauthSet(QString deviceCode, Options options = Options());
   static CLI *insertJournal(QString text, int percentage, QString privacy, Options options = Options());
   static CLI *updateJournal(Options options = Options());
   static CLI *getUser(Options options = Options());

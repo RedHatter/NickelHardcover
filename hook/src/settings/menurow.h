@@ -4,6 +4,7 @@
 #include <QVariant>
 #include <QWidget>
 
+#include "../widgets/label.h"
 #include "../menucontroller.h"
 #include "../nickelhardcover.h"
 
@@ -22,6 +23,8 @@ public:
 
   static QVariant OPEN_DIALOG;
 
+  void setHeading(QString heading);
+
 public Q_SLOTS:
   void tapped();
   void up();
@@ -34,6 +37,7 @@ Q_SIGNALS:
 
 private:
   MenuRowType type;
+  Label *headingLabel = nullptr;
   QLabel *label = nullptr;
   QLabel *dialogLabel = nullptr;
   QList<Item> menuItems;

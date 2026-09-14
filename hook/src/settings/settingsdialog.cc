@@ -1,5 +1,6 @@
 #include <QDateTime>
 #include <QVBoxLayout>
+#include <QTimer>
 
 #include <NickelHook.h>
 
@@ -203,7 +204,8 @@ QFrame *SettingsDialog::buildGeneral() {
   layout->addWidget(row);
   row->setProperty("noBorder", true);
 
-  username = new StaticRow("Authorized user", "Unknown", false);
+  username = new MenuRow("Unknown user", MenuRowType::Tap, {{"Sign out", true}}, {}, true);
+  QObject::connect(username, &MenuRow::triggered, this, &SettingsDialog::signOut);
   layout->addWidget(username);
 
   CLI::Options options;
@@ -344,7 +346,7 @@ void SettingsDialog::setUsername(Messages message) {
   Optional<QString> usernameValue = message.user->username;
 
   if (usernameValue) {
-    username->setValue(usernameValue->prepend("@"));
+    username->setHeading(usernameValue->prepend("@"));
   }
 }
 
@@ -383,3 +385,8 @@ void SettingsDialog::clearLastSynced() {
 void SettingsDialog::setDebug(bool value) { Settings::getInstance()->setDebug(value); }
 
 void SettingsDialog::saveLogs() { nh_dump_log(); }
+
+void SettingsDialog::signOut() {
+  Settings::getInstance()->clearAuthorization();
+  QTimer::singleShot(0, this, &Dialog::close);
+}

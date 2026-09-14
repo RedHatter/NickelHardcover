@@ -66,6 +66,10 @@ void Settings::setLastProgress(QString contentId, int value) { setValue(contentI
 
 int Settings::getLastProgress(QString contentId) { return getValue(contentId, "progress").toInt(); }
 
+void Settings::clearAuthorization() { config->setValue("authorization", ""); }
+
+bool Settings::isAuthorized() { return !config->value("authorization").toString().isEmpty(); }
+
 void Settings::setSyncDaily(int value) { config->setValue("sync_daily", value); }
 
 int Settings::getSyncDaily() {

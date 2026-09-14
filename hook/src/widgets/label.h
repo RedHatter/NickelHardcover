@@ -8,6 +8,7 @@ class Label : public QLabel {
 
 public:
   static const QString Avenir;
+  static const QString AvenirExtraLarge;
   static const QString ExtraSmall;
   static const QString Small;
   static const QString Medium;

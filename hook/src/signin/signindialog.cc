@@ -41,7 +41,7 @@ void SignInDialog::response(Messages message) {
   qrLabel->setPixmap(QPixmap::fromImage(buildQrCode(message.o_auth_device->verification_uri_complete)));
   box->addWidget(qrLabel, 0, Qt::AlignCenter);
 
-  QString text = QString("<br><br>Please scan this QR code<br><br>— or —<br><br>Visit <b>%1</b> and enter<br>")
+  QString text = QString("<br>Please scan this QR code<br><br>— or —<br><br>Visit <b>%1</b> and enter<br>")
                      .arg(message.o_auth_device->verification_uri);
   QLabel *label = new Label(Label::Medium, text);
   label->setAlignment(Qt::AlignCenter);
@@ -76,7 +76,7 @@ QImage SignInDialog::buildQrCode(const QString &text) {
   }
 
   int size = qrcodegen_getSize(qrcode);
-  int imgSize = size * 2 * scale;
+  int imgSize = size * scale;
 
   QImage image(imgSize, imgSize, QImage::Format_RGB32);
   image.fill(Qt::white);

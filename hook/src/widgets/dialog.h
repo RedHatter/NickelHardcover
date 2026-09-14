@@ -12,6 +12,10 @@ public Q_SLOTS:
   void showKeyboard();
   void hideKeyboard();
 
+  void close() {
+    dialog->deleteLater();
+  }
+
   virtual void commit() {}
 
 private:

@@ -66,9 +66,8 @@ PagedStack::PagedStack(QWidget *parent) : QWidget(parent) {
   nextButton->hide();
   QWidget::connect(nextButton, SIGNAL(tapped(bool)), this, SLOT(next()));
 
-  status = new Label(Label::Small, "");
+  status = new Label(Label::Small, "Loading. Please wait...");
   status->setAlignment(Qt::AlignCenter);
-  status->setText("Loading. Please wait...");
 
   stack->addWidget(status);
 }

@@ -1,9 +1,3 @@
-#include <QApplication>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QScreen>
-#include <QTextEdit>
-
 #include <NickelHook.h>
 
 #include "../cli.h"
