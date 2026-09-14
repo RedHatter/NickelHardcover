@@ -1,17 +1,18 @@
 use std::env;
 use std::panic;
 
+use crate::appcontext::AppContext;
 use crate::commands::oauthset;
 use crate::commands::{
   getuser, getuserbook, insertjournal, listbookmarks, listeditions, listjournal, oauthrequest, search, setuserbook,
   update, updatejournal,
 };
-use crate::config::CONFIG;
 use crate::messages::Error;
 use crate::messages::Messages;
 use crate::utils::send_msg;
 use crate::utils::{VERSION, write_logfile};
 
+mod appcontext;
 mod commands;
 mod config;
 mod database;
@@ -75,22 +76,29 @@ fn main() {
     return;
   }
 
+  let mut context = AppContext::new().unwrap_or_else(|e| {
+    panic!(
+      "Encountered an unexpected error. Please report this.<br><br>{:#}",
+      e.chain().join("<br>> ")
+    )
+  });
+
   let res = match args
     .command
     .expect("A subcommands must be present. Run with --help for more information.")
   {
-    Commands::GetUser(args) => getuser::run(&args),
-    Commands::GetUserBook(args) => getuserbook::run(&args),
-    Commands::InsertJournal(args) => insertjournal::run(args),
-    Commands::ListBookmarks(args) => listbookmarks::run(&args),
-    Commands::ListEditions(args) => listeditions::run(args),
-    Commands::ListJournal(args) => listjournal::run(&args),
-    Commands::OAuthRequest(args) => oauthrequest::run(&args),
-    Commands::OAuthCheck(args) => oauthset::run(&args),
-    Commands::Search(args) => search::run(args),
-    Commands::SetUserBook(args) => setuserbook::run(args),
-    Commands::Update(args) => update::run(&args),
-    Commands::UpdateJournal(args) => updatejournal::run(&args),
+    Commands::GetUser(args) => getuser::run(&mut context, &args),
+    Commands::GetUserBook(args) => getuserbook::run(&mut context, &args),
+    Commands::InsertJournal(args) => insertjournal::run(&mut context, args),
+    Commands::ListBookmarks(args) => listbookmarks::run(&mut context, &args),
+    Commands::ListEditions(args) => listeditions::run(&mut context, args),
+    Commands::ListJournal(args) => listjournal::run(&mut context, &args),
+    Commands::OAuthRequest(args) => oauthrequest::run(&mut context, &args),
+    Commands::OAuthCheck(args) => oauthset::run(&mut context, &args),
+    Commands::Search(args) => search::run(&mut context, args),
+    Commands::SetUserBook(args) => setuserbook::run(&mut context, args),
+    Commands::Update(args) => update::run(&mut context, &args),
+    Commands::UpdateJournal(args) => updatejournal::run(&mut context, &args),
   };
 
   if let Err(e) = res {
@@ -100,7 +108,7 @@ fn main() {
     );
   }
 
-  if CONFIG.debug
+  if context.config.debug
     && let Err(e) = write_logfile()
   {
     panic!(

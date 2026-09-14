@@ -2,8 +2,8 @@ use anyhow::{Context, Result};
 use argh::FromArgs;
 use serde_json::Value;
 
-use crate::config::{CLIENT_ID, CONFIG};
-use crate::hardcover::HARDCOVER_AGENT;
+use crate::appcontext::AppContext;
+use crate::config::CLIENT_ID;
 use crate::messages::Messages;
 use crate::utils::{VERSION, send_error, send_msg};
 use crate::{debug_log, log};
@@ -13,12 +13,12 @@ use crate::{debug_log, log};
 #[argh(subcommand, name = "oauth-request")]
 pub struct OAuthRequest {}
 
-pub fn run(args: &OAuthRequest) -> Result<()> {
+pub fn run(context: &mut AppContext, args: &OAuthRequest) -> Result<()> {
   log!("{} {:?}", &*VERSION, args)?;
 
-  let json = HARDCOVER_AGENT
+  let json = context
     .agent
-    .post(format!("{}{}", &CONFIG.hardcover_endpoint, "/oauth2/device"))
+    .post(format!("{}{}", context.config.hardcover_endpoint, "/oauth2/device"))
     .send_form([
       ("client_id", CLIENT_ID),
       (
@@ -35,6 +35,7 @@ pub fn run(args: &OAuthRequest) -> Result<()> {
 
   if let Some(Value::String(error)) = json.get("error") {
     send_error(
+      context,
       "OAUTH",
       format!("Sign-in failed, please try again.<br><br><i>{}</i>", error),
     );

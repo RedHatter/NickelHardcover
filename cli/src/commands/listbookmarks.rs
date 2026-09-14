@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use argh::FromArgs;
 use rusqlite::{Connection, OpenFlags};
 
-use crate::config::CONFIG;
+use crate::appcontext::AppContext;
 use crate::log;
 use crate::messages::{Annotation, AnnotationList, Messages};
 use crate::utils::{VERSION, send_msg};
@@ -12,13 +12,13 @@ use crate::utils::{VERSION, send_msg};
 #[argh(subcommand, name = "list-bookmarks")]
 pub struct ListBookmarks {}
 
-pub fn run(args: &ListBookmarks) -> Result<()> {
+pub fn run(context: &mut AppContext, args: &ListBookmarks) -> Result<()> {
   log!("{} {:?}", &*VERSION, args)?;
 
-  let annotations = Connection::open_with_flags(&CONFIG.sqlite_path, OpenFlags::SQLITE_OPEN_READ_ONLY)
+  let annotations = Connection::open_with_flags(&context.config.sqlite_path, OpenFlags::SQLITE_OPEN_READ_ONLY)
     .context(format!(
       "Failed to connect to the database <i>{}</i>",
-      &CONFIG.sqlite_path
+      context.config.sqlite_path
     ))?
     .prepare(
       "SELECT

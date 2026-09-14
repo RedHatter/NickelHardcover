@@ -7,7 +7,7 @@ use graphql_client::{GraphQLQuery, Response};
 use itertools::Itertools;
 use jiff::Zoned;
 
-use crate::config::CONFIG;
+use crate::appcontext::AppContext;
 use crate::database::get_sqlite_isbn;
 use crate::epub::read_epub_isbn;
 use crate::hardcover::send_request;
@@ -31,7 +31,7 @@ macro_rules! log {
   }};
 }
 
-pub static VERSION: LazyLock<&str> = LazyLock::new(|| option_env!("VERSION").unwrap_or(env!("CARGO_PKG_VERSION")));
+pub static VERSION: &str = option_env!("VERSION").unwrap();
 
 static LOG: LazyLock<Mutex<String>> = LazyLock::new(|| Mutex::new(String::new()));
 
@@ -66,19 +66,24 @@ pub fn write_logfile() -> Result<()> {
   .context("Failed to write log file")
 }
 
-pub fn normalize_identifiers(linked_id: Option<i64>, content_id: Option<&str>) -> (i64, Vec<String>) {
+pub fn normalize_identifiers(
+  context: &mut AppContext,
+  linked_id: Option<i64>,
+  content_id: Option<&str>,
+) -> (i64, Vec<String>) {
   match (linked_id, content_id) {
     (Some(linked_id), _) => (linked_id, Vec::new()),
     (_, Some(content_id)) => {
       let isbn = if content_id.starts_with("file://") {
         read_epub_isbn(content_id)
       } else {
-        get_sqlite_isbn(content_id)
+        get_sqlite_isbn(context, content_id)
       };
 
       match isbn {
         Ok(isbn) => (0, isbn),
         Err(e) => send_error(
+          context,
           "BOOK_NOT_FOUND",
           format!(
             "Failed to find an ISBN. Please link book manually.<br><br>{:#}",
@@ -91,14 +96,14 @@ pub fn normalize_identifiers(linked_id: Option<i64>, content_id: Option<&str>) -
   }
 }
 
-pub fn send_error(error_code: &str, message: String) -> ! {
+pub fn send_error(context: &mut AppContext, error_code: &str, message: String) -> ! {
   send_msg(&Messages::Error(Error {
     error_code: error_code.to_string(),
     message,
   }))
   .expect("Failed to log `BOOK_NOT_FOUND` error");
 
-  if CONFIG.debug
+  if context.config.debug
     && let Err(e) = write_logfile()
   {
     panic!(
@@ -114,7 +119,7 @@ pub trait GraphQLQueryExt
 where
   Self: GraphQLQuery,
 {
-  fn send_request(variables: Self::Variables) -> Result<Self::ResponseData>;
+  fn send_request(context: &mut AppContext, variables: Self::Variables) -> Result<Self::ResponseData>;
 }
 
 impl<T: GraphQLQuery> GraphQLQueryExt for T
@@ -122,10 +127,10 @@ where
   <T as GraphQLQuery>::Variables: Debug,
   <T as GraphQLQuery>::ResponseData: Debug,
 {
-  fn send_request(variables: Self::Variables) -> Result<Self::ResponseData> {
+  fn send_request(context: &mut AppContext, variables: Self::Variables) -> Result<Self::ResponseData> {
     let body = Self::build_query(variables);
     debug_log!("{}, {:?}", body.operation_name, body.variables)?;
-    send_request::<_, Response<Self::ResponseData>>(body.operation_name, &body)?
+    send_request::<_, Response<Self::ResponseData>>(context, body.operation_name, &body)?
       .data
       .context(format!("{} response is None", body.operation_name))
   }

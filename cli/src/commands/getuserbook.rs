@@ -2,7 +2,7 @@ use anyhow::Result;
 use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 
-use crate::commands::getuser::get_user;
+use crate::appcontext::AppContext;
 use crate::log;
 use crate::messages::{Messages, UserBook};
 use crate::utils::{GraphQLQueryExt, VERSION, normalize_identifiers, send_error, send_msg};
@@ -43,11 +43,11 @@ pub struct GetUserBook {
   linked_id: Option<i64>,
 }
 
-pub fn run(args: &GetUserBook) -> Result<()> {
+pub fn run(context: &mut AppContext, args: &GetUserBook) -> Result<()> {
   log!("{} {:?}", &*VERSION, args)?;
 
-  let (linked_id, isbn) = normalize_identifiers(args.linked_id, args.content_id.as_deref());
-  let book = get_book(isbn, linked_id)?;
+  let (linked_id, isbn) = normalize_identifiers(context, args.linked_id, args.content_id.as_deref());
+  let book = get_book(context, isbn, linked_id)?;
 
   if let Some(user_book) = book.user_book {
     send_msg(&Messages::UserBook(UserBook {
@@ -71,22 +71,26 @@ pub struct Book {
   pub pages: i64,
 }
 
-pub fn get_book(isbn: Vec<String>, linked_id: i64) -> Result<Book> {
-  let user_id = get_user()?.id;
+pub fn get_book(context: &mut AppContext, isbn: Vec<String>, linked_id: i64) -> Result<Book> {
+  let user_id = context.user.id;
   let isbn_display = isbn.join(", ");
 
   // retrieve book, edition and maybe user book and user book read
-  let book = match GetEdition::send_request(get_edition::Variables {
-    isbn,
-    linked_id,
-    user_id,
-  })?
+  let book = match GetEdition::send_request(
+    context,
+    get_edition::Variables {
+      isbn,
+      linked_id,
+      user_id,
+    },
+  )?
   .books
   .into_iter()
   .next()
   {
     Some(book) => book,
     None => send_error(
+      context,
       "BOOK_NOT_FOUND",
       if linked_id != 0 {
         format!(

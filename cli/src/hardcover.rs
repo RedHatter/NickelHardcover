@@ -1,5 +1,3 @@
-use std::sync::LazyLock;
-use std::sync::atomic::{AtomicUsize, Ordering};
 use std::thread::sleep;
 use std::time::Duration;
 
@@ -13,14 +11,14 @@ use retry::{
 use serde::{Serialize, de::DeserializeOwned};
 use serde_json::Value;
 use ureq::{
-  Agent, Body,
+  Body,
   http::{Response, StatusCode},
 };
 
+use crate::appcontext::AppContext;
 use crate::commands::oauthset::refresh_token;
-use crate::config::CONFIG;
 use crate::rate_limit::RateLimit;
-use crate::utils::{VERSION, send_error};
+use crate::utils::send_error;
 use crate::{debug_log, log};
 
 pub mod scalars {
@@ -40,35 +38,11 @@ pub mod scalars {
   pub type timestamptz = Timestamp;
 }
 
-pub struct HardcoverContext {
-  pub agent: Agent,
-  rate_limit: AtomicUsize,
-}
-
-impl HardcoverContext {
-  fn rate_limit(&self) -> usize {
-    self.rate_limit.load(Ordering::Relaxed)
-  }
-
-  fn set_rate_limit(&self, val: usize) {
-    self.rate_limit.store(val.max(1), Ordering::Relaxed);
-  }
-}
-
-pub static HARDCOVER_AGENT: LazyLock<HardcoverContext> = LazyLock::new(|| HardcoverContext {
-  agent: Agent::config_builder()
-    .user_agent(format!("{}/{}", env!("CARGO_PKG_NAME"), &*VERSION))
-    .http_status_as_error(false)
-    .build()
-    .into(),
-  rate_limit: AtomicUsize::new(0),
-});
-
-fn try_request<T: Serialize>(request_body: &T) -> Result<Response<Body>> {
-  let res = HARDCOVER_AGENT
+fn try_request<T: Serialize>(context: &mut AppContext, request_body: &T) -> Result<Response<Body>> {
+  let res = context
     .agent
-    .post(format!("{}{}", &CONFIG.hardcover_endpoint, "/v1/graphql"))
-    .header("authorization", format!("Bearer {}", &CONFIG.authorization))
+    .post(format!("{}{}", context.config.hardcover_endpoint, "/v1/graphql"))
+    .header("authorization", format!("Bearer {}", context.config.authorization))
     .send_json(request_body)
     .context("Failed to send request")?;
 
@@ -100,7 +74,7 @@ fn try_request<T: Serialize>(request_body: &T) -> Result<Response<Body>> {
   }
 
   if let Some(rate_limit) = rate_limit.first() {
-    HARDCOVER_AGENT.set_rate_limit(rate_limit.remaining() as usize);
+    context.rate_limit = rate_limit.remaining().max(1) as usize;
 
     if rate_limit.remaining() == 0 {
       let duration = rate_limit.reset().unwrap_or(Duration::from_secs(1));
@@ -127,7 +101,7 @@ fn try_request<T: Serialize>(request_body: &T) -> Result<Response<Body>> {
     log!("{msg}")?;
 
     if code == StatusCode::UNAUTHORIZED {
-      send_error("UNAUTHORIZED", "".to_string());
+      send_error(context, "UNAUTHORIZED", "".to_string());
     } else {
       bail!(msg);
     }
@@ -164,20 +138,24 @@ fn collect_errors<'a>(value: &'a serde_json::Value, errors: &mut Vec<&'a str>) {
   }
 }
 
-pub fn send_request<T: Serialize, R: DeserializeOwned>(operation_name: &str, request_body: T) -> Result<R> {
-  if CONFIG.authorization.is_empty() {
-    send_error("UNAUTHORIZED", "".to_string());
+pub fn send_request<T: Serialize, R: DeserializeOwned>(
+  context: &mut AppContext,
+  operation_name: &str,
+  request_body: T,
+) -> Result<R> {
+  if context.config.authorization.is_empty() {
+    send_error(context, "UNAUTHORIZED", "".to_string());
   }
 
-  if let Some(token_expires_at) = CONFIG.token_expires_at
+  if let Some(token_expires_at) = context.config.token_expires_at
     && Timestamp::now().duration_until(token_expires_at).is_negative()
-    && !CONFIG.refresh_token.is_empty()
+    && !context.config.refresh_token.is_empty()
   {
-    refresh_token()?;
+    refresh_token(context)?;
   }
 
   let json = retry(Exponential::from_millis(10).map(jitter).take(3), || {
-    try_request(&request_body)
+    try_request(context, &request_body)
   })
   .map_err(|err| err.error)
   .context(format!("<i>{operation_name}</i> request failed"))?
@@ -198,18 +176,19 @@ pub fn send_request<T: Serialize, R: DeserializeOwned>(operation_name: &str, req
 }
 
 pub fn batch_requests<T: Serialize, R: DeserializeOwned>(
+  context: &mut AppContext,
   operation_name: &str,
   request_bodies: Vec<T>,
 ) -> Result<Vec<R>> {
   request_bodies
     .iter()
     .batching(|it| {
-      let chunk = it.take(HARDCOVER_AGENT.rate_limit()).collect::<Vec<_>>();
+      let chunk = it.take(context.rate_limit).collect::<Vec<_>>();
       if chunk.is_empty() {
         None
       } else {
         debug_log!("Batching {}", chunk.len()).unwrap();
-        Some(send_request::<_, Vec<R>>(operation_name, chunk))
+        Some(send_request::<_, Vec<R>>(context, operation_name, chunk))
       }
     })
     .flatten_ok()

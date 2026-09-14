@@ -3,6 +3,7 @@ use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 
+use crate::appcontext::AppContext;
 use crate::log;
 use crate::messages::{Edition, EditionList, Messages};
 use crate::utils::{GraphQLQueryExt, VERSION, send_msg};
@@ -35,7 +36,7 @@ pub struct ListEditions {
   language: Option<String>,
 }
 
-pub fn run(args: ListEditions) -> Result<()> {
+pub fn run(context: &mut AppContext, args: ListEditions) -> Result<()> {
   log!("{} {:?}", &*VERSION, args)?;
 
   let reading_format = match args.reading_format {
@@ -44,20 +45,23 @@ pub fn run(args: ListEditions) -> Result<()> {
     None => vec![1, 4],
   };
 
-  let res = GetEditions::send_request(get_editions::Variables {
-    book_id: args.book_id,
-    reading_format,
-    where_: match args.language {
-      Some(language) => serde_json::json!({
-        "language": {
+  let res = GetEditions::send_request(
+    context,
+    get_editions::Variables {
+      book_id: args.book_id,
+      reading_format,
+      where_: match args.language {
+        Some(language) => serde_json::json!({
           "language": {
-            "_eq": language
+            "language": {
+              "_eq": language
+            }
           }
-        }
-      }),
-      None => Value::Object(serde_json::Map::new()),
+        }),
+        None => Value::Object(serde_json::Map::new()),
+      },
     },
-  })?;
+  )?;
 
   let mut languages = res
     .languages

@@ -3,6 +3,7 @@ use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 
+use crate::appcontext::AppContext;
 use crate::log;
 use crate::messages::{Messages, SearchPages, SearchResult, Series};
 use crate::utils::{GraphQLQueryExt, VERSION, send_msg};
@@ -34,14 +35,17 @@ pub struct Search {
   query: String,
 }
 
-pub fn run(args: Search) -> Result<()> {
+pub fn run(context: &mut AppContext, args: Search) -> Result<()> {
   log!("{} {:?}", &*VERSION, args)?;
 
-  let res = SearchBooks::send_request(search_books::Variables {
-    query: args.query,
-    limit: args.limit,
-    page: args.page,
-  })?
+  let res = SearchBooks::send_request(
+    context,
+    search_books::Variables {
+      query: args.query,
+      limit: args.limit,
+      page: args.page,
+    },
+  )?
   .search
   .context("Failed to find field <i>search</i> in Hardcover.app results")?
   .results

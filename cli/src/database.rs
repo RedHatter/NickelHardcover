@@ -2,7 +2,7 @@ use anyhow::{Context, Result, anyhow};
 use jiff::{Timestamp, civil::DateTime, tz::TimeZone};
 use rusqlite::{Connection, OpenFlags};
 
-use crate::{config::CONFIG, epub::normalize_isbn};
+use crate::{appcontext::AppContext, epub::normalize_isbn};
 
 #[derive(Debug)]
 pub struct Bookmark {
@@ -14,10 +14,12 @@ pub struct Bookmark {
   pub location: Option<f64>,
 }
 
-pub fn get_bookmarks(content_id: &str) -> Result<Vec<Bookmark>> {
-  let connection = Connection::open_with_flags(&CONFIG.sqlite_path, OpenFlags::SQLITE_OPEN_READ_ONLY).context(
-    format!("Failed to connect to the database <i>{}</i>", &CONFIG.sqlite_path),
-  )?;
+pub fn get_bookmarks(context: &mut AppContext, content_id: &str) -> Result<Vec<Bookmark>> {
+  let connection =
+    Connection::open_with_flags(&context.config.sqlite_path, OpenFlags::SQLITE_OPEN_READ_ONLY).context(format!(
+      "Failed to connect to the database <i>{}</i>",
+      context.config.sqlite_path
+    ))?;
 
   let total_word_count: Option<f64> = connection
     .prepare("SELECT SUM(WordCount) FROM content WHERE BookId = (?1) AND WordCount > 0")
@@ -79,11 +81,11 @@ pub fn get_bookmarks(content_id: &str) -> Result<Vec<Bookmark>> {
     .context("Failed to map bookmark query result")
 }
 
-pub fn get_sqlite_isbn(content_id: &str) -> Result<Vec<String>> {
-  let isbn = Connection::open_with_flags(&CONFIG.sqlite_path, OpenFlags::SQLITE_OPEN_READ_ONLY)
+pub fn get_sqlite_isbn(context: &mut AppContext, content_id: &str) -> Result<Vec<String>> {
+  let isbn = Connection::open_with_flags(&context.config.sqlite_path, OpenFlags::SQLITE_OPEN_READ_ONLY)
     .context(format!(
       "Failed to connect to the database <i>{}</i>",
-      &CONFIG.sqlite_path
+      context.config.sqlite_path
     ))?
     .prepare(
       "SELECT ISBN

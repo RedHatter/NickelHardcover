@@ -3,7 +3,7 @@ use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
 
-use crate::commands::getuser::get_user;
+use crate::appcontext::AppContext;
 use crate::log;
 use crate::messages::{Journal, JournalList, Messages, Metadata};
 use crate::utils::{GraphQLQueryExt, VERSION, normalize_identifiers, send_msg};
@@ -39,19 +39,22 @@ pub struct ListJournal {
   offset: i64,
 }
 
-pub fn run(args: &ListJournal) -> Result<()> {
+pub fn run(context: &mut AppContext, args: &ListJournal) -> Result<()> {
   log!("{} {:?}", &*VERSION, args)?;
 
-  let (linked_id, isbn) = normalize_identifiers(args.linked_id, args.content_id.as_deref());
-  let user_id = get_user()?.id;
+  let (linked_id, isbn) = normalize_identifiers(context, args.linked_id, args.content_id.as_deref());
+  let user_id = context.user.id;
 
-  let reading_journals = GetReadingJournal::send_request(get_reading_journal::Variables {
-    isbn,
-    linked_id,
-    user_id,
-    limit: args.limit,
-    offset: args.offset,
-  })?
+  let reading_journals = GetReadingJournal::send_request(
+    context,
+    get_reading_journal::Variables {
+      isbn,
+      linked_id,
+      user_id,
+      limit: args.limit,
+      offset: args.offset,
+    },
+  )?
   .reading_journals
   .iter()
   .map(|journal| Journal {

@@ -2,15 +2,13 @@ use core::fmt;
 use std::fs;
 use std::path::PathBuf;
 use std::str::FromStr;
-use std::sync::LazyLock;
 
 use anyhow::{Context, Result, anyhow};
-use itertools::Itertools;
 use jiff::Timestamp;
 use serde::Serialize;
 use serde::{Deserialize, Deserializer, de};
 
-use crate::commands::getuser::get_user;
+use crate::appcontext::AppContext;
 
 pub static CLIENT_ID: &str = "f74912d3-4275-4935-803f-6b900042d63c";
 
@@ -48,10 +46,10 @@ pub enum JournalPrivacy {
 }
 
 impl JournalPrivacy {
-  pub fn get_value(self) -> Result<i64> {
+  pub fn get_value(self, context: &AppContext) -> i64 {
     match self {
-      JournalPrivacy::Account => Ok(get_user()?.account_privacy_setting_id),
-      _ => Ok(self as i64),
+      JournalPrivacy::Account => context.user.account_privacy_setting_id,
+      _ => self as i64,
     }
   }
 }
@@ -177,7 +175,7 @@ impl Default for Config {
 }
 
 impl Config {
-  fn get_dir() -> Result<PathBuf> {
+  pub fn get_dir() -> Result<PathBuf> {
     let current_exe = std::env::current_exe().context("Failed to get current binary path")?;
     Ok(
       current_exe
@@ -187,11 +185,11 @@ impl Config {
     )
   }
 
-  fn get_path() -> Result<PathBuf> {
+  pub fn get_path() -> Result<PathBuf> {
     Ok(Config::get_dir()?.join("config.ini"))
   }
 
-  fn read() -> Result<Option<Config>> {
+  pub fn read() -> Result<Option<Config>> {
     let config_path = Config::get_path()?;
 
     if config_path.exists() {
@@ -209,41 +207,3 @@ impl Config {
     fs::write(Config::get_path()?, ini).context("Failed to write default config")
   }
 }
-
-pub static CONFIG: LazyLock<Config> = LazyLock::new(|| {
-  let config = || -> Result<Config> {
-    let config_dir = Config::get_dir()?;
-
-    let config = if let Some(config) = Config::read()? {
-      config
-    } else {
-      let config = Config::default();
-      config.write()?;
-      config
-    };
-
-    Ok(Config {
-      authorization: if let Some(auth) = config.authorization.strip_prefix("Bearer ") {
-        auth.to_string()
-      } else {
-        config.authorization
-      },
-      sqlite_path: config_dir
-        .join(config.sqlite_path)
-        .to_str()
-        .context("Failed to get SQLite path")?
-        .to_string(),
-      ..config
-    })
-  }();
-
-  match config {
-    Ok(config) => config,
-    Err(e) => {
-      panic!(
-        "Encountered an unexpected error. Please report this.<br><br>{:#}",
-        e.chain().join("<br>> ")
-      );
-    }
-  }
-});

@@ -3,10 +3,11 @@ use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 use jiff::Zoned;
 
+use crate::appcontext::AppContext;
 use crate::commands::getuserbook::get_book;
 use crate::commands::setuserbook::{update_or_insert_user_book, update_user_book::UserBookUpdateInput};
 use crate::commands::updatejournal::update_journal;
-use crate::config::{CONFIG, SyncBookmarks};
+use crate::config::SyncBookmarks;
 use crate::log;
 use crate::utils::{GraphQLQueryExt, VERSION, normalize_identifiers};
 
@@ -47,12 +48,13 @@ pub struct Update {
   value: i64,
 }
 
-pub fn run(args: &Update) -> Result<()> {
+pub fn run(context: &mut AppContext, args: &Update) -> Result<()> {
   log!("{} {:?}", &*VERSION, args)?;
 
-  let (linked_id, isbn) = normalize_identifiers(args.linked_id, Some(&args.content_id));
-  let book = get_book(isbn, linked_id)?;
+  let (linked_id, isbn) = normalize_identifiers(context, args.linked_id, Some(&args.content_id));
+  let book = get_book(context, isbn, linked_id)?;
   let (user_book_id, user_read_id, started_at) = update_or_insert_user_book(
+    context,
     &book,
     UserBookUpdateInput {
       status_id: Some(2),
@@ -69,33 +71,39 @@ pub fn run(args: &Update) -> Result<()> {
       book.edition_id
     )?;
 
-    UpdateRead::send_request(update_read::Variables {
-      id: user_read_id,
-      progress_pages,
-      edition_id: book.edition_id,
-      started_at,
-    })?;
+    UpdateRead::send_request(
+      context,
+      update_read::Variables {
+        id: user_read_id,
+        progress_pages,
+        edition_id: book.edition_id,
+        started_at,
+      },
+    )?;
   } else {
     log!(
       "Insert new read for edition `{}` at page `{progress_pages}`",
       book.edition_id
     )?;
 
-    InsertRead::send_request(insert_read::Variables {
-      user_book_id,
-      edition_id: book.edition_id,
-      progress_pages,
-      started_at,
-    })?;
+    InsertRead::send_request(
+      context,
+      insert_read::Variables {
+        user_book_id,
+        edition_id: book.edition_id,
+        progress_pages,
+        started_at,
+      },
+    )?;
   }
 
-  if CONFIG.sync_bookmarks == SyncBookmarks::Never
-    || (CONFIG.sync_bookmarks == SyncBookmarks::Finished && args.value != 100)
+  if context.config.sync_bookmarks == SyncBookmarks::Never
+    || (context.config.sync_bookmarks == SyncBookmarks::Finished && args.value != 100)
   {
     return Ok(());
   }
 
-  update_journal(&args.content_id, &book)?;
+  update_journal(context, &args.content_id, &book)?;
 
   Ok(())
 }

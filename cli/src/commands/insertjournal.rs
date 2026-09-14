@@ -3,8 +3,9 @@ use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 use serde_json::json;
 
+use crate::appcontext::AppContext;
 use crate::commands::getuserbook::get_book;
-use crate::config::{CONFIG, JournalPrivacy};
+use crate::config::JournalPrivacy;
 use crate::log;
 use crate::utils::{GraphQLQueryExt, VERSION, normalize_identifiers};
 
@@ -43,25 +44,31 @@ pub struct InsertJournal {
   privacy: Option<JournalPrivacy>,
 }
 
-pub fn run(args: InsertJournal) -> Result<()> {
+pub fn run(context: &mut AppContext, args: InsertJournal) -> Result<()> {
   log!("{} {:?}", &*VERSION, args)?;
 
-  let (linked_id, isbn) = normalize_identifiers(args.linked_id, args.content_id.as_deref());
-  let book = get_book(isbn, linked_id)?;
+  let (linked_id, isbn) = normalize_identifiers(context, args.linked_id, args.content_id.as_deref());
+  let book = get_book(context, isbn, linked_id)?;
 
-  InsertReadingJournal::send_request(insert_reading_journal::Variables {
-    book_id: book.book_id,
-    edition_id: book.edition_id,
-    event: "note".into(),
-    privacy_setting_id: args.privacy.unwrap_or(CONFIG.journal_privacy).get_value()?,
-    entry: args.text,
-    action_at: None,
-    metadata: Some(json!({
-      "page": (book.pages as f64 * (args.percentage / 100.0)).round() as i64,
-      "possible": book.pages,
-      "percent": args.percentage,
-    })),
-  })?;
+  InsertReadingJournal::send_request(
+    context,
+    insert_reading_journal::Variables {
+      book_id: book.book_id,
+      edition_id: book.edition_id,
+      event: "note".into(),
+      privacy_setting_id: args
+        .privacy
+        .unwrap_or(context.config.journal_privacy)
+        .get_value(context),
+      entry: args.text,
+      action_at: None,
+      metadata: Some(json!({
+        "page": (book.pages as f64 * (args.percentage / 100.0)).round() as i64,
+        "possible": book.pages,
+        "percent": args.percentage,
+      })),
+    },
+  )?;
 
   Ok(())
 }

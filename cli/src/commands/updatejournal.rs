@@ -5,9 +5,9 @@ use itertools::{Either, Itertools};
 use jiff::{SignedDuration, Timestamp};
 use serde_json::json;
 
-use crate::commands::getuser::get_user;
+use crate::appcontext::AppContext;
 use crate::commands::getuserbook::{Book, get_book};
-use crate::config::{CONFIG, SyncBookmarks};
+use crate::config::SyncBookmarks;
 use crate::database::{Bookmark, get_bookmarks};
 use crate::hardcover::batch_requests;
 use crate::utils::{GraphQLQueryExt, VERSION, normalize_identifiers};
@@ -56,18 +56,18 @@ pub struct UpdateJournal {
   linked_id: Option<i64>,
 }
 
-pub fn run(args: &UpdateJournal) -> Result<()> {
+pub fn run(context: &mut AppContext, args: &UpdateJournal) -> Result<()> {
   log!("{} {:?}", &*VERSION, args)?;
 
-  let (linked_id, isbn) = normalize_identifiers(args.linked_id, Some(&args.content_id));
-  let book = get_book(isbn, linked_id)?;
-  update_journal(&args.content_id, &book)?;
+  let (linked_id, isbn) = normalize_identifiers(context, args.linked_id, Some(&args.content_id));
+  let book = get_book(context, isbn, linked_id)?;
+  update_journal(context, &args.content_id, &book)?;
 
   Ok(())
 }
 
-pub fn update_journal(content_id: &str, book: &Book) -> Result<()> {
-  let mut bookmarks = get_bookmarks(content_id)?;
+pub fn update_journal(context: &mut AppContext, content_id: &str, book: &Book) -> Result<()> {
+  let mut bookmarks = get_bookmarks(context, content_id)?;
 
   log!("{} bookmarks", bookmarks.len())?;
 
@@ -77,9 +77,9 @@ pub fn update_journal(content_id: &str, book: &Book) -> Result<()> {
 
   debug_log!("{:?}", bookmarks)?;
 
-  let user_id = get_user()?.id;
+  let user_id = context.user.id;
 
-  let reading_journals = if CONFIG.sync_bookmarks == SyncBookmarks::Finished {
+  let reading_journals = if context.config.sync_bookmarks == SyncBookmarks::Finished {
     bookmarks.sort_by(|a, b| a.location.unwrap_or(0.0).total_cmp(&b.location.unwrap_or(0.0)));
     vec![]
   } else {
@@ -89,11 +89,14 @@ pub fn update_journal(content_id: &str, book: &Book) -> Result<()> {
     let mut reading_journals = Vec::new();
 
     loop {
-      let entries = GetJournalQuotes::send_request(get_journal_quotes::Variables {
-        book_id: book.book_id,
-        user_id,
-        offset,
-      })?
+      let entries = GetJournalQuotes::send_request(
+        context,
+        get_journal_quotes::Variables {
+          book_id: book.book_id,
+          user_id,
+          offset,
+        },
+      )?
       .reading_journals;
       let len = entries.len();
       reading_journals.extend(entries);
@@ -113,6 +116,7 @@ pub fn update_journal(content_id: &str, book: &Book) -> Result<()> {
     .enumerate()
     .map(|(i, bookmark)| {
       build_journal_quote(
+        context,
         i,
         bookmark,
         reading_journals
@@ -133,6 +137,7 @@ pub fn update_journal(content_id: &str, book: &Book) -> Result<()> {
     )?;
     debug_log!("UpdateReadingJournal / InsertReadingJournal, {:?}", mutations)?;
     batch_requests::<_, serde_json::Value>(
+      context,
       "UpdateReadingJournal / InsertReadingJournal",
       mutations
         .into_iter()
@@ -151,6 +156,7 @@ pub fn update_journal(content_id: &str, book: &Book) -> Result<()> {
 }
 
 fn build_journal_quote(
+  context: &mut AppContext,
   i: usize,
   bookmark: &Bookmark,
   journal: Option<&get_journal_quotes::GetJournalQuotesReadingJournals>,
@@ -180,10 +186,10 @@ fn build_journal_quote(
       book_id: book.book_id,
       edition_id: book.edition_id,
       event: "quote".into(),
-      privacy_setting_id: CONFIG.journal_privacy.get_value()?,
+      privacy_setting_id: context.config.journal_privacy.get_value(context),
       entry,
       action_at: Some(
-        if CONFIG.sync_bookmarks == SyncBookmarks::Finished {
+        if context.config.sync_bookmarks == SyncBookmarks::Finished {
           Timestamp::now() + SignedDuration::from_secs(i as i64)
         } else {
           bookmark.date_created

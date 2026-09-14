@@ -2,6 +2,7 @@ use anyhow::{Context, Result};
 use graphql_client::GraphQLQuery;
 use jiff::Zoned;
 
+use crate::appcontext::AppContext;
 use crate::commands::getuserbook::{Book, get_book};
 use crate::log;
 use crate::utils::{GraphQLQueryExt, VERSION, normalize_identifiers};
@@ -63,13 +64,14 @@ pub struct SetUserBook {
   spoilers: Option<bool>,
 }
 
-pub fn run(args: SetUserBook) -> Result<()> {
+pub fn run(context: &mut AppContext, args: SetUserBook) -> Result<()> {
   log!("{} {:?}", &*VERSION, args)?;
 
-  let (linked_id, isbn) = normalize_identifiers(args.linked_id, args.content_id.as_deref());
-  let book = get_book(isbn, linked_id)?;
+  let (linked_id, isbn) = normalize_identifiers(context, args.linked_id, args.content_id.as_deref());
+  let book = get_book(context, isbn, linked_id)?;
 
   update_or_insert_user_book(
+    context,
     &book,
     update_user_book::UserBookUpdateInput {
       status_id: args.status,
@@ -109,6 +111,7 @@ pub fn run(args: SetUserBook) -> Result<()> {
 }
 
 pub fn update_or_insert_user_book(
+  context: &mut AppContext,
   book: &Book,
   object: update_user_book::UserBookUpdateInput,
 ) -> Result<(i64, Option<i64>, Option<String>)> {
@@ -128,10 +131,13 @@ pub fn update_or_insert_user_book(
     {
       log!("Update user book `{}`", user_book.id)?;
 
-      UpdateUserBook::send_request(update_user_book::Variables {
-        user_book_id: user_book.id,
-        object,
-      })?
+      UpdateUserBook::send_request(
+        context,
+        update_user_book::Variables {
+          user_book_id: user_book.id,
+          object,
+        },
+      )?
       .update_user_book
       .and_then(|update| update.user_book)
       .context(format!("Failed to find updated user book <i>{}</i>", user_book.id))?
@@ -156,19 +162,22 @@ pub fn update_or_insert_user_book(
         book.edition_id
       )?;
 
-      let user_book = InsertUserBook::send_request(insert_user_book::Variables {
-        object: insert_user_book::UserBookCreateInput {
-          book_id: book.book_id,
-          edition_id: Some(book.edition_id),
-          status_id: object.status_id,
-          rating: object.rating,
-          review_slate: object.review_slate,
-          sponsored_review: object.sponsored_review,
-          reviewed_at: object.reviewed_at,
-          review_has_spoilers: object.review_has_spoilers,
-          ..insert_user_book::UserBookCreateInput::default()
+      let user_book = InsertUserBook::send_request(
+        context,
+        insert_user_book::Variables {
+          object: insert_user_book::UserBookCreateInput {
+            book_id: book.book_id,
+            edition_id: Some(book.edition_id),
+            status_id: object.status_id,
+            rating: object.rating,
+            review_slate: object.review_slate,
+            sponsored_review: object.sponsored_review,
+            reviewed_at: object.reviewed_at,
+            review_has_spoilers: object.review_has_spoilers,
+            ..insert_user_book::UserBookCreateInput::default()
+          },
         },
-      })?
+      )?
       .insert_user_book
       .and_then(|update| update.user_book)
       .context("Failed to find inserted user book")?;
