@@ -31,8 +31,6 @@ macro_rules! log {
   }};
 }
 
-pub static VERSION: &str = option_env!("VERSION").unwrap();
-
 static LOG: LazyLock<Mutex<String>> = LazyLock::new(|| Mutex::new(String::new()));
 
 pub fn send_msg(value: &Messages) -> Result<()> {

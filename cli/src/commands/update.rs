@@ -7,9 +7,9 @@ use crate::appcontext::AppContext;
 use crate::commands::getuserbook::get_book;
 use crate::commands::setuserbook::{update_or_insert_user_book, update_user_book::UserBookUpdateInput};
 use crate::commands::updatejournal::update_journal;
-use crate::config::SyncBookmarks;
+use crate::config::{SyncBookmarks, VERSION};
 use crate::log;
-use crate::utils::{GraphQLQueryExt, VERSION, normalize_identifiers};
+use crate::utils::{GraphQLQueryExt, normalize_identifiers};
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -49,7 +49,7 @@ pub struct Update {
 }
 
 pub fn run(context: &mut AppContext, args: &Update) -> Result<()> {
-  log!("{} {:?}", &*VERSION, args)?;
+  log!("{} {:?}", VERSION, args)?;
 
   let (linked_id, isbn) = normalize_identifiers(context, args.linked_id, Some(&args.content_id));
   let book = get_book(context, isbn, linked_id)?;

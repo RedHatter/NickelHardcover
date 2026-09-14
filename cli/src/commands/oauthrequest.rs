@@ -3,9 +3,9 @@ use argh::FromArgs;
 use serde_json::Value;
 
 use crate::appcontext::AppContext;
-use crate::config::CLIENT_ID;
+use crate::config::{CLIENT_ID, VERSION};
 use crate::messages::Messages;
-use crate::utils::{VERSION, send_error, send_msg};
+use crate::utils::{send_error, send_msg};
 use crate::{debug_log, log};
 
 /// Begin OAuth login flow
@@ -14,7 +14,7 @@ use crate::{debug_log, log};
 pub struct OAuthRequest {}
 
 pub fn run(context: &mut AppContext, args: &OAuthRequest) -> Result<()> {
-  log!("{} {:?}", &*VERSION, args)?;
+  log!("{} {:?}", VERSION, args)?;
 
   let json = context
     .agent

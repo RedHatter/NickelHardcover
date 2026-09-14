@@ -2,9 +2,9 @@ use anyhow::{Context, Result};
 use graphql_client::GraphQLQuery;
 use ureq::Agent;
 
-use crate::config::Config;
+use crate::config::{Config, VERSION};
 use crate::log;
-use crate::utils::{GraphQLQueryExt, VERSION};
+use crate::utils::GraphQLQueryExt;
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -37,7 +37,7 @@ impl AppContext {
 
     let mut context = AppContext {
       agent: Agent::config_builder()
-        .user_agent(format!("{}/{}", env!("CARGO_PKG_NAME"), &*VERSION))
+        .user_agent(format!("{}/{}", env!("CARGO_PKG_NAME"), VERSION))
         .http_status_as_error(false)
         .build()
         .into(),

@@ -7,10 +7,10 @@ use serde_json::json;
 
 use crate::appcontext::AppContext;
 use crate::commands::getuserbook::{Book, get_book};
-use crate::config::SyncBookmarks;
+use crate::config::{SyncBookmarks, VERSION};
 use crate::database::{Bookmark, get_bookmarks};
 use crate::hardcover::batch_requests;
-use crate::utils::{GraphQLQueryExt, VERSION, normalize_identifiers};
+use crate::utils::{GraphQLQueryExt, normalize_identifiers};
 use crate::{debug_log, log};
 
 #[derive(GraphQLQuery)]
@@ -57,7 +57,7 @@ pub struct UpdateJournal {
 }
 
 pub fn run(context: &mut AppContext, args: &UpdateJournal) -> Result<()> {
-  log!("{} {:?}", &*VERSION, args)?;
+  log!("{} {:?}", VERSION, args)?;
 
   let (linked_id, isbn) = normalize_identifiers(context, args.linked_id, Some(&args.content_id));
   let book = get_book(context, isbn, linked_id)?;

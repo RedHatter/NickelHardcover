@@ -4,8 +4,9 @@ use jiff::Zoned;
 
 use crate::appcontext::AppContext;
 use crate::commands::getuserbook::{Book, get_book};
+use crate::config::VERSION;
 use crate::log;
-use crate::utils::{GraphQLQueryExt, VERSION, normalize_identifiers};
+use crate::utils::{GraphQLQueryExt, normalize_identifiers};
 
 use argh::FromArgs;
 
@@ -65,7 +66,7 @@ pub struct SetUserBook {
 }
 
 pub fn run(context: &mut AppContext, args: SetUserBook) -> Result<()> {
-  log!("{} {:?}", &*VERSION, args)?;
+  log!("{} {:?}", VERSION, args)?;
 
   let (linked_id, isbn) = normalize_identifiers(context, args.linked_id, args.content_id.as_deref());
   let book = get_book(context, isbn, linked_id)?;

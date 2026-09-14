@@ -4,9 +4,10 @@ use graphql_client::GraphQLQuery;
 use serde_json::Value;
 
 use crate::appcontext::AppContext;
+use crate::config::VERSION;
 use crate::log;
 use crate::messages::{Journal, JournalList, Messages, Metadata};
-use crate::utils::{GraphQLQueryExt, VERSION, normalize_identifiers, send_msg};
+use crate::utils::{GraphQLQueryExt, normalize_identifiers, send_msg};
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -40,7 +41,7 @@ pub struct ListJournal {
 }
 
 pub fn run(context: &mut AppContext, args: &ListJournal) -> Result<()> {
-  log!("{} {:?}", &*VERSION, args)?;
+  log!("{} {:?}", VERSION, args)?;
 
   let (linked_id, isbn) = normalize_identifiers(context, args.linked_id, args.content_id.as_deref());
   let user_id = context.user.id;

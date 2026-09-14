@@ -7,10 +7,11 @@ use crate::commands::{
   getuser, getuserbook, insertjournal, listbookmarks, listeditions, listjournal, oauthrequest, search, setuserbook,
   update, updatejournal,
 };
+use crate::config::VERSION;
 use crate::messages::Error;
 use crate::messages::Messages;
 use crate::utils::send_msg;
-use crate::utils::{VERSION, write_logfile};
+use crate::utils::write_logfile;
 
 mod appcontext;
 mod commands;
@@ -72,7 +73,7 @@ fn main() {
   let args: Arguments = argh::from_env();
 
   if args.version {
-    println!("{}", &*VERSION);
+    println!("{}", VERSION);
     return;
   }
 

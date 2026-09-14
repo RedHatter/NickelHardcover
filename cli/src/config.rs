@@ -11,6 +11,7 @@ use serde::{Deserialize, Deserializer, de};
 use crate::appcontext::AppContext;
 
 pub static CLIENT_ID: &str = "f74912d3-4275-4935-803f-6b900042d63c";
+pub static VERSION: &str = option_env!("VERSION").unwrap();
 
 #[derive(Serialize, PartialEq, Debug, Clone)]
 #[serde(rename_all = "lowercase")]

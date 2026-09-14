@@ -5,8 +5,8 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::appcontext::AppContext;
-use crate::config::CLIENT_ID;
-use crate::utils::{VERSION, send_error};
+use crate::config::{CLIENT_ID, VERSION};
+use crate::utils::send_error;
 use crate::{debug_log, log};
 
 #[derive(Serialize, Deserialize)]
@@ -28,7 +28,7 @@ pub struct OAuthSet {
 }
 
 pub fn run(context: &mut AppContext, args: &OAuthSet) -> Result<()> {
-  log!("{} {:?}", &*VERSION, args)?;
+  log!("{} {:?}", VERSION, args)?;
 
   request_token(
     context,

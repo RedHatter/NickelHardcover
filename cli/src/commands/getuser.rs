@@ -2,10 +2,10 @@ use anyhow::{Context, Result};
 use argh::FromArgs;
 
 use crate::appcontext::AppContext;
-use crate::config::JournalPrivacy;
+use crate::config::{JournalPrivacy, VERSION};
 use crate::log;
 use crate::messages::{Messages, User};
-use crate::utils::{VERSION, send_msg};
+use crate::utils::send_msg;
 
 /// Retrieve authenticated user.
 #[derive(FromArgs, PartialEq, Debug)]
@@ -13,7 +13,7 @@ use crate::utils::{VERSION, send_msg};
 pub struct GetUser {}
 
 pub fn run(context: &mut AppContext, args: &GetUser) -> Result<()> {
-  log!("{} {:?}", &*VERSION, args)?;
+  log!("{} {:?}", VERSION, args)?;
 
   send_msg(&Messages::User(User {
     id: context.user.id,
