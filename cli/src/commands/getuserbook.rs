@@ -3,6 +3,7 @@ use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 
 use crate::appcontext::AppContext;
+use crate::commands::getuser::get_user;
 use crate::config::VERSION;
 use crate::log;
 use crate::messages::{Messages, UserBook};
@@ -73,7 +74,7 @@ pub struct Book {
 }
 
 pub fn get_book(context: &mut AppContext, isbn: Vec<String>, linked_id: i64) -> Result<Book> {
-  let user_id = context.user.id;
+  let user_id = get_user(context)?.id;
   let isbn_display = isbn.join(", ");
 
   // retrieve book, edition and maybe user book and user book read

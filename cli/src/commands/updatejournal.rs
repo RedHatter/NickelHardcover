@@ -6,6 +6,7 @@ use jiff::{SignedDuration, Timestamp};
 use serde_json::json;
 
 use crate::appcontext::AppContext;
+use crate::commands::getuser::get_user;
 use crate::commands::getuserbook::{Book, get_book};
 use crate::config::{SyncBookmarks, VERSION};
 use crate::database::{Bookmark, get_bookmarks};
@@ -77,7 +78,7 @@ pub fn update_journal(context: &mut AppContext, content_id: &str, book: &Book) -
 
   debug_log!("{:?}", bookmarks)?;
 
-  let user_id = context.user.id;
+  let user_id = get_user(context)?.id;
 
   let reading_journals = if context.config.sync_bookmarks == SyncBookmarks::Finished {
     bookmarks.sort_by(|a, b| a.location.unwrap_or(0.0).total_cmp(&b.location.unwrap_or(0.0)));
@@ -186,7 +187,7 @@ fn build_journal_quote(
       book_id: book.book_id,
       edition_id: book.edition_id,
       event: "quote".into(),
-      privacy_setting_id: context.config.journal_privacy.get_value(context),
+      privacy_setting_id: context.config.journal_privacy.get_value(context)?,
       entry,
       action_at: Some(
         if context.config.sync_bookmarks == SyncBookmarks::Finished {

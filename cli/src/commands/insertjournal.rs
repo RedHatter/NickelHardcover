@@ -49,6 +49,10 @@ pub fn run(context: &mut AppContext, args: InsertJournal) -> Result<()> {
 
   let (linked_id, isbn) = normalize_identifiers(context, args.linked_id, args.content_id.as_deref());
   let book = get_book(context, isbn, linked_id)?;
+  let privacy_setting_id = args
+    .privacy
+    .unwrap_or(context.config.journal_privacy)
+    .get_value(context)?;
 
   InsertReadingJournal::send_request(
     context,
@@ -56,10 +60,7 @@ pub fn run(context: &mut AppContext, args: InsertJournal) -> Result<()> {
       book_id: book.book_id,
       edition_id: book.edition_id,
       event: "note".into(),
-      privacy_setting_id: args
-        .privacy
-        .unwrap_or(context.config.journal_privacy)
-        .get_value(context),
+      privacy_setting_id,
       entry: args.text,
       action_at: None,
       metadata: Some(json!({

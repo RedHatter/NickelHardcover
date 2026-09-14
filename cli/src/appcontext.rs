@@ -1,26 +1,16 @@
 use anyhow::{Context, Result};
-use graphql_client::GraphQLQuery;
 use ureq::Agent;
 
-use crate::config::{Config, VERSION};
-use crate::log;
-use crate::utils::GraphQLQueryExt;
-
-#[derive(GraphQLQuery)]
-#[graphql(
-  schema_path = "src/graphql/schema.graphql",
-  query_path = "src/graphql/queries/getme.graphql",
-  custom_scalars_module = "crate::hardcover::scalars"
-  response_derives = "Debug,Serialize,Default",
-  variables_derives = "Debug"
-)]
-pub struct GetMe;
+use crate::{
+  commands::getuser::get_me,
+  config::{Config, VERSION},
+};
 
 pub struct AppContext {
   pub agent: Agent,
   pub config: Config,
   pub rate_limit: usize,
-  pub user: get_me::GetMeMe,
+  pub user: Option<get_me::GetMeMe>,
 }
 
 impl AppContext {
@@ -35,7 +25,7 @@ impl AppContext {
       config
     };
 
-    let mut context = AppContext {
+    Ok(AppContext {
       agent: Agent::config_builder()
         .user_agent(format!("{}/{}", env!("CARGO_PKG_NAME"), VERSION))
         .http_status_as_error(false)
@@ -55,17 +45,7 @@ impl AppContext {
         ..config
       },
       rate_limit: 1,
-      user: get_me::GetMeMe::default(),
-    };
-
-    context.user = GetMe::send_request(&mut context, get_me::Variables {})?
-      .me
-      .into_iter()
-      .next()
-      .context("Failed to find Hardcover.app user")?;
-
-    log!("user {}", context.user.id)?;
-
-    Ok(context)
+      user: None,
+    })
   }
 }

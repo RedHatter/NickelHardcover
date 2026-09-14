@@ -4,6 +4,7 @@ use graphql_client::GraphQLQuery;
 use serde_json::Value;
 
 use crate::appcontext::AppContext;
+use crate::commands::getuser::get_user;
 use crate::config::VERSION;
 use crate::log;
 use crate::messages::{Journal, JournalList, Messages, Metadata};
@@ -44,7 +45,7 @@ pub fn run(context: &mut AppContext, args: &ListJournal) -> Result<()> {
   log!("{} {:?}", VERSION, args)?;
 
   let (linked_id, isbn) = normalize_identifiers(context, args.linked_id, args.content_id.as_deref());
-  let user_id = context.user.id;
+  let user_id = get_user(context)?.id;
 
   let reading_journals = GetReadingJournal::send_request(
     context,

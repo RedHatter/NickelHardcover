@@ -9,6 +9,7 @@ use serde::Serialize;
 use serde::{Deserialize, Deserializer, de};
 
 use crate::appcontext::AppContext;
+use crate::commands::getuser::get_user;
 
 pub static CLIENT_ID: &str = "f74912d3-4275-4935-803f-6b900042d63c";
 pub static VERSION: &str = option_env!("VERSION").unwrap();
@@ -47,10 +48,10 @@ pub enum JournalPrivacy {
 }
 
 impl JournalPrivacy {
-  pub fn get_value(self, context: &AppContext) -> i64 {
+  pub fn get_value(self, context: &mut AppContext) -> Result<i64> {
     match self {
-      JournalPrivacy::Account => context.user.account_privacy_setting_id,
-      _ => self as i64,
+      JournalPrivacy::Account => Ok(get_user(context)?.account_privacy_setting_id),
+      _ => Ok(self as i64),
     }
   }
 }
