@@ -15,10 +15,10 @@ use ureq::{
   http::{Response, StatusCode},
 };
 
-use crate::appcontext::AppContext;
 use crate::commands::oauthset::refresh_token;
 use crate::rate_limit::RateLimit;
 use crate::utils::send_error;
+use crate::{appcontext::AppContext, config::BASE_URL};
 use crate::{debug_log, log};
 
 pub mod scalars {
@@ -41,7 +41,7 @@ pub mod scalars {
 fn try_request<T: Serialize>(context: &mut AppContext, request_body: &T) -> Result<Response<Body>> {
   let res = context
     .agent
-    .post(format!("{}{}", context.config.hardcover_endpoint, "/v1/graphql"))
+    .post(format!("{}{}", BASE_URL, "/v1/graphql"))
     .header("authorization", format!("Bearer {}", context.config.authorization))
     .send_json(request_body)
     .context("Failed to send request")?;

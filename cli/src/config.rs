@@ -11,7 +11,11 @@ use serde::{Deserialize, Deserializer, de};
 use crate::appcontext::AppContext;
 use crate::commands::getuser::get_user;
 
-pub static CLIENT_ID: &str = "f74912d3-4275-4935-803f-6b900042d63c";
+// pub static CLIENT_ID: &str = "f74912d3-4275-4935-803f-6b900042d63c";
+// pub static BASE_URL: &str = "https://staging-api.hardcover.app";
+
+pub static CLIENT_ID: &str = "2ec8855f-400e-4bb9-a2ed-5b628afa4a17";
+pub static BASE_URL: &str = "https://api.hardcover.app";
 pub static VERSION: &str = option_env!("VERSION").unwrap();
 
 #[derive(Serialize, PartialEq, Debug, Clone)]
@@ -144,7 +148,6 @@ pub struct Config {
   pub authorization: String,
   pub auto_sync_default: bool,
   pub debug: bool,
-  pub hardcover_endpoint: String,
   pub journal_privacy: JournalPrivacy,
   pub refresh_token: String,
   pub retry_on_network: bool,
@@ -162,7 +165,6 @@ impl Default for Config {
       authorization: String::new(),
       auto_sync_default: false,
       debug: false,
-      hardcover_endpoint: "https://api.hardcover.app".into(),
       journal_privacy: JournalPrivacy::Account,
       refresh_token: String::new(),
       retry_on_network: false,

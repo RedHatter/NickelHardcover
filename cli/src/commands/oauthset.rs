@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::appcontext::AppContext;
-use crate::config::{CLIENT_ID, VERSION};
+use crate::config::{BASE_URL, CLIENT_ID, VERSION};
 use crate::utils::send_error;
 use crate::{debug_log, log};
 
@@ -57,7 +57,7 @@ pub fn request_token<I: IntoIterator<Item = (K, V)>, K: AsRef<str>, V: AsRef<str
 ) -> Result<()> {
   let json = context
     .agent
-    .post(format!("{}{}", context.config.hardcover_endpoint, "/oauth2/token"))
+    .post(format!("{}{}", BASE_URL, "/oauth2/token"))
     .send_form(body)
     .context("Failed to send OAuth token request")?
     .body_mut()

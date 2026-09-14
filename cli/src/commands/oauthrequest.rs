@@ -3,7 +3,7 @@ use argh::FromArgs;
 use serde_json::Value;
 
 use crate::appcontext::AppContext;
-use crate::config::{CLIENT_ID, VERSION};
+use crate::config::{BASE_URL, CLIENT_ID, VERSION};
 use crate::messages::Messages;
 use crate::utils::{send_error, send_msg};
 use crate::{debug_log, log};
@@ -18,7 +18,7 @@ pub fn run(context: &mut AppContext, args: &OAuthRequest) -> Result<()> {
 
   let json = context
     .agent
-    .post(format!("{}{}", context.config.hardcover_endpoint, "/oauth2/device"))
+    .post(format!("{}{}", BASE_URL, "/oauth2/device"))
     .send_form([
       ("client_id", CLIENT_ID),
       (
