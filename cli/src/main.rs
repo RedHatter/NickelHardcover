@@ -1,10 +1,11 @@
 use std::env;
 use std::panic;
 
-use crate::commands::listbookmarks;
-use crate::commands::listeditions;
-use crate::commands::updatejournal;
-use crate::commands::{getuser, getuserbook, insertjournal, listjournal, search, setuserbook, update};
+use crate::commands::oauthset;
+use crate::commands::{
+  getuser, getuserbook, insertjournal, listbookmarks, listeditions, listjournal, oauthrequest, search, setuserbook,
+  update, updatejournal,
+};
 use crate::config::CONFIG;
 use crate::messages::Error;
 use crate::messages::Messages;
@@ -43,6 +44,8 @@ enum Commands {
   ListBookmarks(listbookmarks::ListBookmarks),
   ListEditions(listeditions::ListEditions),
   ListJournal(listjournal::ListJournal),
+  OAuthRequest(oauthrequest::OAuthRequest),
+  OAuthCheck(oauthset::OAuthSet),
   Search(search::Search),
   SetUserBook(setuserbook::SetUserBook),
   Update(update::Update),
@@ -82,6 +85,8 @@ fn main() {
     Commands::ListBookmarks(args) => listbookmarks::run(&args),
     Commands::ListEditions(args) => listeditions::run(args),
     Commands::ListJournal(args) => listjournal::run(&args),
+    Commands::OAuthRequest(args) => oauthrequest::run(&args),
+    Commands::OAuthCheck(args) => oauthset::run(&args),
     Commands::Search(args) => search::run(args),
     Commands::SetUserBook(args) => setuserbook::run(args),
     Commands::Update(args) => update::run(&args),

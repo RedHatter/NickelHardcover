@@ -1,16 +1,20 @@
 use core::fmt;
 use std::fs;
+use std::path::PathBuf;
 use std::str::FromStr;
 use std::sync::LazyLock;
 
 use anyhow::{Context, Result, anyhow};
 use itertools::Itertools;
+use jiff::Timestamp;
 use serde::Serialize;
 use serde::{Deserialize, Deserializer, de};
 
 use crate::commands::getuser::get_user;
 
-#[derive(Serialize, PartialEq, Debug)]
+pub static CLIENT_ID: &str = "f74912d3-4275-4935-803f-6b900042d63c";
+
+#[derive(Serialize, PartialEq, Debug, Clone)]
 #[serde(rename_all = "lowercase")]
 pub enum SyncBookmarks {
   Always,
@@ -102,7 +106,7 @@ impl fmt::Display for JournalPrivacy {
   }
 }
 
-#[derive(Serialize, PartialEq, Debug)]
+#[derive(Serialize, PartialEq, Debug, Clone)]
 #[serde(rename_all = "lowercase")]
 pub enum SyncOnClose {
   Always,
@@ -134,7 +138,7 @@ impl<'de> Deserialize<'de> for SyncOnClose {
   }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(default)]
 pub struct Config {
   pub authorization: String,
@@ -142,12 +146,14 @@ pub struct Config {
   pub debug: bool,
   pub hardcover_endpoint: String,
   pub journal_privacy: JournalPrivacy,
+  pub refresh_token: String,
   pub retry_on_network: bool,
   pub sqlite_path: String,
   pub sync_bookmarks: SyncBookmarks,
   pub sync_daily: i8,
   pub sync_on_close: SyncOnClose,
   pub threshold: u8,
+  pub token_expires_at: Option<Timestamp>,
 }
 
 impl Default for Config {
@@ -156,44 +162,73 @@ impl Default for Config {
       authorization: String::new(),
       auto_sync_default: false,
       debug: false,
-      hardcover_endpoint: "https://api.hardcover.app/v1/graphql".into(),
+      hardcover_endpoint: "https://api.hardcover.app".into(),
       journal_privacy: JournalPrivacy::Account,
+      refresh_token: String::new(),
       retry_on_network: false,
       sqlite_path: "/mnt/onboard/.kobo/KoboReader.sqlite".into(),
       sync_bookmarks: SyncBookmarks::Never,
       sync_daily: -1,
       sync_on_close: SyncOnClose::Never,
       threshold: 0,
+      token_expires_at: None,
     }
+  }
+}
+
+impl Config {
+  fn get_dir() -> Result<PathBuf> {
+    let current_exe = std::env::current_exe().context("Failed to get current binary path")?;
+    Ok(
+      current_exe
+        .parent()
+        .context("Failed to get current binary directory")?
+        .into(),
+    )
+  }
+
+  fn get_path() -> Result<PathBuf> {
+    Ok(Config::get_dir()?.join("config.ini"))
+  }
+
+  fn read() -> Result<Option<Config>> {
+    let config_path = Config::get_path()?;
+
+    if config_path.exists() {
+      let content = fs::read_to_string(config_path)
+        .context("Failed to read config file")?
+        .replace("[General]", "");
+      Ok(Some(serini::from_str(&content).context("Failed to parse config file")?))
+    } else {
+      Ok(None)
+    }
+  }
+
+  pub fn write(&self) -> Result<()> {
+    let ini = serini::to_string(&self).context("Failed to serialize default config")?;
+    fs::write(Config::get_path()?, ini).context("Failed to write default config")
   }
 }
 
 pub static CONFIG: LazyLock<Config> = LazyLock::new(|| {
   let config = || -> Result<Config> {
-    let current_exe = std::env::current_exe().context("Failed to get current binary path")?;
-    let exe_dir = current_exe.parent().context("Failed to get current binary directory")?;
-    let config_path = exe_dir.join("config.ini");
+    let config_dir = Config::get_dir()?;
 
-    let config = if config_path.exists() {
-      let content = fs::read_to_string(config_path)
-        .context("Failed to read config file")?
-        .replace("[General]", "");
-      serini::from_str(&content).context("Failed to parse config file")?
+    let config = if let Some(config) = Config::read()? {
+      config
     } else {
       let config = Config::default();
-      let ini = serini::to_string(&config).context("Failed to serialize default config")?;
-      fs::write(config_path, ini).context("Failed to write default config")?;
-
+      config.write()?;
       config
     };
 
     Ok(Config {
-      authorization: if config.authorization.is_empty() || config.authorization.starts_with("Bearer ") {
-        config.authorization
+      authorization: if let Some(auth) = config.authorization.strip_prefix("Bearer ") {
+        auth.to_string()
       } else {
-        format!("Bearer {}", config.authorization)
+        config.authorization
       },
-      sqlite_path: exe_dir
+      sqlite_path: config_dir
         .join(config.sqlite_path)
         .to_str()
         .context("Failed to get SQLite path")?

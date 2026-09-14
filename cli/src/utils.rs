@@ -78,20 +78,23 @@ pub fn normalize_identifiers(linked_id: Option<i64>, content_id: Option<&str>) -
 
       match isbn {
         Ok(isbn) => (0, isbn),
-        Err(e) => book_not_found(&format!(
-          "Failed to find an ISBN. Please link book manually.<br><br>{:#}",
-          e.chain().join("<br>> ")
-        )),
+        Err(e) => send_error(
+          "BOOK_NOT_FOUND",
+          format!(
+            "Failed to find an ISBN. Please link book manually.<br><br>{:#}",
+            e.chain().join("<br>> ")
+          ),
+        ),
       }
     }
     (None, None) => panic!("One of --content-id or --linked-id is required"),
   }
 }
 
-pub fn book_not_found(message: &str) -> ! {
+pub fn send_error(error_code: &str, message: String) -> ! {
   send_msg(&Messages::Error(Error {
-    error_code: "BOOK_NOT_FOUND".to_string(),
-    message: message.to_string(),
+    error_code: error_code.to_string(),
+    message,
   }))
   .expect("Failed to log `BOOK_NOT_FOUND` error");
 

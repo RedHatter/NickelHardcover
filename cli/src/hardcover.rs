@@ -5,6 +5,7 @@ use std::time::Duration;
 
 use anyhow::{Context, Result, bail};
 use itertools::Itertools;
+use jiff::Timestamp;
 use retry::{
   delay::{Exponential, jitter},
   retry,
@@ -16,9 +17,10 @@ use ureq::{
   http::{Response, StatusCode},
 };
 
+use crate::commands::oauthset::refresh_token;
 use crate::config::CONFIG;
 use crate::rate_limit::RateLimit;
-use crate::utils::VERSION;
+use crate::utils::{VERSION, send_error};
 use crate::{debug_log, log};
 
 pub mod scalars {
@@ -38,8 +40,8 @@ pub mod scalars {
   pub type timestamptz = Timestamp;
 }
 
-struct HardcoverContext {
-  agent: Agent,
+pub struct HardcoverContext {
+  pub agent: Agent,
   rate_limit: AtomicUsize,
 }
 
@@ -53,7 +55,7 @@ impl HardcoverContext {
   }
 }
 
-static HARDCOVER_AGENT: LazyLock<HardcoverContext> = LazyLock::new(|| HardcoverContext {
+pub static HARDCOVER_AGENT: LazyLock<HardcoverContext> = LazyLock::new(|| HardcoverContext {
   agent: Agent::config_builder()
     .user_agent(format!("{}/{}", env!("CARGO_PKG_NAME"), &*VERSION))
     .http_status_as_error(false)
@@ -65,8 +67,8 @@ static HARDCOVER_AGENT: LazyLock<HardcoverContext> = LazyLock::new(|| HardcoverC
 fn try_request<T: Serialize>(request_body: &T) -> Result<Response<Body>> {
   let res = HARDCOVER_AGENT
     .agent
-    .post(&CONFIG.hardcover_endpoint)
-    .header("authorization", &CONFIG.authorization)
+    .post(format!("{}{}", &CONFIG.hardcover_endpoint, "/v1/graphql"))
+    .header("authorization", format!("Bearer {}", &CONFIG.authorization))
     .send_json(request_body)
     .context("Failed to send request")?;
 
@@ -125,9 +127,7 @@ fn try_request<T: Serialize>(request_body: &T) -> Result<Response<Body>> {
     log!("{msg}")?;
 
     if code == StatusCode::UNAUTHORIZED {
-      panic!(
-        "Please set a valid Hardcover.app authorization token in <i>.adds/NickelHardcover/config.ini</i>.<br>>{msg}"
-      )
+      send_error("UNAUTHORIZED", "".to_string());
     } else {
       bail!(msg);
     }
@@ -165,10 +165,16 @@ fn collect_errors<'a>(value: &'a serde_json::Value, errors: &mut Vec<&'a str>) {
 }
 
 pub fn send_request<T: Serialize, R: DeserializeOwned>(operation_name: &str, request_body: T) -> Result<R> {
-  assert!(
-    !CONFIG.authorization.is_empty(),
-    "Please set the Hardcover.app authorization token in <i>.adds/NickelHardcover/config.ini</i>."
-  );
+  if CONFIG.authorization.is_empty() {
+    send_error("UNAUTHORIZED", "".to_string());
+  }
+
+  if let Some(token_expires_at) = CONFIG.token_expires_at
+    && Timestamp::now().duration_until(token_expires_at).is_negative()
+    && !CONFIG.refresh_token.is_empty()
+  {
+    refresh_token()?;
+  }
 
   let json = retry(Exponential::from_millis(10).map(jitter).take(3), || {
     try_request(&request_body)

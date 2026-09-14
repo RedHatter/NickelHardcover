@@ -5,7 +5,7 @@ use graphql_client::GraphQLQuery;
 use crate::commands::getuser::get_user;
 use crate::log;
 use crate::messages::{Messages, UserBook};
-use crate::utils::{GraphQLQueryExt, VERSION, book_not_found, normalize_identifiers, send_msg};
+use crate::utils::{GraphQLQueryExt, VERSION, normalize_identifiers, send_error, send_msg};
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -86,15 +86,18 @@ pub fn get_book(isbn: Vec<String>, linked_id: i64) -> Result<Book> {
   .next()
   {
     Some(book) => book,
-    None => book_not_found(&if linked_id != 0 {
-      format!(
-        "Unable to find book or edition with id <i>{linked_id}</i> on Hardcover.app. Please manually un-link and re-link book."
-      )
-    } else {
-      format!(
-        "Unable to find a book edition on Hardcover.app with ISBN/ASIN <i>{isbn_display}</i>. Please manually link book."
-      )
-    }),
+    None => send_error(
+      "BOOK_NOT_FOUND",
+      if linked_id != 0 {
+        format!(
+          "Unable to find book or edition with id <i>{linked_id}</i> on Hardcover.app. Please manually un-link and re-link book."
+        )
+      } else {
+        format!(
+          "Unable to find a book edition on Hardcover.app with ISBN/ASIN <i>{isbn_display}</i>. Please manually link book."
+        )
+      },
+    ),
   };
   let user_book = book.user_books.into_iter().next();
 

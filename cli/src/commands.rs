@@ -4,6 +4,8 @@ pub mod insertjournal;
 pub mod listbookmarks;
 pub mod listeditions;
 pub mod listjournal;
+pub mod oauthrequest;
+pub mod oauthset;
 pub mod search;
 pub mod setuserbook;
 pub mod update;

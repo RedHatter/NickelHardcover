@@ -1,5 +1,5 @@
 use jiff::Timestamp;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize)]
 pub struct Log {
@@ -123,6 +123,16 @@ pub struct SearchPages {
   pub total: u64,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct OAuthDevice {
+  pub device_code: String,
+  pub user_code: String,
+  pub verification_uri: String,
+  pub verification_uri_complete: String,
+  pub expires_in: u64,
+  pub interval: u64,
+}
+
 #[derive(Serialize)]
 #[serde(tag = "kind")]
 pub enum Messages {
@@ -134,4 +144,5 @@ pub enum Messages {
   EditionList(EditionList),
   JournalList(JournalList),
   SearchPages(SearchPages),
+  OAuthDevice(OAuthDevice),
 }
