@@ -97,13 +97,9 @@ pub fn run(context: &mut AppContext, args: &Update) -> Result<()> {
     )?;
   }
 
-  if context.config.sync_bookmarks == SyncBookmarks::Never
-    || (context.config.sync_bookmarks == SyncBookmarks::Finished && args.value != 100)
-  {
-    return Ok(());
+  if context.config.sync_bookmarks != SyncBookmarks::Never {
+    update_journal(context, &args.content_id, &book)?;
   }
-
-  update_journal(context, &args.content_id, &book)?;
 
   Ok(())
 }

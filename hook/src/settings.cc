@@ -6,7 +6,6 @@
 
 #include <stdlib.h>
 
-#include "cli.h"
 #include "settings.h"
 #include "synccontroller.h"
 

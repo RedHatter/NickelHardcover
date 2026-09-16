@@ -1,6 +1,6 @@
 #include <QDateTime>
-#include <QVBoxLayout>
 #include <QTimer>
+#include <QVBoxLayout>
 
 #include <NickelHook.h>
 
@@ -225,9 +225,9 @@ QFrame *SettingsDialog::buildGeneral() {
   QObject::connect(checkboxRow, &CheckboxRow::triggered, this, &SettingsDialog::setRetryOnNetwork);
   layout->addWidget(checkboxRow);
 
-  MenuRow *menuRow = new MenuRow("Sync annotations to reading journal", MenuRowType::Menu,
-                                 {{"Always", "always"}, {"Never", "never"}, {"Once the book is finished", "finished"}},
-                                 {}, Settings::getInstance()->getSyncBookmarks());
+  MenuRow *menuRow =
+      new MenuRow("Sync annotations to reading journal", MenuRowType::Menu, {{"Always", "always"}, {"Never", "never"}},
+                  {}, Settings::getInstance()->getSyncBookmarks());
   QObject::connect(menuRow, &MenuRow::triggered, this, &SettingsDialog::setSyncBookmarks);
   layout->addWidget(menuRow);
 

@@ -23,7 +23,6 @@ pub static VERSION: &str = option_env!("VERSION").unwrap();
 pub enum SyncBookmarks {
   Always,
   Never,
-  Finished,
 }
 
 impl<'de> Deserialize<'de> for SyncBookmarks {
@@ -34,7 +33,6 @@ impl<'de> Deserialize<'de> for SyncBookmarks {
     match String::deserialize(deserializer)? {
       s if s.eq_ignore_ascii_case("Always") => Ok(SyncBookmarks::Always),
       s if s.eq_ignore_ascii_case("Never") => Ok(SyncBookmarks::Never),
-      s if s.eq_ignore_ascii_case("Finished") => Ok(SyncBookmarks::Finished),
       s => Err(de::Error::custom(format!(
         "<i>{s}</i> is not a valid <i>sync_bookmarks</i> value"
       ))),

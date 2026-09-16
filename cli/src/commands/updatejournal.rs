@@ -2,13 +2,12 @@ use anyhow::{Context, Result};
 use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 use itertools::{Either, Itertools};
-use jiff::{SignedDuration, Timestamp};
 use serde_json::json;
 
 use crate::appcontext::AppContext;
 use crate::commands::getuser::get_user;
 use crate::commands::getuserbook::{Book, get_book};
-use crate::config::{SyncBookmarks, VERSION};
+use crate::config::VERSION;
 use crate::database::{Bookmark, get_bookmarks};
 use crate::hardcover::batch_requests;
 use crate::utils::{GraphQLQueryExt, normalize_identifiers};
@@ -80,45 +79,36 @@ pub fn update_journal(context: &mut AppContext, content_id: &str, book: &Book) -
 
   let user_id = get_user(context)?.id;
 
-  let reading_journals = if context.config.sync_bookmarks == SyncBookmarks::Finished {
-    bookmarks.sort_by(|a, b| a.location.unwrap_or(0.0).total_cmp(&b.location.unwrap_or(0.0)));
-    vec![]
-  } else {
-    bookmarks.sort_by_key(|bookmark| bookmark.date_created);
+  bookmarks.sort_by_key(|bookmark| bookmark.date_created);
 
-    let mut offset = 0;
-    let mut reading_journals = Vec::new();
+  let mut offset = 0;
+  let mut reading_journals = Vec::new();
 
-    loop {
-      let entries = GetJournalQuotes::send_request(
-        context,
-        get_journal_quotes::Variables {
-          book_id: book.book_id,
-          user_id,
-          offset,
-        },
-      )?
-      .reading_journals;
-      let len = entries.len();
-      reading_journals.extend(entries);
+  loop {
+    let entries = GetJournalQuotes::send_request(
+      context,
+      get_journal_quotes::Variables {
+        book_id: book.book_id,
+        user_id,
+        offset,
+      },
+    )?
+    .reading_journals;
+    let len = entries.len();
+    reading_journals.extend(entries);
 
-      if len < 100 {
-        break;
-      }
-
-      offset += 100;
+    if len < 100 {
+      break;
     }
 
-    reading_journals
-  };
+    offset += 100;
+  }
 
   let mutations = bookmarks
     .iter()
-    .enumerate()
-    .map(|(i, bookmark)| {
+    .map(|bookmark| {
       build_journal_quote(
         context,
-        i,
         bookmark,
         reading_journals
           .iter()
@@ -158,7 +148,6 @@ pub fn update_journal(context: &mut AppContext, content_id: &str, book: &Book) -
 
 fn build_journal_quote(
   context: &mut AppContext,
-  i: usize,
   bookmark: &Bookmark,
   journal: Option<&get_journal_quotes::GetJournalQuotesReadingJournals>,
   book: &Book,
@@ -189,14 +178,7 @@ fn build_journal_quote(
       event: "quote".into(),
       privacy_setting_id: context.config.journal_privacy.get_value(context)?,
       entry,
-      action_at: Some(
-        if context.config.sync_bookmarks == SyncBookmarks::Finished {
-          Timestamp::now() + SignedDuration::from_secs(i as i64)
-        } else {
-          bookmark.date_created
-        }
-        .to_string(),
-      ),
+      action_at: Some(bookmark.date_created.to_string()),
       metadata: bookmark.location.map(|location| {
         json!({
           "position": {

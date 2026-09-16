@@ -77,7 +77,6 @@ auto_sync_default = false
 ; When to sync Kobo highlights and notes (bookmarks) with the Hardcover.app journal.
 ; - always    Sync bookmarks with every sync
 ; - never     Never sync bookmarks
-; - finished  Only sync bookmarks when reading progress reaches 100%
 sync_bookmarks = always
 
 ; Run auto-sync at the specified hour even if the Kobo is asleep. Possible
