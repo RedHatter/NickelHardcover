@@ -96,7 +96,7 @@ void MenuController::showMainMenu() {
   Settings *settings = Settings::getInstance();
 
   QList<Item> items;
-  if (settings->isAuthorized()) {
+  if (settings->isSignedIn()) {
     items = {
         {"Sync now", MenuOption::SYNC_NOW, false, syncController->syncDisabled},
         {!settings->isEnabled(contentId) || syncController->syncDisabled ? "Enable auto-sync" : "Disable auto-sync",

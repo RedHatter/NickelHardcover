@@ -241,7 +241,7 @@ static struct nh_dlsym NickelHardcoverDlsym[] = {
 
 bool hardcover_uninstall() {
   nh_delete_file(Files::config);
-  nh_delete_file(Files::settings);
+  nh_delete_file(Files::library);
   nh_delete_file(Files::cli);
   nh_delete_dir(Files::adds_directory);
 

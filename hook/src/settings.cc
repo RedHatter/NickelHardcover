@@ -1,133 +1,68 @@
-#include <NickelHook.h>
-#include <QDateTime>
-#include <QLabel>
 #include <QSettings>
-#include <QTimer>
 
-#include <stdlib.h>
+#include <NickelHook.h>
 
 #include "settings.h"
 #include "synccontroller.h"
 
-Settings *Settings::instance = nullptr;
-
 Settings *Settings::getInstance() {
-  if (instance == nullptr) {
-    instance = new Settings();
-  };
-
-  return instance;
-};
+  static Settings instance;
+  return &instance;
+}
 
 Settings::Settings(QObject *parent)
-    : QObject(parent), internal(new QSettings(Files::settings, QSettings::IniFormat)),
-      config(new QSettings(Files::config, QSettings::IniFormat)),
-      kobo(new QSettings(Files::koboSettings, QSettings::IniFormat)) {
+    : QObject(parent), library(new QSettings(Files::library, QSettings::IniFormat, this)),
+      config(new QSettings(Files::config, QSettings::IniFormat, this)),
+      kobo(new QSettings(Files::koboSettings, QSettings::IniFormat, this)) {
   QObject::connect(SyncController::getInstance(), &SyncController::currentViewChanged, this,
                    &Settings::currentViewChanged);
-};
+}
 
 void Settings::currentViewChanged(QString name) {
   if (name == "ReadingView") {
-    internal->sync();
+    library->sync();
     config->sync();
   }
 }
 
-QString Settings::getPath(QString contentId, QString key) {
+QString Settings::getPath(QString contentId, const QString &key) const {
   return contentId.replace('/', '-').replace('\\', '-') + "/" + key;
 }
 
-void Settings::setValue(QString contentId, QString key, QVariant value) {
+void Settings::setValue(const QString &contentId, const QString &key, const QVariant &value) {
   if (value.isNull()) {
-    internal->remove(getPath(contentId, key));
+    library->remove(getPath(contentId, key));
   } else {
-    internal->setValue(getPath(contentId, key), value);
+    library->setValue(getPath(contentId, key), value);
   }
 }
 
-QVariant Settings::getValue(QString contentId, QString key, QVariant defaultValue) {
-  return internal->value(getPath(contentId, key), defaultValue);
+QVariant Settings::getValue(const QString &contentId, const QString &key, const QVariant &defaultValue) const {
+  return library->value(getPath(contentId, key), defaultValue);
 }
 
-void Settings::setEnabled(QString contentId, bool value) { setValue(contentId, "enabled", value); }
+void Settings::setEnabled(const QString &contentId, bool value) { setValue(contentId, "enabled", value); }
 
-bool Settings::isEnabled(QString contentId) {
+bool Settings::isEnabled(const QString &contentId) const {
   bool defaultValue = config->value("auto_sync_default", false).toBool();
   return getValue(contentId, "enabled", defaultValue).toBool();
 }
 
-void Settings::setLinkedId(QString contentId, QString value) { setValue(contentId, "linkedbook", value); }
+void Settings::setLinkedId(const QString &contentId, const QString &value) { setValue(contentId, "linkedbook", value); }
 
-QString Settings::getLinkedId(QString contentId) { return getValue(contentId, "linkedbook").toString(); }
+QString Settings::getLinkedId(const QString &contentId) const { return getValue(contentId, "linkedbook").toString(); }
 
-void Settings::setLastProgress(QString contentId, int value) { setValue(contentId, "progress", value); }
+void Settings::setLastProgress(const QString &contentId, int value) { setValue(contentId, "progress", value); }
 
-int Settings::getLastProgress(QString contentId) { return getValue(contentId, "progress").toInt(); }
+int Settings::getLastProgress(const QString &contentId) const { return getValue(contentId, "progress").toInt(); }
 
-void Settings::clearAuthorization() { config->setValue("authorization", ""); }
+void Settings::clearAccessToken() { config->setValue("access_token", ""); }
 
-bool Settings::isAuthorized() { return !config->value("authorization").toString().isEmpty(); }
-
-void Settings::setSyncDaily(int value) { config->setValue("sync_daily", value); }
-
-int Settings::getSyncDaily() {
-  int hour = config->value("sync_daily", -1).toInt();
-  return hour >= 0 && hour <= 23 ? hour : -1;
-}
+bool Settings::isSignedIn() const { return !config->value("access_token").toString().isEmpty(); }
 
 void Settings::setAutoSyncDefault(bool value) { config->setValue("auto_sync_default", value); }
 
-bool Settings::getAutoSyncDefault() { return config->value("auto_sync_default", false).toBool(); }
-
-void Settings::setSyncBookmarks(QString value) { config->setValue("sync_bookmarks", value); }
-
-QString Settings::getSyncBookmarks() { return config->value("sync_bookmarks", "never").toString().toLower(); }
-
-void Settings::setJournalPrivacy(QString value) { config->setValue("journal_privacy", value); }
-
-QString Settings::getJournalPrivacy() { return config->value("journal_privacy", "public").toString().toLower(); }
-
-void Settings::setRetryOnNetwork(bool value) { config->setValue("retry_on_network", value); }
-
-bool Settings::isRetryOnNetwork() { return config->value("retry_on_network", false).toBool(); }
-
-void Settings::setCloseThreshold(int value) {
-  QVariant realValue = "never";
-
-  if (value == 1) {
-    realValue = "always";
-  } else if (value > 0 && value < 100) {
-    realValue = value;
-  }
-
-  config->setValue("sync_on_close", realValue);
-}
-
-int Settings::getCloseThreshold() {
-  QVariant syncOnClose = config->value("sync_on_close", "always");
-  if (syncOnClose.toString().toLower() == "always") {
-    return 1;
-  }
-
-  int threshold = syncOnClose.toInt();
-  if (threshold > 0 && threshold < 100) {
-    return threshold;
-  }
-
-  return 0;
-}
-
-int Settings::getPageThreshold() {
-  int threshold = config->value("threshold").toInt();
-  if (threshold > 0 && threshold < 100) {
-    return threshold;
-  }
-
-  return 0;
-}
-
-void Settings::setPageThreshold(int value) { config->setValue("threshold", value > 0 && value < 100 ? value : 0); }
+bool Settings::getAutoSyncDefault() const { return config->value("auto_sync_default", false).toBool(); }
 
 void Settings::setDebug(bool value) {
   if (value) {
@@ -137,6 +72,39 @@ void Settings::setDebug(bool value) {
   }
 }
 
-bool Settings::getDebug() { return config->value("debug").toBool(); }
+bool Settings::getDebug() const { return config->value("debug").toBool(); }
 
-bool Settings::is24HourClock() { return kobo->value("ApplicationPreferences/is24HourClock").toBool(); }
+void Settings::setJournalPrivacy(const QVariant &value) { config->setValue("journal_privacy", value); }
+
+QString Settings::getJournalPrivacy() const { return config->value("journal_privacy", "account").toString().toLower(); }
+
+void Settings::setRetryOnNetwork(bool value) { config->setValue("retry_on_network", value); }
+
+bool Settings::getRetryOnNetwork() const { return config->value("retry_on_network", false).toBool(); }
+
+void Settings::setSyncAnnotations(bool value) { config->setValue("sync_annotations", value); }
+
+bool Settings::getSyncAnnotations() const { return config->value("sync_annotations", false).toBool(); }
+
+void Settings::setSyncOnClose(const QVariant &value) { config->setValue("sync_on_close", value); }
+
+int Settings::getSyncOnClose() const {
+  int threshold = config->value("sync_on_close", -1).toInt();
+  return threshold > 0 && threshold < 100 ? threshold : -1;
+}
+
+void Settings::setSyncOnRead(const QVariant &value) { config->setValue("sync_on_read", value); }
+
+int Settings::getSyncOnRead() const {
+  int threshold = config->value("sync_on_read", -1).toInt();
+  return threshold > 0 && threshold < 100 ? threshold : -1;
+}
+
+void Settings::setSyncOnSchedule(const QVariant &value) { config->setValue("sync_on_schedule", value); }
+
+int Settings::getSyncOnSchedule() const {
+  int hour = config->value("sync_on_schedule", -1).toInt();
+  return hour >= 0 && hour <= 23 ? hour : -1;
+}
+
+bool Settings::is24HourClock() const { return kobo->value("ApplicationPreferences/is24HourClock").toBool(); }

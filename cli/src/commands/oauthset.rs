@@ -67,7 +67,7 @@ pub fn request_token<I: IntoIterator<Item = (K, V)>, K: AsRef<str>, V: AsRef<str
   debug_log!("{:?}", json)?;
 
   if let Some(Value::String(error)) = json.get("error") {
-    context.config.authorization = String::new();
+    context.config.access_token = String::new();
     context.config.refresh_token = String::new();
     context.config.token_expires_at = None;
     context.config.write()?;
@@ -79,7 +79,7 @@ pub fn request_token<I: IntoIterator<Item = (K, V)>, K: AsRef<str>, V: AsRef<str
   } else {
     let value =
       serde_json::from_value::<OAuthToken>(json).context(format!("Failed to deserialize OAuth token response"))?;
-    context.config.authorization = value.access_token;
+    context.config.access_token = value.access_token;
     context.config.refresh_token = value.refresh_token;
     context.config.token_expires_at = Some(Timestamp::now() + SignedDuration::from_secs(value.expires_in));
     context.config.write()

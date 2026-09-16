@@ -43,7 +43,7 @@ struct UpdateReadingJournal;
 )]
 struct GetJournalQuotes;
 
-/// Create journal entries for bookmarks.
+/// Create journal entries for annotations.
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand, name = "update-journal")]
 pub struct UpdateJournal {

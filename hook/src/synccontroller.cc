@@ -7,15 +7,10 @@
 #include "settings.h"
 #include "synccontroller.h"
 
-SyncController *SyncController::instance = nullptr;
-
 SyncController *SyncController::getInstance() {
-  if (instance == nullptr) {
-    instance = new SyncController();
-  };
-
-  return instance;
-};
+  static SyncController instance;
+  return &instance;
+}
 
 SyncController::SyncController(QObject *parent) : QObject(parent) {};
 
@@ -46,7 +41,7 @@ void SyncController::currentViewIndexChanged(int index) {
   Settings *settings = Settings::getInstance();
   if (lastViewName == "ReadingView" &&
       (name.endsWith("DragonPowerView") || MainWindowController__viewWithObjectName(mwc, "ReadingView") == nullptr) &&
-      settings->isEnabled(contentId) && queue->checkThreshold(contentId, settings->getCloseThreshold())) {
+      settings->isEnabled(contentId) && queue->checkThreshold(contentId, settings->getSyncOnClose())) {
     nh_log("Triggered on close auto-sync");
     queue->run(contentId);
   }
@@ -81,7 +76,7 @@ void SyncController::pageChanged() {
     queue->updateReadProgress(contentId);
   }
 
-  int syncDaily = settings->getSyncDaily();
+  int syncDaily = settings->getSyncOnSchedule();
 
   if (timer != nullptr && (PowerTimer__timeRemaining(timer) <= 0 || syncDaily != lastSyncDaily)) {
     timer->deleteLater();
@@ -105,7 +100,7 @@ void SyncController::pageChanged() {
   }
 
   if (!queue->failed && ((getCurrentProgress() == 100 && settings->getLastProgress(contentId) != 100) ||
-                         queue->checkThreshold(contentId, settings->getPageThreshold()))) {
+                         queue->checkThreshold(contentId, settings->getSyncOnRead()))) {
     nh_log("Triggered threshold auto-sync");
     queue->run(contentId);
   }

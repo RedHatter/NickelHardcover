@@ -2,7 +2,7 @@
 
 namespace Files {
 constexpr char const *config = "/mnt/onboard/.adds/NickelHardcover/config.ini";
-constexpr char const *settings = "/mnt/onboard/.adds/NickelHardcover/settings.ini";
+constexpr char const *library = "/mnt/onboard/.adds/NickelHardcover/library.ini";
 constexpr char const *koboSettings = "/mnt/onboard/.kobo/Kobo/Kobo eReader.conf";
 constexpr char const *cli = "/mnt/onboard/.adds/NickelHardcover/CLI";
 constexpr char const *adds_directory = "/mnt/onboard/.adds/NickelHardcover";

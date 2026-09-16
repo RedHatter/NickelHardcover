@@ -42,7 +42,7 @@ fn try_request<T: Serialize>(context: &mut AppContext, request_body: &T) -> Resu
   let res = context
     .agent
     .post(format!("{}{}", BASE_URL, "/v1/graphql"))
-    .header("authorization", format!("Bearer {}", context.config.authorization))
+    .header("authorization", format!("Bearer {}", context.config.access_token))
     .send_json(request_body)
     .context("Failed to send request")?;
 
@@ -143,8 +143,8 @@ pub fn send_request<T: Serialize, R: DeserializeOwned>(
   operation_name: &str,
   request_body: T,
 ) -> Result<R> {
-  if context.config.authorization.is_empty() {
-    send_error(context, "UNAUTHORIZED", "".to_string());
+  if context.config.access_token.is_empty() {
+    send_error(context, "UNAUTHORIZED", String::new());
   }
 
   if let Some(token_expires_at) = context.config.token_expires_at

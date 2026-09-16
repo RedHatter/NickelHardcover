@@ -11,43 +11,43 @@ class Settings : public QObject {
 public:
   static Settings *getInstance();
 
-  void setEnabled(QString contentId, bool value);
-  bool isEnabled(QString contentId);
+  void setEnabled(const QString &contentId, bool value);
+  bool isEnabled(const QString &contentId) const;
 
-  void setLinkedId(QString contentId, QString value);
-  QString getLinkedId(QString contentId);
+  void setLinkedId(const QString &contentId, const QString &value);
+  QString getLinkedId(const QString &contentId) const;
 
-  void setLastProgress(QString contentId, int value);
-  int getLastProgress(QString contentId);
+  void setLastProgress(const QString &contentId, int value);
+  int getLastProgress(const QString &contentId) const;
+
+  void clearAccessToken();
+  bool isSignedIn() const;
 
   void setAutoSyncDefault(bool value);
-  bool getAutoSyncDefault();
-
-  void setSyncBookmarks(QString value);
-  QString getSyncBookmarks();
-
-  void setJournalPrivacy(QString value);
-  QString getJournalPrivacy();
-
-  void setRetryOnNetwork(bool value);
-  bool isRetryOnNetwork();
-
-  void clearAuthorization();
-  bool isAuthorized();
-
-  void setSyncDaily(int value);
-  int getSyncDaily();
-
-  void setCloseThreshold(int value);
-  int getCloseThreshold();
-
-  void setPageThreshold(int value);
-  int getPageThreshold();
+  bool getAutoSyncDefault() const;
 
   void setDebug(bool value);
-  bool getDebug();
+  bool getDebug() const;
 
-  bool is24HourClock();
+  void setJournalPrivacy(const QVariant &value);
+  QString getJournalPrivacy() const;
+
+  void setRetryOnNetwork(bool value);
+  bool getRetryOnNetwork() const;
+
+  void setSyncAnnotations(bool value);
+  bool getSyncAnnotations() const;
+
+  void setSyncOnClose(const QVariant &value);
+  int getSyncOnClose() const;
+
+  void setSyncOnRead(const QVariant &value);
+  int getSyncOnRead() const;
+
+  void setSyncOnSchedule(const QVariant &value);
+  int getSyncOnSchedule() const;
+
+  bool is24HourClock() const;
 
 public Q_SLOTS:
   void currentViewChanged(QString name);
@@ -55,13 +55,11 @@ public Q_SLOTS:
 private:
   Settings(QObject *parent = nullptr);
 
-  static Settings *instance;
-
-  QSettings *internal = nullptr;
+  QSettings *library = nullptr;
   QSettings *config = nullptr;
   QSettings *kobo = nullptr;
 
-  QString getPath(QString contentId, QString key);
-  void setValue(QString contentId, QString key, QVariant value);
-  QVariant getValue(QString contentId, QString key, QVariant defaultValue = QVariant());
+  QString getPath(QString contentId, const QString &key) const;
+  void setValue(const QString &contentId, const QString &key, const QVariant &value);
+  QVariant getValue(const QString &contentId, const QString &key, const QVariant &defaultValue = QVariant()) const;
 };

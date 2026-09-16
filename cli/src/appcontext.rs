@@ -32,11 +32,6 @@ impl AppContext {
         .build()
         .into(),
       config: Config {
-        authorization: if let Some(auth) = config.authorization.strip_prefix("Bearer ") {
-          auth.to_string()
-        } else {
-          config.authorization
-        },
         sqlite_path: config_dir
           .join(config.sqlite_path)
           .to_str()

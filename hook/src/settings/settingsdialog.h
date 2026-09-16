@@ -14,15 +14,6 @@ public:
 public Q_SLOTS:
   void buildPages();
 
-  void setAutoSyncDefault(bool value);
-  void setSyncBookmarks(QVariant value);
-  void setJournalPrivacy(QVariant value);
-  void setRetryOnNetwork(bool value);
-  void setSyncDaily(QVariant value);
-  void setCloseThreshold(QVariant value);
-  void setPageThreshold(QVariant value);
-
-  void setDebug(bool value);
   void saveLogs();
   void signOut();
 

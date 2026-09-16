@@ -7,7 +7,7 @@ use crate::appcontext::AppContext;
 use crate::commands::getuserbook::get_book;
 use crate::commands::setuserbook::{update_or_insert_user_book, update_user_book::UserBookUpdateInput};
 use crate::commands::updatejournal::update_journal;
-use crate::config::{SyncBookmarks, VERSION};
+use crate::config::VERSION;
 use crate::log;
 use crate::utils::{GraphQLQueryExt, normalize_identifiers};
 
@@ -31,7 +31,7 @@ struct UpdateRead;
 )]
 struct InsertRead;
 
-/// Update read percentage and create journal entries for bookmarks.
+/// Update read percentage and create journal entries for annotations.
 #[derive(FromArgs, PartialEq, Debug)]
 #[argh(subcommand, name = "update")]
 pub struct Update {
@@ -97,7 +97,7 @@ pub fn run(context: &mut AppContext, args: &Update) -> Result<()> {
     )?;
   }
 
-  if context.config.sync_bookmarks != SyncBookmarks::Never {
+  if context.config.sync_annotations {
     update_journal(context, &args.content_id, &book)?;
   }
 

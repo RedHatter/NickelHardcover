@@ -204,7 +204,7 @@ QFrame *SettingsDialog::buildGeneral() {
   layout->addWidget(row);
   row->setProperty("noBorder", true);
 
-  username = new MenuRow("Unknown user", MenuRowType::Tap, {{"Sign out", true}}, {}, true);
+  username = new MenuRow("Loading…", MenuRowType::Tap, {{"Sign out", true}}, {}, true);
   QObject::connect(username, &MenuRow::triggered, this, &SettingsDialog::signOut);
   layout->addWidget(username);
 
@@ -214,28 +214,28 @@ QFrame *SettingsDialog::buildGeneral() {
   CLI *cli = CLI::getUser(options);
   QObject::connect(cli, &CLI::response, this, &SettingsDialog::setUsername);
 
-  CheckboxRow *checkboxRow =
-      new CheckboxRow("Enable auto-sync by default", Settings::getInstance()->getAutoSyncDefault());
-  QObject::connect(checkboxRow, &CheckboxRow::triggered, this, &SettingsDialog::setAutoSyncDefault);
+  Settings *settings = Settings::getInstance();
+
+  CheckboxRow *checkboxRow = new CheckboxRow("Enable auto-sync by default for new books", settings->getAutoSyncDefault());
+  QObject::connect(checkboxRow, &CheckboxRow::triggered, settings, &Settings::setAutoSyncDefault);
   layout->addWidget(checkboxRow);
 
   checkboxRow = new CheckboxRow(
-      "If syncing fails due to lack of internet connection automatically retry next time you connect to WiFi",
-      Settings::getInstance()->isRetryOnNetwork());
-  QObject::connect(checkboxRow, &CheckboxRow::triggered, this, &SettingsDialog::setRetryOnNetwork);
+      "If a sync fails due to lack of internet connection, automatically retry the next time you connect to Wi-Fi",
+      settings->getRetryOnNetwork());
+  QObject::connect(checkboxRow, &CheckboxRow::triggered, settings, &Settings::setRetryOnNetwork);
   layout->addWidget(checkboxRow);
 
-  MenuRow *menuRow =
-      new MenuRow("Sync annotations to reading journal", MenuRowType::Menu, {{"Always", "always"}, {"Never", "never"}},
-                  {}, Settings::getInstance()->getSyncBookmarks());
-  QObject::connect(menuRow, &MenuRow::triggered, this, &SettingsDialog::setSyncBookmarks);
-  layout->addWidget(menuRow);
+  checkboxRow = new CheckboxRow("Sync Kobo annotations (highlights and notes) to the Hardcover.app journal",
+                                settings->getSyncAnnotations());
+  QObject::connect(checkboxRow, &CheckboxRow::triggered, settings, &Settings::setSyncAnnotations);
+  layout->addWidget(checkboxRow);
 
-  menuRow = new MenuRow(
+  MenuRow *menuRow = new MenuRow(
       "Reading journal privacy", MenuRowType::Menu,
       {{"Account default", "account"}, {"Public", "public"}, {"Follows", "follows"}, {"Private", "private"}}, {},
-      Settings::getInstance()->getJournalPrivacy());
-  QObject::connect(menuRow, &MenuRow::triggered, this, &SettingsDialog::setJournalPrivacy);
+      settings->getJournalPrivacy());
+  QObject::connect(menuRow, &MenuRow::triggered, settings, &Settings::setJournalPrivacy);
   layout->addWidget(menuRow);
 
   return frame;
@@ -264,9 +264,9 @@ QFrame *SettingsDialog::buildAutoSync() {
   }
 
   MenuRow *menuRow =
-      new MenuRow("Once per day", MenuRowType::Menu, {{"Never", -1}, {"Set time of day", MenuRow::OPEN_DIALOG}}, hours,
-                  settings->getSyncDaily());
-  QObject::connect(menuRow, &MenuRow::triggered, this, &SettingsDialog::setSyncDaily);
+      new MenuRow("At a scheduled time each day", MenuRowType::Menu, {{"Never", -1}, {"Set time of day", MenuRow::OPEN_DIALOG}}, hours,
+                  settings->getSyncOnSchedule());
+  QObject::connect(menuRow, &MenuRow::triggered, settings, &Settings::setSyncOnSchedule);
   layout->addWidget(menuRow);
   menuRow->setProperty("noBorder", true);
 
@@ -276,15 +276,15 @@ QFrame *SettingsDialog::buildAutoSync() {
   }
 
   menuRow = new MenuRow("After closing a book or the Kobo is put to sleep", MenuRowType::Menu,
-                        {{"Always", 1}, {"Never", 0}, {"Set a threshold", MenuRow::OPEN_DIALOG}}, thresholdItems,
-                        QVariant(settings->getCloseThreshold()));
-  QObject::connect(menuRow, &MenuRow::triggered, this, &SettingsDialog::setCloseThreshold);
+                        {{"Every time", 1}, {"Never", -1}, {"Set a threshold", MenuRow::OPEN_DIALOG}}, thresholdItems,
+                        settings->getSyncOnClose());
+  QObject::connect(menuRow, &MenuRow::triggered, settings, &Settings::setSyncOnClose);
   layout->addWidget(menuRow);
 
   menuRow = new MenuRow("Periodically by read percentage", MenuRowType::Menu,
-                        {{"Never", 0}, {"Set a threshold", MenuRow::OPEN_DIALOG}}, thresholdItems,
-                        QVariant(settings->getPageThreshold()));
-  QObject::connect(menuRow, &MenuRow::triggered, this, &SettingsDialog::setPageThreshold);
+                        {{"Never", -1}, {"Set a threshold", MenuRow::OPEN_DIALOG}}, thresholdItems,
+                        settings->getSyncOnRead());
+  QObject::connect(menuRow, &MenuRow::triggered, settings, &Settings::setSyncOnRead);
   layout->addWidget(menuRow);
 
   return frame;
@@ -296,7 +296,7 @@ QFrame *SettingsDialog::buildInformation() {
   layout->setSpacing(0);
   layout->setContentsMargins(0, 0, 0, 0);
 
-  layout->addWidget(new Label(Label::Avenir, "Book information"));
+  layout->addWidget(new Label(Label::Avenir, "Current book"));
 
   SyncController *ctl = SyncController::getInstance();
   QDateTime alarm = ctl->getAlarm();
@@ -325,8 +325,10 @@ QFrame *SettingsDialog::buildAdvanced() {
 
   layout->addWidget(new Label(Label::Avenir, "Advanced"));
 
-  CheckboxRow *checkboxRow = new CheckboxRow("Debug logs", Settings::getInstance()->getDebug());
-  QObject::connect(checkboxRow, &CheckboxRow::triggered, this, &SettingsDialog::setDebug);
+  Settings *settings = Settings::getInstance();
+
+  CheckboxRow *checkboxRow = new CheckboxRow("Enable debug logs", settings->getDebug());
+  QObject::connect(checkboxRow, &CheckboxRow::triggered, settings, &Settings::setDebug);
   layout->addWidget(checkboxRow);
   checkboxRow->setProperty("noBorder", true);
 
@@ -350,20 +352,6 @@ void SettingsDialog::setUsername(Messages message) {
   }
 }
 
-void SettingsDialog::setAutoSyncDefault(bool value) { Settings::getInstance()->setAutoSyncDefault(value); }
-
-void SettingsDialog::setSyncBookmarks(QVariant value) { Settings::getInstance()->setSyncBookmarks(value.toString()); }
-
-void SettingsDialog::setJournalPrivacy(QVariant value) { Settings::getInstance()->setJournalPrivacy(value.toString()); }
-
-void SettingsDialog::setRetryOnNetwork(bool value) { Settings::getInstance()->setRetryOnNetwork(value); }
-
-void SettingsDialog::setSyncDaily(QVariant value) { Settings::getInstance()->setSyncDaily(value.toInt()); }
-
-void SettingsDialog::setCloseThreshold(QVariant value) { Settings::getInstance()->setCloseThreshold(value.toInt()); }
-
-void SettingsDialog::setPageThreshold(QVariant value) { Settings::getInstance()->setPageThreshold(value.toInt()); }
-
 void SettingsDialog::clearReadProgress() {
   SyncController *ctl = SyncController::getInstance();
   ctl->clearReadProgress();
@@ -382,11 +370,9 @@ void SettingsDialog::clearLastSynced() {
   row->setValue(progress <= 0 ? "Never" : QString::number(progress).append("%"));
 }
 
-void SettingsDialog::setDebug(bool value) { Settings::getInstance()->setDebug(value); }
-
 void SettingsDialog::saveLogs() { nh_dump_log(); }
 
 void SettingsDialog::signOut() {
-  Settings::getInstance()->clearAuthorization();
+  Settings::getInstance()->clearAccessToken();
   QTimer::singleShot(0, this, &Dialog::close);
 }

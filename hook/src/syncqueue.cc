@@ -35,7 +35,7 @@ bool SyncQueue::checkThreshold(const QString &contentId, int threshold) const {
 }
 
 void SyncQueue::networkConnected() {
-  if (retryQueue.isEmpty() || !Settings::getInstance()->isRetryOnNetwork())
+  if (retryQueue.isEmpty() || !Settings::getInstance()->getRetryOnNetwork())
     return;
 
   nh_log("Retrying %d items", retryQueue.size());
@@ -125,7 +125,7 @@ void SyncQueue::success() {
 void SyncQueue::failure(CLI::FailureReason reason) {
   failed = true;
 
-  if (reason == CLI::FailureReason::Network && Settings::getInstance()->isRetryOnNetwork()) {
+  if (reason == CLI::FailureReason::Network && Settings::getInstance()->getRetryOnNetwork()) {
     retryQueue.insert(currentContentId);
   } else {
     progress.remove(currentContentId);

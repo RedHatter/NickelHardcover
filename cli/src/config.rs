@@ -18,28 +18,6 @@ pub static CLIENT_ID: &str = "2ec8855f-400e-4bb9-a2ed-5b628afa4a17";
 pub static BASE_URL: &str = "https://api.hardcover.app";
 pub static VERSION: &str = option_env!("VERSION").unwrap();
 
-#[derive(Serialize, PartialEq, Debug, Clone)]
-#[serde(rename_all = "lowercase")]
-pub enum SyncBookmarks {
-  Always,
-  Never,
-}
-
-impl<'de> Deserialize<'de> for SyncBookmarks {
-  fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-  where
-    D: Deserializer<'de>,
-  {
-    match String::deserialize(deserializer)? {
-      s if s.eq_ignore_ascii_case("Always") => Ok(SyncBookmarks::Always),
-      s if s.eq_ignore_ascii_case("Never") => Ok(SyncBookmarks::Never),
-      s => Err(de::Error::custom(format!(
-        "<i>{s}</i> is not a valid <i>sync_bookmarks</i> value"
-      ))),
-    }
-  }
-}
-
 #[derive(Clone, Copy, Serialize, PartialEq, Debug)]
 #[serde(rename_all = "lowercase")]
 pub enum JournalPrivacy {
@@ -108,69 +86,37 @@ impl fmt::Display for JournalPrivacy {
   }
 }
 
-#[derive(Serialize, PartialEq, Debug, Clone)]
-#[serde(rename_all = "lowercase")]
-pub enum SyncOnClose {
-  Always,
-  Never,
-  Number(u8),
-}
-
-impl<'de> Deserialize<'de> for SyncOnClose {
-  fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-  where
-    D: Deserializer<'de>,
-  {
-    let s = String::deserialize(deserializer)?;
-
-    if s.eq_ignore_ascii_case("Always") {
-      Ok(SyncOnClose::Always)
-    } else if s.eq_ignore_ascii_case("Never") {
-      Ok(SyncOnClose::Never)
-    } else if let Ok(n) = s.parse::<u8>()
-      && n > 1
-      && n <= 100
-    {
-      Ok(SyncOnClose::Number(n))
-    } else {
-      Err(de::Error::custom(format!(
-        "<i>{s}</i> is not a valid <i>sync_on_close</i> value"
-      )))
-    }
-  }
-}
-
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(default)]
 pub struct Config {
-  pub authorization: String,
+  pub access_token: String,
   pub auto_sync_default: bool,
   pub debug: bool,
   pub journal_privacy: JournalPrivacy,
   pub refresh_token: String,
   pub retry_on_network: bool,
   pub sqlite_path: String,
-  pub sync_bookmarks: SyncBookmarks,
-  pub sync_daily: i8,
-  pub sync_on_close: SyncOnClose,
-  pub threshold: u8,
+  pub sync_annotations: bool,
+  pub sync_on_close: i8,
+  pub sync_on_read: i8,
+  pub sync_on_schedule: i8,
   pub token_expires_at: Option<Timestamp>,
 }
 
 impl Default for Config {
   fn default() -> Self {
     Self {
-      authorization: String::new(),
+      access_token: String::new(),
       auto_sync_default: false,
       debug: false,
       journal_privacy: JournalPrivacy::Account,
       refresh_token: String::new(),
       retry_on_network: false,
       sqlite_path: "/mnt/onboard/.kobo/KoboReader.sqlite".into(),
-      sync_bookmarks: SyncBookmarks::Never,
-      sync_daily: -1,
-      sync_on_close: SyncOnClose::Never,
-      threshold: 0,
+      sync_annotations: false,
+      sync_on_close: -1,
+      sync_on_read: -1,
+      sync_on_schedule: -1,
       token_expires_at: None,
     }
   }
