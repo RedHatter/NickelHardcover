@@ -103,7 +103,7 @@ fn get_opf_path(manifest: &str) -> Result<String> {
           xml_version = version;
         }
       }
-      Ok(Event::Empty(e)) if e.name().as_ref() == b"rootfile" => {
+      Ok(Event::Empty(e) | Event::Start(e)) if e.name().as_ref() == b"rootfile" => {
         let media_type = e
           .try_get_attribute("media-type")
           .context("Failed to decode <i>media-type</i> attribute")?;
@@ -177,7 +177,7 @@ fn read_opf(opf: &str) -> Result<(Vec<String>, Vec<String>)> {
         State::Identifier(s + e.decode().context("Failed to decode identifier text")?.as_ref())
       }
       (State::Start, Event::Start(e)) if e.local_name().as_ref() == b"manifest" => State::Manifest,
-      (State::Manifest, Event::Empty(e)) if e.local_name().as_ref() == b"item" => {
+      (State::Manifest, Event::Empty(e) | Event::Start(e)) if e.local_name().as_ref() == b"item" => {
         if let Some(media_type) = e
           .try_get_attribute("media-type")
           .context("Failed to decode <i>media-type</i> attribute")?
@@ -218,6 +218,7 @@ fn read_item(item: &str) -> Result<Vec<String>> {
     Start,
     Body,
     Style,
+    Script,
   }
 
   static RE: LazyLock<Result<Regex, regex::Error>> = LazyLock::new(|| {
@@ -240,6 +241,8 @@ fn read_item(item: &str) -> Result<Vec<String>> {
       (State::Body, Event::End(e)) if e.local_name().as_ref() == b"body" => break,
       (State::Body, Event::Start(e)) if e.local_name().as_ref() == b"style" => State::Style,
       (State::Style, Event::End(e)) if e.local_name().as_ref() == b"style" => State::Body,
+      (State::Body, Event::Start(e)) if e.local_name().as_ref() == b"script" => State::Script,
+      (State::Script, Event::End(e)) if e.local_name().as_ref() == b"script" => State::Body,
       (State::Body, Event::Text(e)) => {
         text += e.decode().context("Failed to decode text")?.as_ref();
         State::Body
