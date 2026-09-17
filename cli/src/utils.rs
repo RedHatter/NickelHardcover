@@ -110,16 +110,19 @@ pub fn send_error(context: &mut AppContext, error_code: &str, message: String) -
   }))
   .expect("Failed to log error");
 
-  if context.config.debug
-    && let Err(e) = LOGGER.write_to_disk()
-  {
-    panic!(
-      "Encountered an unexpected error. Please report this.<br><br>{:#}",
-      e.chain().join("<br>> ")
-    );
+  if context.config.debug {
+    LOGGER.write_to_disk().map_err(fatal);
   }
 
   std::process::exit(0);
+}
+
+#[allow(clippy::needless_pass_by_value)]
+pub fn fatal(e: anyhow::Error) -> ! {
+  panic!(
+    "Encountered an unexpected error. Please report this.<br><br>{:#}",
+    e.chain().join("<br>> ")
+  );
 }
 
 pub fn normalize_identifiers(

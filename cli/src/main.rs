@@ -2,16 +2,13 @@ use std::env;
 use std::panic;
 
 use crate::appcontext::AppContext;
-use crate::commands::oauthset;
 use crate::commands::{
-  getuser, getuserbook, insertjournal, listbookmarks, listeditions, listjournal, oauthrequest, search, setuserbook,
-  update, updatejournal,
+  getuser, getuserbook, insertjournal, listbookmarks, listeditions, listjournal, oauthrequest, oauthset, search,
+  setuserbook, update, updatejournal,
 };
 use crate::config::VERSION;
-use crate::messages::Error;
-use crate::messages::Messages;
-use crate::utils::LOGGER;
-use crate::utils::send_msg;
+use crate::messages::{Error, Messages};
+use crate::utils::{LOGGER, fatal, send_msg};
 
 mod appcontext;
 mod commands;
@@ -25,7 +22,6 @@ mod rate_limit;
 mod utils;
 
 use argh::FromArgs;
-use itertools::Itertools;
 use log::LevelFilter;
 
 /// The CLI for NickelHardcover.
@@ -49,7 +45,7 @@ enum Commands {
   ListEditions(listeditions::ListEditions),
   ListJournal(listjournal::ListJournal),
   OAuthRequest(oauthrequest::OAuthRequest),
-  OAuthCheck(oauthset::OAuthSet),
+  OAuthSet(oauthset::OAuthSet),
   Search(search::Search),
   SetUserBook(setuserbook::SetUserBook),
   Update(update::Update),
@@ -82,12 +78,7 @@ fn main() {
     return;
   }
 
-  let mut context = AppContext::new().unwrap_or_else(|e| {
-    panic!(
-      "Encountered an unexpected error. Please report this.<br><br>{:#}",
-      e.chain().join("<br>> ")
-    )
-  });
+  let mut context = AppContext::new().unwrap_or_else(|e| fatal(e));
 
   let res = match args
     .command
@@ -100,26 +91,16 @@ fn main() {
     Commands::ListEditions(args) => listeditions::run(&mut context, args),
     Commands::ListJournal(args) => listjournal::run(&mut context, &args),
     Commands::OAuthRequest(args) => oauthrequest::run(&mut context, &args),
-    Commands::OAuthCheck(args) => oauthset::run(&mut context, &args),
+    Commands::OAuthSet(args) => oauthset::run(&mut context, &args),
     Commands::Search(args) => search::run(&mut context, args),
     Commands::SetUserBook(args) => setuserbook::run(&mut context, args),
     Commands::Update(args) => update::run(&mut context, &args),
     Commands::UpdateJournal(args) => updatejournal::run(&mut context, &args),
   };
 
-  if let Err(e) = res {
-    panic!(
-      "Encountered an unexpected error. Please report this.<br><br>{:#}",
-      e.chain().join("<br>> ")
-    );
-  }
+  res.map_err(fatal);
 
-  if context.config.debug
-    && let Err(e) = LOGGER.write_to_disk()
-  {
-    panic!(
-      "Encountered an unexpected error. Please report this.<br><br>{:#}",
-      e.chain().join("<br>> ")
-    );
+  if context.config.debug {
+    LOGGER.write_to_disk().map_err(fatal);
   }
 }
