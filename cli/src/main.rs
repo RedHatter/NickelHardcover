@@ -19,6 +19,7 @@ mod config;
 mod database;
 mod epub;
 mod hardcover;
+mod isbn;
 mod messages;
 mod rate_limit;
 mod utils;

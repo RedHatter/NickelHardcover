@@ -2,7 +2,7 @@ use anyhow::{Context, Result, anyhow};
 use jiff::{Timestamp, civil::DateTime, tz::TimeZone};
 use rusqlite::{Connection, OpenFlags};
 
-use crate::{appcontext::AppContext, epub::normalize_isbn};
+use crate::{appcontext::AppContext, isbn::normalize_isbn};
 
 #[derive(Debug)]
 pub struct Bookmark {

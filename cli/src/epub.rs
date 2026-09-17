@@ -8,82 +8,7 @@ use quick_xml::{Reader, XmlVersion};
 use regex::Regex;
 use zip::ZipArchive;
 
-fn isbn_13_check_digit(digits: &[u32]) -> u32 {
-  let mut sum = 0;
-  for i in 0..6 {
-    sum += digits[i * 2] + 3 * digits[i * 2 + 1];
-  }
-  let sum_m = sum % 10;
-  if sum_m == 0 { 0 } else { 10 - sum_m }
-}
-
-fn isbn_10_check_digit(digits: &[u32]) -> u32 {
-  let sum = digits
-    .iter()
-    .enumerate()
-    .take(9)
-    .map(|(i, digit)| digit * (10 - i as u32))
-    .sum::<u32>();
-  let sum_m = sum % 11;
-  if sum_m == 0 { 0 } else { 11 - sum_m }
-}
-
-fn digits_to_string(digits: &[u32]) -> String {
-  digits
-    .iter()
-    .map(|d| {
-      if *d == 10 {
-        'X'
-      } else {
-        char::from_digit(*d, 10).unwrap()
-      }
-    })
-    .collect()
-}
-
-fn string_to_digits(str: &str) -> Vec<u32> {
-  str
-    .chars()
-    .filter_map(|c| if c == 'X' || c == 'x' { Some(10) } else { c.to_digit(10) })
-    .collect()
-}
-
-pub fn normalize_isbn(isbn: &str) -> Option<Vec<String>> {
-  let mut isbn = isbn.to_ascii_uppercase();
-  isbn.retain(char::is_alphanumeric);
-
-  if isbn.len() == 10 && isbn.starts_with('B') {
-    return Some(vec![isbn]);
-  }
-
-  let digits = string_to_digits(&isbn);
-
-  if digits.len() == 13
-    && (digits[..3] == [9, 7, 8] || digits[..3] == [9, 7, 9])
-    && isbn_13_check_digit(&digits) == digits[12]
-  {
-    if digits[..3] == [9, 7, 8] {
-      let mut isbn_10 = [0; 10];
-      isbn_10[..9].clone_from_slice(&digits[3..12]);
-      isbn_10[9] = isbn_10_check_digit(&isbn_10);
-
-      Some(vec![isbn, digits_to_string(&isbn_10)])
-    } else {
-      Some(vec![isbn])
-    }
-  } else if digits.len() == 10 && isbn_10_check_digit(&digits) == digits[9] {
-    let mut isbn_13 = [0; 13];
-    isbn_13[0] = 9;
-    isbn_13[1] = 7;
-    isbn_13[2] = 8;
-    isbn_13[3..12].clone_from_slice(&digits[..9]);
-    isbn_13[12] = isbn_13_check_digit(&isbn_13);
-
-    Some(vec![isbn, digits_to_string(&isbn_13)])
-  } else {
-    None
-  }
-}
+use crate::isbn::normalize_isbn;
 
 fn get_opf_path(manifest: &str) -> Result<String> {
   let mut reader = Reader::from_str(manifest);
@@ -317,4 +242,210 @@ pub fn read_epub_isbn(content_id: &str) -> Result<Vec<String>> {
   isbn.dedup();
 
   Ok(isbn)
+}
+
+#[cfg(test)]
+mod tests {
+  use std::io::{Cursor, Write};
+  use std::path::PathBuf;
+  use std::sync::atomic::{AtomicU64, Ordering};
+
+  use zip::write::{SimpleFileOptions, ZipWriter};
+
+  use super::*;
+
+  #[test]
+  fn get_opf_path_open_close() {
+    let xml = r#"<?xml version="1.0"?>
+<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
+  <rootfiles>
+    <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"></rootfile>
+  </rootfiles>
+</container>"#;
+    assert_eq!(get_opf_path(xml).unwrap(), "OEBPS/content.opf");
+  }
+
+  #[test]
+  fn get_opf_path_wrong_media_type() {
+    let xml = r#"<?xml version="1.0"?>
+<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
+  <rootfiles>
+    <rootfile full-path="META-INF/other.xml" media-type="text/xml"/>
+    <rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/>
+  </rootfiles>
+</container>"#;
+    assert_eq!(get_opf_path(xml).unwrap(), "OEBPS/content.opf");
+  }
+
+  #[test]
+  fn get_opf_path_missing() {
+    let xml = r#"<?xml version="1.0"?>
+<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
+  <rootfiles></rootfiles>
+</container>"#;
+    assert!(get_opf_path(xml).is_err());
+  }
+
+  #[test]
+  fn read_opf_manifest() {
+    let opf = r#"<?xml version="1.0"?>
+<package xmlns="http://www.idpf.org/2007/opf" xmlns:dc="http://purl.org/dc/elements/1.1/" version="2.0">
+  <metadata>
+    <dc:identifier opf:scheme="ISBN">urn:isbn:9780306406157</dc:identifier>
+  </metadata>
+  <manifest>
+    <item href="style.css" media-type="text/css"/>
+    <item href="cover.jpg" media-type="image/jpeg"/>
+    <item href="toc.ncx" media-type="application/x-dtbncx+xml"/>
+    <item id="chap1" href="chap1.xhtml" media-type="application/xhtml+xml"/>
+    <item id="chap2" href="chap2.xhtml" media-type="application/xhtml+xml"></item>
+    <item href="chap3.dtbook" media-type="application/x-dtbook+xml"/>
+  </manifest>
+</package>"#;
+
+    let (isbns, items) = read_opf(opf).unwrap();
+    assert_eq!(isbns, vec!["9780306406157".to_string(), "0306406152".to_string()]);
+    assert_eq!(
+      items,
+      vec![
+        "chap1.xhtml".to_string(),
+        "chap2.xhtml".to_string(),
+        "chap3.dtbook".to_string()
+      ]
+    );
+  }
+
+  #[test]
+  fn read_opf_empty() {
+    let opf = r#"<?xml version="1.0"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="2.0">
+  <spine></spine>
+</package>"#;
+
+    let (isbns, items) = read_opf(opf).unwrap();
+    assert!(isbns.is_empty());
+    assert!(items.is_empty());
+  }
+
+  #[test]
+  fn read_item_finds_isbn() {
+    let xhtml = r#"<?xml version="1.0"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <body>
+    <style>/* 978-0-13-468599-1 hidden in css, should be ignored */</style>
+    <script>var isbn = "978-1-59420-171-4";</script>
+    <p>Copyright page. ISBN 978-0-306-40615-7</p>
+  </body>
+</html>"#;
+
+    let isbns = read_item(xhtml).unwrap();
+    assert_eq!(isbns, vec!["9780306406157".to_string(), "0306406152".to_string()]);
+  }
+
+  static TEMP_COUNTER: AtomicU64 = AtomicU64::new(0);
+  struct TempFile(PathBuf);
+
+  impl TempFile {
+    fn new(bytes: &[u8]) -> Self {
+      let id = TEMP_COUNTER.fetch_add(1, Ordering::Relaxed);
+      let path = std::env::temp_dir().join(format!("nickelhardcover-epub-test-{}-{id}.epub", std::process::id()));
+      std::fs::write(&path, bytes).unwrap();
+      TempFile(path)
+    }
+
+    fn content_id(&self) -> String {
+      format!("file://{}", self.0.display())
+    }
+  }
+
+  impl Drop for TempFile {
+    fn drop(&mut self) {
+      let _ = std::fs::remove_file(&self.0);
+    }
+  }
+
+  fn build_epub(opf_path: &str, opf_contents: &str, items: &[(&str, &str)]) -> Vec<u8> {
+    let container = format!(
+      r#"<?xml version="1.0"?>
+<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
+  <rootfiles>
+    <rootfile full-path="{opf_path}" media-type="application/oebps-package+xml"/>
+  </rootfiles>
+</container>"#
+    );
+
+    let options = SimpleFileOptions::default();
+    let mut writer = ZipWriter::new(Cursor::new(Vec::new()));
+
+    writer.start_file("META-INF/container.xml", options).unwrap();
+    writer.write_all(container.as_bytes()).unwrap();
+
+    writer.start_file(opf_path, options).unwrap();
+    writer.write_all(opf_contents.as_bytes()).unwrap();
+
+    for (name, contents) in items {
+      writer.start_file(*name, options).unwrap();
+      writer.write_all(contents.as_bytes()).unwrap();
+    }
+
+    writer.finish().unwrap().into_inner()
+  }
+
+  #[test]
+  fn read_epub_isbn_variants() {
+    let isbn_9780306406157 = vec!["0306406152".to_string(), "9780306406157".to_string()];
+
+    let opf = r#"<?xml version="1.0"?>
+<package xmlns="http://www.idpf.org/2007/opf" xmlns:dc="http://purl.org/dc/elements/1.1/" version="2.0">
+  <metadata>
+    <dc:identifier opf:scheme="ISBN">urn:isbn:9780306406157</dc:identifier>
+  </metadata>
+  <manifest>
+    <item href="chap1.xhtml" media-type="application/xhtml+xml"/>
+  </manifest>
+</package>"#;
+    let bytes = build_epub(
+      "OEBPS/content.opf",
+      opf,
+      &[("OEBPS/chap1.xhtml", "<html><body><p>Hello</p></body></html>")],
+    );
+    let file = TempFile::new(&bytes);
+    assert_eq!(read_epub_isbn(&file.content_id()).unwrap(), isbn_9780306406157);
+
+    let opf = r#"<?xml version="1.0"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="2.0">
+  <manifest>
+    <item href="chap1.xhtml" media-type="application/xhtml+xml"/>
+  </manifest>
+</package>"#;
+    let chapter = r#"<html xmlns="http://www.w3.org/1999/xhtml">
+  <body>
+    <style>/* 979-10-30-015935 should be ignored */</style>
+    <script>var isbn = "0-8044-2957-X"; // should be ignored</script>
+    <p>Copyright page. ISBN 978-0-306-40615-7</p>
+  </body>
+</html>"#;
+    let bytes = build_epub("OEBPS/content.opf", opf, &[("OEBPS/chap1.xhtml", chapter)]);
+    let file = TempFile::new(&bytes);
+    assert_eq!(read_epub_isbn(&file.content_id()).unwrap(), isbn_9780306406157);
+  }
+
+  #[test]
+  fn read_epub_isbn_not_found() {
+    let opf = r#"<?xml version="1.0"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="2.0">
+  <manifest>
+    <item href="chap1.xhtml" media-type="application/xhtml+xml"/>
+  </manifest>
+</package>"#;
+
+    let bytes = build_epub(
+      "OEBPS/content.opf",
+      opf,
+      &[("OEBPS/chap1.xhtml", "<html><body><p>No numbers here.</p></body></html>")],
+    );
+    let file = TempFile::new(&bytes);
+
+    assert!(read_epub_isbn(&file.content_id()).is_err());
+  }
 }
