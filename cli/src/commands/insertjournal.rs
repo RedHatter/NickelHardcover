@@ -7,7 +7,7 @@ use crate::appcontext::AppContext;
 use crate::commands::getuserbook::get_book;
 use crate::config::{JournalPrivacy, VERSION};
 use crate::log;
-use crate::utils::{GraphQLQueryExt, normalize_identifiers};
+use crate::utils::{GraphQLQueryExt, Percentage, normalize_identifiers};
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -35,9 +35,9 @@ pub struct InsertJournal {
   #[argh(option)]
   text: String,
 
-  /// current read percentage
+  /// current read percentage (0-100)
   #[argh(option)]
-  percentage: f64,
+  percentage: Percentage,
 
   /// set journal privacy
   #[argh(option)]
@@ -64,9 +64,9 @@ pub fn run(context: &mut AppContext, args: InsertJournal) -> Result<()> {
       entry: args.text,
       action_at: None,
       metadata: Some(json!({
-        "page": (book.pages as f64 * (args.percentage / 100.0)).round() as i64,
+        "page": (book.pages as f64 * (args.percentage.0 / 100.0)).round() as i64,
         "possible": book.pages,
-        "percent": args.percentage,
+        "percent": args.percentage.0,
       })),
     },
   )?;

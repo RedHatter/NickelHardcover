@@ -9,7 +9,7 @@ use crate::commands::setuserbook::{update_or_insert_user_book, update_user_book:
 use crate::commands::updatejournal::update_journal;
 use crate::config::VERSION;
 use crate::log;
-use crate::utils::{GraphQLQueryExt, normalize_identifiers};
+use crate::utils::{GraphQLQueryExt, Percentage, normalize_identifiers};
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -43,9 +43,9 @@ pub struct Update {
   #[argh(option)]
   linked_id: Option<i64>,
 
-  /// read percentage
+  /// read percentage (0-100)
   #[argh(option)]
-  value: i64,
+  value: Percentage,
 }
 
 pub fn run(context: &mut AppContext, args: &Update) -> Result<()> {
@@ -63,7 +63,7 @@ pub fn run(context: &mut AppContext, args: &Update) -> Result<()> {
   )?;
   let started_at = started_at.unwrap_or(Zoned::now().strftime("%F").to_string());
 
-  let progress_pages = (book.pages as f64 * (args.value as f64 / 100.0)).round() as i64;
+  let progress_pages = (book.pages as f64 * (args.value.0 / 100.0)).round() as i64;
 
   if let Some(user_read_id) = user_read_id {
     log!(

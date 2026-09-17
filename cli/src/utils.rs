@@ -1,5 +1,6 @@
 use std::fmt::{Debug, Write};
 use std::fs::write;
+use std::str::FromStr;
 use std::sync::{LazyLock, Mutex};
 
 use anyhow::{Context, Result};
@@ -32,6 +33,25 @@ macro_rules! log {
 }
 
 static LOG: LazyLock<Mutex<String>> = LazyLock::new(|| Mutex::new(String::new()));
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Percentage(pub f64);
+
+impl FromStr for Percentage {
+  type Err = String;
+
+  fn from_str(s: &str) -> Result<Self, Self::Err> {
+    let value: f64 = s.parse().map_err(|_| format!("<i>{s}</i> is not a valid number"))?;
+
+    if (0.0..=100.0).contains(&value) {
+      Ok(Percentage(value))
+    } else {
+      Err(format!(
+        "<i>{value}</i> is not a valid percentage; expected a value between 0 and 100"
+      ))
+    }
+  }
+}
 
 pub fn send_msg(value: &Messages) -> Result<()> {
   let message = serde_json::to_string(value).context("Failed to serialize message")?;
