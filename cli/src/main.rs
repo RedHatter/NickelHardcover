@@ -10,8 +10,8 @@ use crate::commands::{
 use crate::config::VERSION;
 use crate::messages::Error;
 use crate::messages::Messages;
+use crate::utils::LOGGER;
 use crate::utils::send_msg;
-use crate::utils::write_logfile;
 
 mod appcontext;
 mod commands;
@@ -26,6 +26,7 @@ mod utils;
 
 use argh::FromArgs;
 use itertools::Itertools;
+use log::LevelFilter;
 
 /// The CLI for NickelHardcover.
 #[derive(FromArgs, PartialEq, Debug)]
@@ -56,6 +57,9 @@ enum Commands {
 }
 
 fn main() {
+  log::set_logger(&LOGGER).expect("Failed to initialize logger");
+  log::set_max_level(LevelFilter::Debug);
+
   if env::var("RUST_BACKTRACE").is_err() {
     panic::set_hook(Box::new(|info| {
       if let Err(e) = send_msg(&Messages::Error(Error {
@@ -65,7 +69,7 @@ fn main() {
         eprintln!("{e}");
       }
 
-      if let Err(e) = write_logfile() {
+      if let Err(e) = LOGGER.write_to_disk() {
         eprintln!("{e}");
       }
     }));
@@ -111,7 +115,7 @@ fn main() {
   }
 
   if context.config.debug
-    && let Err(e) = write_logfile()
+    && let Err(e) = LOGGER.write_to_disk()
   {
     panic!(
       "Encountered an unexpected error. Please report this.<br><br>{:#}",

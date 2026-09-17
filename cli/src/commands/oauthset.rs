@@ -7,7 +7,6 @@ use serde_json::Value;
 use crate::appcontext::AppContext;
 use crate::config::{BASE_URL, CLIENT_ID, VERSION};
 use crate::utils::send_error;
-use crate::{debug_log, log};
 
 #[derive(Serialize, Deserialize)]
 struct OAuthToken {
@@ -28,7 +27,7 @@ pub struct OAuthSet {
 }
 
 pub fn run(context: &mut AppContext, args: &OAuthSet) -> Result<()> {
-  log!("{} {:?}", VERSION, args)?;
+  log::info!("{VERSION} {args:?}");
 
   request_token(
     context,
@@ -64,7 +63,7 @@ pub fn request_token<I: IntoIterator<Item = (K, V)>, K: AsRef<str>, V: AsRef<str
     .read_json::<Value>()
     .context("Failed to parse OAuth token response")?;
 
-  debug_log!("{:?}", json)?;
+  log::debug!("{json:?}");
 
   if let Some(Value::String(error)) = json.get("error") {
     context.config.access_token = String::new();

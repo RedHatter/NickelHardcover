@@ -8,7 +8,6 @@ use crate::commands::getuserbook::get_book;
 use crate::commands::setuserbook::{update_or_insert_user_book, update_user_book::UserBookUpdateInput};
 use crate::commands::updatejournal::update_journal;
 use crate::config::VERSION;
-use crate::log;
 use crate::utils::{GraphQLQueryExt, Percentage, normalize_identifiers};
 
 #[derive(GraphQLQuery)]
@@ -49,7 +48,7 @@ pub struct Update {
 }
 
 pub fn run(context: &mut AppContext, args: &Update) -> Result<()> {
-  log!("{} {:?}", VERSION, args)?;
+  log::info!("{VERSION} {args:?}");
 
   let (linked_id, isbn) = normalize_identifiers(context, args.linked_id, Some(&args.content_id));
   let book = get_book(context, isbn, linked_id)?;
@@ -66,10 +65,10 @@ pub fn run(context: &mut AppContext, args: &Update) -> Result<()> {
   let progress_pages = (book.pages as f64 * (args.value.0 / 100.0)).round() as i64;
 
   if let Some(user_read_id) = user_read_id {
-    log!(
+    log::info!(
       "Update read `{user_read_id}` for edition `{}` to page `{progress_pages}`",
       book.edition_id
-    )?;
+    );
 
     UpdateRead::send_request(
       context,
@@ -81,10 +80,10 @@ pub fn run(context: &mut AppContext, args: &Update) -> Result<()> {
       },
     )?;
   } else {
-    log!(
+    log::info!(
       "Insert new read for edition `{}` at page `{progress_pages}`",
       book.edition_id
-    )?;
+    );
 
     InsertRead::send_request(
       context,

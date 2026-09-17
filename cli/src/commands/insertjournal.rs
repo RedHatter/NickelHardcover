@@ -6,7 +6,6 @@ use serde_json::json;
 use crate::appcontext::AppContext;
 use crate::commands::getuserbook::get_book;
 use crate::config::{JournalPrivacy, VERSION};
-use crate::log;
 use crate::utils::{GraphQLQueryExt, Percentage, normalize_identifiers};
 
 #[derive(GraphQLQuery)]
@@ -45,7 +44,7 @@ pub struct InsertJournal {
 }
 
 pub fn run(context: &mut AppContext, args: InsertJournal) -> Result<()> {
-  log!("{} {:?}", VERSION, args)?;
+  log::info!("{VERSION} {args:?}");
 
   let (linked_id, isbn) = normalize_identifiers(context, args.linked_id, args.content_id.as_deref());
   let book = get_book(context, isbn, linked_id)?;

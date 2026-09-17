@@ -5,7 +5,6 @@ use serde_json::Value;
 
 use crate::appcontext::AppContext;
 use crate::config::VERSION;
-use crate::log;
 use crate::messages::{Edition, EditionList, Messages};
 use crate::utils::{GraphQLQueryExt, send_msg};
 
@@ -38,7 +37,7 @@ pub struct ListEditions {
 }
 
 pub fn run(context: &mut AppContext, args: ListEditions) -> Result<()> {
-  log!("{} {:?}", VERSION, args)?;
+  log::info!("{VERSION} {args:?}");
 
   let reading_format = match args.reading_format {
     Some(format @ (1 | 2 | 4)) => vec![format],

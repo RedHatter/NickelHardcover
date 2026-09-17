@@ -19,7 +19,6 @@ use crate::commands::oauthset::refresh_token;
 use crate::rate_limit::RateLimit;
 use crate::utils::send_error;
 use crate::{appcontext::AppContext, config::BASE_URL};
-use crate::{debug_log, log};
 
 pub mod scalars {
   #![allow(non_camel_case_types)]
@@ -57,7 +56,7 @@ fn try_request<T: Serialize>(context: &mut AppContext, request_body: &T) -> Resu
       .parse::<u64>()
       .context("Failed to parse <i>Retry-After</i> header")?;
     let duration = Duration::from_secs(retry_after);
-    log!("Encountered Retry-After header sleeping for {}", duration.as_secs())?;
+    log::info!("Encountered Retry-After header sleeping for {}", duration.as_secs());
     sleep(duration);
     bail!("Rate limited, retrying");
   }
@@ -78,7 +77,7 @@ fn try_request<T: Serialize>(context: &mut AppContext, request_body: &T) -> Resu
 
     if rate_limit.remaining() == 0 {
       let duration = rate_limit.reset().unwrap_or(Duration::from_secs(1));
-      log!("Reached rate limit sleeping for {}", duration.as_secs())?;
+      log::info!("Reached rate limit sleeping for {}", duration.as_secs());
       sleep(duration);
     }
   }
@@ -98,7 +97,7 @@ fn try_request<T: Serialize>(context: &mut AppContext, request_body: &T) -> Resu
       body
     };
     let msg = format!("Request failed <i>{code}: {msg}</i>");
-    log!("{msg}")?;
+    log::info!("{msg}");
 
     if code == StatusCode::UNAUTHORIZED {
       send_error(context, "UNAUTHORIZED", String::new());
@@ -165,7 +164,7 @@ pub fn send_request<T: Serialize, R: DeserializeOwned>(
   .read_json::<Value>()
   .context(format!("Failed to parse <i>{operation_name}</i> response"))?;
 
-  debug_log!("{:?}", json)?;
+  log::debug!("{json:?}");
 
   let mut errors = Vec::<&str>::new();
   collect_errors(&json, &mut errors);
@@ -189,7 +188,7 @@ pub fn batch_requests<T: Serialize, R: DeserializeOwned>(
       if chunk.is_empty() {
         None
       } else {
-        debug_log!("Batching {}", chunk.len()).unwrap();
+        log::debug!("Batching {}", chunk.len());
         Some(send_request::<_, Vec<R>>(context, operation_name, chunk))
       }
     })

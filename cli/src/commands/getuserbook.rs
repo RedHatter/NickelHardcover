@@ -5,7 +5,6 @@ use graphql_client::GraphQLQuery;
 use crate::appcontext::AppContext;
 use crate::commands::getuser::get_user;
 use crate::config::VERSION;
-use crate::log;
 use crate::messages::{Messages, UserBook};
 use crate::utils::{GraphQLQueryExt, normalize_identifiers, send_error, send_msg};
 
@@ -46,7 +45,7 @@ pub struct GetUserBook {
 }
 
 pub fn run(context: &mut AppContext, args: &GetUserBook) -> Result<()> {
-  log!("{} {:?}", VERSION, args)?;
+  log::info!("{VERSION} {args:?}");
 
   let (linked_id, isbn) = normalize_identifiers(context, args.linked_id, args.content_id.as_deref());
   let book = get_book(context, isbn, linked_id)?;

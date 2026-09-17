@@ -6,7 +6,6 @@ use crate::appcontext::AppContext;
 use crate::config::{BASE_URL, CLIENT_ID, VERSION};
 use crate::messages::Messages;
 use crate::utils::{send_error, send_msg};
-use crate::{debug_log, log};
 
 /// Begin OAuth login flow
 #[derive(FromArgs, PartialEq, Debug)]
@@ -14,7 +13,7 @@ use crate::{debug_log, log};
 pub struct OAuthRequest {}
 
 pub fn run(context: &mut AppContext, args: &OAuthRequest) -> Result<()> {
-  log!("{} {:?}", VERSION, args)?;
+  log::info!("{VERSION} {args:?}");
 
   let json = context
     .agent
@@ -31,7 +30,7 @@ pub fn run(context: &mut AppContext, args: &OAuthRequest) -> Result<()> {
     .read_json::<Value>()
     .context("Failed to parse OAuth device response")?;
 
-  debug_log!("{:?}", json)?;
+  log::debug!("{json:?}");
 
   if let Some(Value::String(error)) = json.get("error") {
     send_error(

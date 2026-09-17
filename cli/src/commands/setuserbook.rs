@@ -5,7 +5,6 @@ use jiff::Zoned;
 use crate::appcontext::AppContext;
 use crate::commands::getuserbook::{Book, get_book};
 use crate::config::VERSION;
-use crate::log;
 use crate::utils::{GraphQLQueryExt, normalize_identifiers};
 
 use argh::FromArgs;
@@ -66,7 +65,7 @@ pub struct SetUserBook {
 }
 
 pub fn run(context: &mut AppContext, args: SetUserBook) -> Result<()> {
-  log!("{} {:?}", VERSION, args)?;
+  log::info!("{VERSION} {args:?}");
 
   let (linked_id, isbn) = normalize_identifiers(context, args.linked_id, args.content_id.as_deref());
   let book = get_book(context, isbn, linked_id)?;
@@ -130,7 +129,7 @@ pub fn update_or_insert_user_book(
           .status_id
           .is_some_and(|status_id| status_id != user_book.status_id) =>
     {
-      log!("Update user book `{}`", user_book.id)?;
+      log::info!("Update user book `{}`", user_book.id);
 
       UpdateUserBook::send_request(
         context,
@@ -157,11 +156,11 @@ pub fn update_or_insert_user_book(
       }),
     None => {
       // Insert new user book
-      log!(
+      log::info!(
         "Insert user book for book `{}` and edition `{}`",
         book.book_id,
         book.edition_id
-      )?;
+      );
 
       let user_book = InsertUserBook::send_request(
         context,
@@ -193,7 +192,7 @@ pub fn update_or_insert_user_book(
   };
 
   if let Some(id) = user_read_id {
-    log!("user read `{id}`")?;
+    log::info!("user read `{id}`");
   }
 
   Ok((user_book_id, user_read_id, started_at))

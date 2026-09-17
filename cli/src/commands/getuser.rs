@@ -4,7 +4,6 @@ use graphql_client::GraphQLQuery;
 
 use crate::appcontext::AppContext;
 use crate::config::{JournalPrivacy, VERSION};
-use crate::log;
 use crate::messages::{Messages, User};
 use crate::utils::{GraphQLQueryExt, send_msg};
 
@@ -30,7 +29,7 @@ pub fn get_user(context: &mut AppContext) -> Result<&get_me::GetMeMe> {
       .into_iter()
       .next()
       .context("Failed to find Hardcover.app user")?;
-    log!("user {}", user.id)?;
+    log::info!("user {}", user.id);
     context.user = Some(user);
   }
 
@@ -38,7 +37,7 @@ pub fn get_user(context: &mut AppContext) -> Result<&get_me::GetMeMe> {
 }
 
 pub fn run(context: &mut AppContext, args: &GetUser) -> Result<()> {
-  log!("{} {:?}", VERSION, args)?;
+  log::info!("{VERSION} {args:?}");
 
   let user = get_user(context)?;
 

@@ -895,6 +895,7 @@ dependencies = [
  "graphql_client",
  "itertools 0.14.0",
  "jiff",
+ "log",
  "quick-xml",
  "regex",
  "retry",

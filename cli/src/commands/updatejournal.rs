@@ -11,7 +11,6 @@ use crate::config::VERSION;
 use crate::database::{Bookmark, get_bookmarks};
 use crate::hardcover::batch_requests;
 use crate::utils::{GraphQLQueryExt, normalize_identifiers};
-use crate::{debug_log, log};
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -57,7 +56,7 @@ pub struct UpdateJournal {
 }
 
 pub fn run(context: &mut AppContext, args: &UpdateJournal) -> Result<()> {
-  log!("{} {:?}", VERSION, args)?;
+  log::info!("{VERSION} {args:?}");
 
   let (linked_id, isbn) = normalize_identifiers(context, args.linked_id, Some(&args.content_id));
   let book = get_book(context, isbn, linked_id)?;
@@ -69,13 +68,13 @@ pub fn run(context: &mut AppContext, args: &UpdateJournal) -> Result<()> {
 pub fn update_journal(context: &mut AppContext, content_id: &str, book: &Book) -> Result<()> {
   let mut bookmarks = get_bookmarks(context, content_id)?;
 
-  log!("{} bookmarks", bookmarks.len())?;
+  log::info!("{} bookmarks", bookmarks.len());
 
   if bookmarks.is_empty() {
     return Ok(());
   }
 
-  debug_log!("{:?}", bookmarks)?;
+  log::debug!("{bookmarks:?}");
 
   let user_id = get_user(context)?.id;
 
@@ -120,13 +119,13 @@ pub fn update_journal(context: &mut AppContext, content_id: &str, book: &Book) -
     .collect::<Result<Vec<_>>>()?;
 
   if !mutations.is_empty() {
-    log!(
+    log::info!(
       "Insert or update {} annotations for book `{}` and edition `{}`",
       mutations.len(),
       book.book_id,
       book.edition_id,
-    )?;
-    debug_log!("UpdateReadingJournal / InsertReadingJournal, {:?}", mutations)?;
+    );
+    log::debug!("UpdateReadingJournal / InsertReadingJournal, {mutations:?}");
     batch_requests::<_, serde_json::Value>(
       context,
       "UpdateReadingJournal / InsertReadingJournal",

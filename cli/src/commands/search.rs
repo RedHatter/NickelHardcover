@@ -5,7 +5,6 @@ use serde_json::Value;
 
 use crate::appcontext::AppContext;
 use crate::config::VERSION;
-use crate::log;
 use crate::messages::{Messages, SearchPages, SearchResult, Series};
 use crate::utils::{GraphQLQueryExt, send_msg};
 
@@ -37,7 +36,7 @@ pub struct Search {
 }
 
 pub fn run(context: &mut AppContext, args: Search) -> Result<()> {
-  log!("{} {:?}", VERSION, args)?;
+  log::info!("{VERSION} {args:?}");
 
   let res = SearchBooks::send_request(
     context,

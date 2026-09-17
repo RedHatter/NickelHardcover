@@ -4,7 +4,6 @@ use rusqlite::{Connection, OpenFlags};
 
 use crate::appcontext::AppContext;
 use crate::config::VERSION;
-use crate::log;
 use crate::messages::{Annotation, AnnotationList, Messages};
 use crate::utils::send_msg;
 
@@ -14,7 +13,7 @@ use crate::utils::send_msg;
 pub struct ListBookmarks {}
 
 pub fn run(context: &mut AppContext, args: &ListBookmarks) -> Result<()> {
-  log!("{} {:?}", VERSION, args)?;
+  log::info!("{VERSION} {args:?}");
 
   let annotations = Connection::open_with_flags(&context.config.sqlite_path, OpenFlags::SQLITE_OPEN_READ_ONLY)
     .context(format!(
