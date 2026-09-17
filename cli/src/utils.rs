@@ -90,7 +90,7 @@ pub fn normalize_identifiers(
   content_id: Option<&str>,
 ) -> (i64, Vec<String>) {
   match (linked_id, content_id) {
-    (Some(linked_id), _) => (linked_id, Vec::new()),
+    (Some(linked_id), _) if linked_id != 0 => (linked_id, Vec::new()),
     (_, Some(content_id)) => {
       let isbn = if content_id.starts_with("file://") {
         read_epub_isbn(content_id)
@@ -110,7 +110,7 @@ pub fn normalize_identifiers(
         ),
       }
     }
-    (None, None) => panic!("One of --content-id or --linked-id is required"),
+    (_, None) => panic!("One of --content-id or --linked-id is required"),
   }
 }
 
