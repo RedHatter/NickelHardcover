@@ -25,7 +25,7 @@ struct SearchBooks;
 pub struct Search {
   /// how many results per page
   #[argh(option)]
-  limit: i64,
+  limit: u64,
 
   /// which page
   #[argh(option)]
@@ -43,7 +43,7 @@ pub fn run(context: &mut AppContext, args: Search) -> Result<()> {
     context,
     search_books::Variables {
       query: args.query,
-      limit: args.limit,
+      limit: args.limit as i64,
       page: args.page,
     },
   )?
@@ -102,9 +102,9 @@ pub fn run(context: &mut AppContext, args: Search) -> Result<()> {
   send_msg(&Messages::SearchPages(SearchPages {
     results,
     page: res.get("page").and_then(Value::as_u64).unwrap_or(0),
-    total: match res.get("found").and_then(Value::as_f64) {
-      Some(0.0) => 0,
-      Some(n) => ((n / args.limit as f64).ceil() as u64).max(1),
+    total: match res.get("found").and_then(Value::as_u64) {
+      Some(0) => 0,
+      Some(n) => n.div_ceil(args.limit).max(1),
       None => 1,
     },
   }))

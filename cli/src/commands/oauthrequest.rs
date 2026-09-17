@@ -37,11 +37,11 @@ pub fn run(context: &mut AppContext, args: &OAuthRequest) -> Result<()> {
     send_error(
       context,
       "OAUTH",
-      format!("Sign-in failed, please try again.<br><br><i>{}</i>", error),
+      format!("Sign-in failed, please try again.<br><br><i>{error}</i>"),
     );
   } else {
     send_msg(&Messages::OAuthDevice(
-      serde_json::from_value(json).context(format!("Failed to deserialize OAuth device response"))?,
+      serde_json::from_value(json).context("Failed to deserialize OAuth device response")?,
     ))
   }
 }

@@ -86,7 +86,7 @@ mod sf {
   }
 
   /// Skip a list item we don't model: drain any inner-list members, then its parameters.
-  pub(crate) fn skip_item(parser: &mut Parser<'_>, value: Value) -> Result<(), ParseError> {
+  pub(crate) fn skip_item(parser: &mut Parser<'_>, value: &Value) -> Result<(), ParseError> {
     if matches!(value, Value::InnerList) {
       while parser.parse_inner_list().map_err(|_| ParseError)?.is_some() {}
     }
@@ -174,7 +174,7 @@ impl<'a> RateLimit<'a> {
       let name = match value {
         Value::String { range, escape } => sf::string_value(input, range, escape),
         other => {
-          sf::skip_item(&mut parser, other)?;
+          sf::skip_item(&mut parser, &other)?;
           continue;
         }
       };
@@ -185,9 +185,9 @@ impl<'a> RateLimit<'a> {
 
       while let Some((key, param)) = parser.parse_param().map_err(|_| ParseError)? {
         match (key, param) {
-          ("r", Value::Integer(value)) if value >= 0 => remaining = Some(value as u64),
+          ("r", Value::Integer(value)) if value >= 0 => remaining = Some(value.cast_unsigned()),
           ("t", Value::Integer(value)) if value >= 0 => {
-            reset = Some(Duration::from_secs(value as u64));
+            reset = Some(Duration::from_secs(value.cast_unsigned()));
           }
           ("pk", Value::ByteSeq(range)) => {
             partition_key = Some(Cow::Borrowed(&input[range]));
@@ -213,7 +213,7 @@ impl<'a> RateLimit<'a> {
   /// Parses every service limit across all `RateLimit` field lines in `headers`.
   pub fn from_headers(headers: &'a HeaderMap) -> Result<Vec<Self>, ParseError> {
     let mut limits = Vec::new();
-    for value in headers.get_all(RATE_LIMIT_HEADER).iter() {
+    for value in headers.get_all(RATE_LIMIT_HEADER) {
       limits.extend(Self::parse_list(value.to_str().map_err(|_| ParseError)?)?);
     }
     Ok(limits)

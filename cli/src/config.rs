@@ -16,7 +16,7 @@ use crate::commands::getuser::get_user;
 
 pub static CLIENT_ID: &str = "2ec8855f-400e-4bb9-a2ed-5b628afa4a17";
 pub static BASE_URL: &str = "https://api.hardcover.app";
-pub static VERSION: &str = option_env!("VERSION").unwrap();
+pub static VERSION: &str = env!("VERSION");
 
 #[derive(Clone, Copy, Serialize, PartialEq, Debug)]
 #[serde(rename_all = "lowercase")]

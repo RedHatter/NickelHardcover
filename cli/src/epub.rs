@@ -295,7 +295,7 @@ pub fn read_epub_isbn(content_id: &str) -> Result<Vec<String>> {
       buf.clear();
       archive
         .by_path(opf_dir.join(&items[i]))
-        .context(format!("Failed to open OEBPS root file <i>{}</i>", &items[i]))?
+        .context(format!("Failed to open OEBPS root file <i>{}</i>", items[i]))?
         .read_to_string(&mut buf)
         .context("Failed to read OEBPS root file")?;
       isbn = read_item(&buf)?;

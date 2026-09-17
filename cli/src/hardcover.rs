@@ -101,7 +101,7 @@ fn try_request<T: Serialize>(context: &mut AppContext, request_body: &T) -> Resu
     log!("{msg}")?;
 
     if code == StatusCode::UNAUTHORIZED {
-      send_error(context, "UNAUTHORIZED", "".to_string());
+      send_error(context, "UNAUTHORIZED", String::new());
     } else {
       bail!(msg);
     }
@@ -113,7 +113,9 @@ fn try_request<T: Serialize>(context: &mut AppContext, request_body: &T) -> Resu
 fn collect_errors<'a>(value: &'a serde_json::Value, errors: &mut Vec<&'a str>) {
   match value {
     Value::Array(arr) => {
-      arr.iter().for_each(|val| collect_errors(val, errors));
+      for val in arr {
+        collect_errors(val, errors);
+      }
     }
     Value::Object(map) => {
       if let Some(val) = map.get("error") {
@@ -178,7 +180,7 @@ pub fn send_request<T: Serialize, R: DeserializeOwned>(
 pub fn batch_requests<T: Serialize, R: DeserializeOwned>(
   context: &mut AppContext,
   operation_name: &str,
-  request_bodies: Vec<T>,
+  request_bodies: &[T],
 ) -> Result<Vec<R>> {
   request_bodies
     .iter()

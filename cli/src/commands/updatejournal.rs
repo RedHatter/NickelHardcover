@@ -130,7 +130,7 @@ pub fn update_journal(context: &mut AppContext, content_id: &str, book: &Book) -
     batch_requests::<_, serde_json::Value>(
       context,
       "UpdateReadingJournal / InsertReadingJournal",
-      mutations
+      &mutations
         .into_iter()
         .map(|m| {
           m.either(

@@ -74,11 +74,10 @@ pub fn request_token<I: IntoIterator<Item = (K, V)>, K: AsRef<str>, V: AsRef<str
     send_error(
       context,
       "OAUTH",
-      format!("Sign-in failed, please try again.<br><br><i>{}</i>", error),
+      format!("Sign-in failed, please try again.<br><br><i>{error}</i>"),
     );
   } else {
-    let value =
-      serde_json::from_value::<OAuthToken>(json).context(format!("Failed to deserialize OAuth token response"))?;
+    let value = serde_json::from_value::<OAuthToken>(json).context("Failed to deserialize OAuth token response")?;
     context.config.access_token = value.access_token;
     context.config.refresh_token = value.refresh_token;
     context.config.token_expires_at = Some(Timestamp::now() + SignedDuration::from_secs(value.expires_in));

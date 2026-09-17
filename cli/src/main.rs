@@ -73,7 +73,7 @@ fn main() {
   let args: Arguments = argh::from_env();
 
   if args.version {
-    println!("{}", VERSION);
+    println!("{VERSION}");
     return;
   }
 

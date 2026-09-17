@@ -78,7 +78,7 @@ pub fn get_book(context: &mut AppContext, isbn: Vec<String>, linked_id: i64) -> 
   let isbn_display = isbn.join(", ");
 
   // retrieve book, edition and maybe user book and user book read
-  let book = match GetEdition::send_request(
+  let Some(book) = GetEdition::send_request(
     context,
     get_edition::Variables {
       isbn,
@@ -88,10 +88,8 @@ pub fn get_book(context: &mut AppContext, isbn: Vec<String>, linked_id: i64) -> 
   )?
   .books
   .into_iter()
-  .next()
-  {
-    Some(book) => book,
-    None => send_error(
+  .next() else {
+    send_error(
       context,
       "BOOK_NOT_FOUND",
       if linked_id != 0 {
@@ -103,7 +101,7 @@ pub fn get_book(context: &mut AppContext, isbn: Vec<String>, linked_id: i64) -> 
           "Unable to find a book edition on Hardcover.app with ISBN/ASIN <i>{isbn_display}</i>. Please manually link book."
         )
       },
-    ),
+    )
   };
   let user_book = book.user_books.into_iter().next();
 
