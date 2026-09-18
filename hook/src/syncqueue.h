@@ -1,3 +1,5 @@
+#pragma once
+
 #include <QLabel>
 #include <QNetworkAccessManager>
 #include <QObject>
@@ -23,6 +25,7 @@ public:
   void run(const QString &contentId, bool manual = false);
 
   bool failed = false;
+  bool running = false;
 
 public Q_SLOTS:
   void networkConnected();

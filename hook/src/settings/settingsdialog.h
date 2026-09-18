@@ -1,3 +1,5 @@
+#pragma once
+
 #include <QJsonObject>
 
 #include "../messages.h"

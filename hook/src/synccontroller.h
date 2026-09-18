@@ -1,3 +1,5 @@
+#pragma once
+
 #include <QLabel>
 #include <QNetworkAccessManager>
 #include <QObject>
@@ -15,7 +17,7 @@ public:
   QString title;
   QString author;
   QString contentId;
-  bool syncDisabled;
+  bool notRealBook;
   QNetworkAccessManager *network = new QNetworkAccessManager();
 
   int getCurrentProgress() const { return queue->getProgress().value(contentId); }
@@ -26,6 +28,8 @@ public:
 
   void manualSync();
   QDateTime getAlarm() const;
+
+  bool isEnabled();
 
 public Q_SLOTS:
   void currentViewIndexChanged(int index);

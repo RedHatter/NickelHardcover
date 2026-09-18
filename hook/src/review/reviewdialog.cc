@@ -62,7 +62,10 @@ void ReviewDialog::response(Messages message) {
   }
 
   QLayout *column = layout();
-  column->takeAt(0)->widget()->deleteLater();
+
+  QLayoutItem *item = column->takeAt(0);
+  item->widget()->deleteLater();
+  delete item;
 
   rating = message.user_book->rating.value_or_default();
   spoilers = message.user_book->review_has_spoilers;
@@ -135,5 +138,4 @@ void ReviewDialog::commit() {
 
   CLI *cli = CLI::setUserBook(rating, textEdit->toPlainText(), spoilers, sponsored);
   QObject::connect(cli, &CLI::success, dialog, &QDialog::deleteLater);
-  QObject::connect(cli, &CLI::failure, dialog, &QDialog::deleteLater);
 }

@@ -186,7 +186,7 @@ void CLI::connectingFailed() {
   showIcon(Files::error);
 
   failure(FailureReason::Network);
-  QTimer::singleShot(800, this, &SyncQueue::deleteLater);
+  QTimer::singleShot(800, this, &CLI::deleteLater);
 }
 
 void CLI::showIcon(const char *path) {
@@ -223,12 +223,10 @@ void CLI::networkConnected() {
   QObject::connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &CLI::processFinished);
 }
 
-void CLI::processFinished() {
+void CLI::processFinished(int exitCode) {
   QProcess *process = qobject_cast<QProcess *>(sender());
 
-  QByteArray stdout = process->readAllStandardOutput();
-
-  QList<QByteArray> lines = stdout.split('\n');
+  QList<QByteArray> lines = process->readAllStandardOutput().split('\n');
   for (QByteArray &line : lines) {
     if (line.length() == 0)
       continue;
@@ -236,6 +234,10 @@ void CLI::processFinished() {
     Messages msg = Messages::fromJson(QJsonDocument::fromJson(line).object());
 
     switch (msg.kind) {
+    case Messages::Kind::Unknown:
+      nh_log("%s", qPrintable(line));
+      break;
+
     case Messages::Kind::Log:
       nh_log("%s", qPrintable(msg.log->message));
       break;
@@ -280,7 +282,13 @@ void CLI::processFinished() {
     }
   }
 
-  success();
+  if (exitCode == 0) {
+    success();
+  } else {
+    ConfirmationDialogFactory__showErrorDialog("Hardcover.app", "Encountered an unexpected error. Please report this.");
+    failure(FailureReason::Error);
+  }
+
   deleteLater();
 }
 

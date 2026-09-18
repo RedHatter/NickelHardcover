@@ -22,6 +22,7 @@ SignInDialog::SignInDialog() : Dialog("Sign in to Hardcover.app") {
 
   CLI *cli = CLI::oauthRequest();
   QObject::connect(cli, &CLI::response, this, &SignInDialog::response);
+  QObject::connect(cli, &CLI::failure, this, &SignInDialog::closeDialog);
 }
 
 void SignInDialog::response(Messages message) {
@@ -97,6 +98,6 @@ QImage SignInDialog::buildQrCode(const QString &text) {
 
 void SignInDialog::continueTapped() {
   CLI *cli = CLI::oauthSet(deviceCode);
-  QObject::connect(cli, &CLI::success, this, &Dialog::close);
-  QObject::connect(cli, &CLI::failure, this, &Dialog::close);
+  QObject::connect(cli, &CLI::success, this, &Dialog::closeDialog);
+  QObject::connect(cli, &CLI::failure, this, &Dialog::closeDialog);
 }

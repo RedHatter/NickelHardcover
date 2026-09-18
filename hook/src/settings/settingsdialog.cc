@@ -374,5 +374,5 @@ void SettingsDialog::saveLogs() { nh_dump_log(); }
 
 void SettingsDialog::signOut() {
   Settings::getInstance()->clearAccessToken();
-  QTimer::singleShot(0, this, &Dialog::close);
+  QTimer::singleShot(0, this, &Dialog::closeDialog);
 }

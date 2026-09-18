@@ -1,3 +1,5 @@
+#pragma once
+
 #include <QFrame>
 #include <QJsonObject>
 #include <QLabel>

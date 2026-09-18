@@ -7,7 +7,6 @@
 
 #include "../cli.h"
 #include "../nickelhardcover.h"
-#include "../widgets/elidedlabel.h"
 #include "annotationsdialog.h"
 #include "annotationsrow.h"
 
@@ -41,6 +40,7 @@ AnnotationsDialog::AnnotationsDialog() : Dialog("Annotations") {
 
   CLI *cli = CLI::listBookmarks();
   QObject::connect(cli, &CLI::response, this, &AnnotationsDialog::response);
+  QObject::connect(cli, &CLI::failure, this, &AnnotationsDialog::closeDialog);
 }
 
 void AnnotationsDialog::response(Messages message) {

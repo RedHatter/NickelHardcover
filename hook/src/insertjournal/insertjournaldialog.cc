@@ -41,7 +41,6 @@ void InsertJournalDialog::commit() {
   CLI *cli = CLI::insertJournal(textEdit->toPlainText(), SyncController::getInstance()->getCurrentProgress(),
                                 privacy->value().toString());
   QObject::connect(cli, &CLI::success, dialog, &QDialog::deleteLater);
-  QObject::connect(cli, &CLI::failure, dialog, &QDialog::deleteLater);
 }
 
 void InsertJournalDialog::response(Messages message) {

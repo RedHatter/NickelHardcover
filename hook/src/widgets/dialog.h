@@ -12,7 +12,7 @@ public Q_SLOTS:
   void showKeyboard();
   void hideKeyboard();
 
-  void close() {
+  void closeDialog() {
     dialog->deleteLater();
   }
 

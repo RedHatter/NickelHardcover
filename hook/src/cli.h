@@ -50,7 +50,7 @@ public Q_SLOTS:
   void checkConnected();
   void networkConnected();
   void connectingFailed();
-  void processFinished();
+  void processFinished(int errorCode);
   void linkBook();
 
 Q_SIGNALS:

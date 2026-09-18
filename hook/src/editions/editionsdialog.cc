@@ -7,8 +7,6 @@
 #include <NickelHook.h>
 
 #include "../cli.h"
-#include "../settings.h"
-#include "../synccontroller.h"
 #include "../widgets/buttongroup.h"
 #include "editionrow.h"
 #include "editionsdialog.h"
@@ -87,6 +85,7 @@ void EditionsDialog::request() {
 
   CLI *cli = CLI::listEditions(bookId, readingFormat.toInt(), lang);
   QObject::connect(cli, &CLI::response, this, &EditionsDialog::response);
+  QObject::connect(cli, &CLI::failure, this, &EditionsDialog::closeDialog);
 }
 
 void EditionsDialog::response(Messages message) {

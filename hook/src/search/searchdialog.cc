@@ -83,6 +83,7 @@ void SearchDialog::requestPage(int index) {
 
   CLI *cli = CLI::search(query, limit, index);
   QObject::connect(cli, &CLI::response, this, &SearchDialog::response);
+  QObject::connect(cli, &CLI::failure, this, &SearchDialog::closeDialog);
 }
 
 void SearchDialog::response(Messages message) {

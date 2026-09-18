@@ -49,79 +49,79 @@ const QString Label::Stylesheet = QStringLiteral(R"(
     font-size: 60px;
   }
 
-  [qApp_deviceIsTrilogy="true"] [textSize="ExtraSmall"] {
+  [qApp_deviceIsTrilogy=true] [textSize="ExtraSmall"] {
     font-size: 14px;
   }
-  [qApp_deviceIsPhoenix="true"] [textSize="ExtraSmall"] {
+  [qApp_deviceIsPhoenix=true] [textSize="ExtraSmall"] {
     font-size: 18px;
   }
-  [qApp_deviceIsDragon="true"] [textSize="ExtraSmall"] {
+  [qApp_deviceIsDragon=true] [textSize="ExtraSmall"] {
     font-size: 21px;
   }
-  [qApp_deviceIsAlyssum="true"] [textSize="ExtraSmall"],
-  [qApp_deviceIsNova="true"] [textSize="ExtraSmall"],
-  [qApp_deviceIsStorm="true"] [textSize="ExtraSmall"] {
+  [qApp_deviceIsAlyssum=true] [textSize="ExtraSmall"],
+  [qApp_deviceIsNova=true] [textSize="ExtraSmall"],
+  [qApp_deviceIsStorm=true] [textSize="ExtraSmall"] {
     font-size: 25px;
   }
-  [qApp_deviceIsDaylight="true"] [textSize="ExtraSmall"] {
+  [qApp_deviceIsDaylight=true] [textSize="ExtraSmall"] {
     font-size: 28px;
   }
 
-  [qApp_deviceIsTrilogy="true"] [textSize="Small"] {
+  [qApp_deviceIsTrilogy=true] [textSize="Small"] {
     font-size: 17px;
   }
-  [qApp_deviceIsPhoenix="true"] [textSize="Small"] {
+  [qApp_deviceIsPhoenix=true] [textSize="Small"] {
     font-size: 22px;
   }
-  [qApp_deviceIsDragon="true"] [textSize="Small"] {
+  [qApp_deviceIsDragon=true] [textSize="Small"] {
     font-size: 26px;
   }
-  [qApp_deviceIsAlyssum="true"] [textSize="Small"],
-  [qApp_deviceIsNova="true"] [textSize="Small"],
-  [qApp_deviceIsStorm="true"] [textSize="Small"] {
+  [qApp_deviceIsAlyssum=true] [textSize="Small"],
+  [qApp_deviceIsNova=true] [textSize="Small"],
+  [qApp_deviceIsStorm=true] [textSize="Small"] {
     font-size: 30px;
   }
-  [qApp_deviceIsDaylight="true"] [textSize="Small"] {
+  [qApp_deviceIsDaylight=true] [textSize="Small"] {
     font-size: 34px;
   }
 
-  [qApp_deviceIsTrilogy="true"] [textSize="Medium"] {
+  [qApp_deviceIsTrilogy=true] [textSize="Medium"] {
     font-size: 19px;
   }
-  [qApp_deviceIsPhoenix="true"] [textSize="Medium"] {
+  [qApp_deviceIsPhoenix=true] [textSize="Medium"] {
     font-size: 23px;
   }
-  [qApp_deviceIsDragon="true"] [textSize="Medium"] {
+  [qApp_deviceIsDragon=true] [textSize="Medium"] {
     font-size: 29px;
   }
-  [qApp_deviceIsAlyssum="true"] [textSize="Medium"],
-  [qApp_deviceIsNova="true"] [textSize="Medium"] {
+  [qApp_deviceIsAlyssum=true] [textSize="Medium"],
+  [qApp_deviceIsNova=true] [textSize="Medium"] {
     font-size: 32px;
   }
-  [qApp_deviceIsStorm="true"] [textSize="Medium"] {
+  [qApp_deviceIsStorm=true] [textSize="Medium"] {
     font-size: 34px;
   }
-  [qApp_deviceIsDaylight="true"] [textSize="Medium"] {
+  [qApp_deviceIsDaylight=true] [textSize="Medium"] {
     font-size: 37px;
   }
 
-  [qApp_deviceIsTrilogy="true"] [textSize="Large"] {
+  [qApp_deviceIsTrilogy=true] [textSize="Large"] {
     font-size: 23px;
   }
-  [qApp_deviceIsPhoenix="true"] [textSize="Large"] {
+  [qApp_deviceIsPhoenix=true] [textSize="Large"] {
     font-size: 28px;
   }
-  [qApp_deviceIsDragon="true"] [textSize="Large"] {
+  [qApp_deviceIsDragon=true] [textSize="Large"] {
     font-size: 36px;
   }
-  [qApp_deviceIsAlyssum="true"] [textSize="Large"],
-  [qApp_deviceIsNova="true"] [textSize="Large"] {
+  [qApp_deviceIsAlyssum=true] [textSize="Large"],
+  [qApp_deviceIsNova=true] [textSize="Large"] {
     font-size: 39px;
   }
-  [qApp_deviceIsStorm="true"] [textSize="Large"] {
+  [qApp_deviceIsStorm=true] [textSize="Large"] {
     font-size: 42px;
   }
-  [qApp_deviceIsDaylight="true"] [textSize="Large"] {
+  [qApp_deviceIsDaylight=true] [textSize="Large"] {
     font-size: 47px;
   }
 

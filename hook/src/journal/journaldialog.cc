@@ -78,6 +78,7 @@ void JournalDialog::requestPage(int index) {
 
   CLI *cli = CLI::listJournal(15, offset);
   QObject::connect(cli, &CLI::response, this, &JournalDialog::response);
+  QObject::connect(cli, &CLI::failure, this, &JournalDialog::closeDialog);
 }
 
 void JournalDialog::response(Messages message) {

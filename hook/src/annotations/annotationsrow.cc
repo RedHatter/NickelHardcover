@@ -4,11 +4,8 @@
 
 #include "../cli.h"
 #include "../nickelhardcover.h"
-#include "../search/searchdialog.h"
-#include "../settings.h"
 #include "../widgets/elidedlabel.h"
 #include "annotationsrow.h"
-#include "qnamespace.h"
 
 AnnotationsRow::AnnotationsRow(Annotation annotation, QWidget *parent) : QFrame(parent), annotation(annotation) {
   setStyleSheet(R"(

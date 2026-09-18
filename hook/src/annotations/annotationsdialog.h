@@ -1,3 +1,5 @@
+#pragma once
+
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QStackedLayout>

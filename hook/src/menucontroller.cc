@@ -98,9 +98,9 @@ void MenuController::showMainMenu() {
   QList<Item> items;
   if (settings->isSignedIn()) {
     items = {
-        {"Sync now", MenuOption::SYNC_NOW, false, syncController->syncDisabled},
-        {!settings->isEnabled(contentId) || syncController->syncDisabled ? "Enable auto-sync" : "Disable auto-sync",
-         MenuOption::TOGGLE_ENABLED, false, syncController->syncDisabled},
+        {"Sync now", MenuOption::SYNC_NOW, false, !syncController->isEnabled()},
+        {!settings->isEnabled(contentId) || syncController->notRealBook ? "Enable auto-sync" : "Disable auto-sync",
+         MenuOption::TOGGLE_ENABLED, false, syncController->notRealBook},
         {settings->getLinkedId(contentId).isEmpty() ? "Manually link book" : "Unlink book", MenuOption::LINK},
         {"Update book status", MenuOption::BOOK_STATUS},
         {"Open reading journal", MenuOption::JOURNAL},

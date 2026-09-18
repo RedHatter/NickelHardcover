@@ -1,3 +1,5 @@
+#pragma once
+
 #include <QJsonArray>
 
 #include "../messages.h"
