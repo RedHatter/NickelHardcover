@@ -10,7 +10,7 @@
 #include "../widgets/elidedlabel.h"
 #include "editionrow.h"
 
-EditionRow::EditionRow(Edition edition, QWidget *parent) : QFrame(parent), id(QString::number(edition.id)) {
+EditionRow::EditionRow(const Edition &edition, QWidget *parent) : QFrame(parent), id(QString::number(edition.id)) {
   QGridLayout *layout = new QGridLayout(this);
   layout->setContentsMargins(0, 0, 0, 0);
 
@@ -138,13 +138,7 @@ EditionRow::EditionRow(Edition edition, QWidget *parent) : QFrame(parent), id(QS
   }
 }
 
-QGridLayout *EditionRow::layout() const { return qobject_cast<QGridLayout *>(QWidget::layout()); }
-
-void EditionRow::setVerticalSpacing(int value) { layout()->setVerticalSpacing(value); }
-
-int EditionRow::verticalSpacing() const { return layout()->verticalSpacing(); };
-
-QLabel *EditionRow::buildCover(Edition edition) {
+QLabel *EditionRow::buildCover(const Edition &edition) {
   QLabel *label = new QLabel();
   label->setObjectName("cover");
   label->setScaledContents(true);
@@ -176,5 +170,3 @@ void EditionRow::loadCover() {
 
   reply->deleteLater();
 }
-
-void EditionRow::tapped() { selected(id); }

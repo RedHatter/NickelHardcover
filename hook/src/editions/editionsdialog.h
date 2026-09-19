@@ -1,3 +1,5 @@
+#pragma once
+
 #include <QJsonArray>
 
 #include "../messages.h"
@@ -9,28 +11,29 @@ class EditionsDialog : public Dialog {
   Q_OBJECT
 
 public:
-  static EditionsDialog *show(QString bookId);
+  static EditionsDialog *show(const QString &bookId) { return new EditionsDialog(bookId); }
 
 public Q_SLOTS:
-  void readingFormatChanged(QVariant value);
   void showLangMenu();
-  void langTriggered(QAction *action);
-  void requestPage(int index);
-  void response(Messages messages);
 
 Q_SIGNALS:
   void closed();
   void selected(QString id);
 
 private:
-  EditionsDialog(QString bookId);
+  EditionsDialog(const QString &bookId);
 
   void request();
+
+  void readingFormatChanged(const QVariant &value);
+  void langTriggered(const QAction *action);
+  void requestPage(int index);
+  void response(const Messages &messages);
 
   N3ButtonLabel *langButton = nullptr;
   PagedStack *pages = nullptr;
 
-  QString bookId = 0;
+  QString bookId = "";
   QVariant readingFormat = 4;
   QString lang = "";
 

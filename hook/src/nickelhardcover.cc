@@ -263,7 +263,7 @@ _nh_ReadingController__setVolume(ReadingController *_this, Volume *volume, Bookm
   syncController->contentId = Content__getId(volume);
   syncController->title = Content__getTitle(volume);
   syncController->author = Content__getAttribution(volume);
-  syncController->syncDisabled =
+  syncController->notRealBook =
       !Content__isFullBookAccessible(volume) || (Volume__isInstapaper && Volume__isInstapaper(volume));
 
   MainWindowController *mwc = MainWindowController__sharedInstance();
@@ -325,7 +325,7 @@ _nh_SupportedLocales__supportedLocales(SupportedLocales *_this, bool b1) {
   return items;
 }
 
-QString join(QVector<QString> list, QString separator) {
+QString join(const QVector<QString> &list, const QString &separator) {
   QString res;
 
   for (int i = 0; i < list.size(); ++i) {

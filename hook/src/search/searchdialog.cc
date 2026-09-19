@@ -12,9 +12,7 @@
 #include "bookrow.h"
 #include "searchdialog.h"
 
-void SearchDialog::show(QString contentId, QString query) { new SearchDialog(contentId, query); }
-
-SearchDialog::SearchDialog(QString contentId, QString query) : Dialog("Manually link book"), contentId(contentId) {
+SearchDialog::SearchDialog(const QString &contentId, const QString &query) : Dialog("Manually link book"), contentId(contentId) {
   setStyleSheet(R"(
     [qApp_deviceIsTrilogy=true] TouchLineEdit {
       margin: 0 20px;
@@ -83,9 +81,10 @@ void SearchDialog::requestPage(int index) {
 
   CLI *cli = CLI::search(query, limit, index);
   QObject::connect(cli, &CLI::response, this, &SearchDialog::response);
+  QObject::connect(cli, &CLI::failure, this, &SearchDialog::closeDialog);
 }
 
-void SearchDialog::response(Messages message) {
+void SearchDialog::response(const Messages &message) {
   if (!message.isSearchPages()) {
     ConfirmationDialogFactory__showErrorDialog("Hardcover.app", "Unexpected CLI response for <i>search</i>");
     return;
@@ -121,7 +120,7 @@ void SearchDialog::response(Messages message) {
   pages->addPage(box);
 }
 
-void SearchDialog::editions(QString id) {
+void SearchDialog::editions(const QString &id) {
   nh_log("SearchDialog::editions(%s)", qPrintable(id));
 
   EditionsDialog *editions = EditionsDialog::show(id);
@@ -129,7 +128,7 @@ void SearchDialog::editions(QString id) {
   QObject::connect(editions, &EditionsDialog::selected, this, &SearchDialog::selected);
 }
 
-void SearchDialog::selected(QString id) {
+void SearchDialog::selected(const QString &id) {
   nh_log("SearchDialog::selected(%s)", qPrintable(id));
   Settings::getInstance()->setLinkedId(contentId, id);
   dialog->deleteLater();

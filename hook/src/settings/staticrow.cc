@@ -5,7 +5,7 @@
 #include "../widgets/label.h"
 #include "staticrow.h"
 
-StaticRow::StaticRow(QString heading, QString value, bool showClear, QWidget *parent) : QFrame(parent) {
+StaticRow::StaticRow(const QString &heading, const QString &value, bool showClear, QWidget *parent) : QFrame(parent) {
   QHBoxLayout *rowLayout = new QHBoxLayout(this);
   rowLayout->setContentsMargins(0, 0, 0, 0);
 
@@ -25,5 +25,3 @@ StaticRow::StaticRow(QString heading, QString value, bool showClear, QWidget *pa
   rowLayout->addWidget(icon);
   QWidget::connect(icon, SIGNAL(tapped(bool)), this, SIGNAL(clear()));
 }
-
-void StaticRow::setValue(QString value) { label->setText(value); }

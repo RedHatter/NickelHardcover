@@ -7,14 +7,15 @@ class SignInDialog : public Dialog {
   Q_OBJECT
 
 public:
-  static void show();
+  static void show() { new SignInDialog(); }
 
 public Q_SLOTS:
-  void response(Messages message);
   void continueTapped();
 
 private:
   SignInDialog();
+
+  void response(const Messages &message);
 
   QImage buildQrCode(const QString &text);
 

@@ -44,8 +44,6 @@ int ElidedLabel::heightForWidth(int width) const {
   return y;
 }
 
-QSize ElidedLabel::sizeHint() const { return QSize(width(), heightForWidth(width())); }
-
 void ElidedLabel::paintEvent(QPaintEvent *event) {
   QFrame::paintEvent(event);
 

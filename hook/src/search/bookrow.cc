@@ -11,7 +11,7 @@
 #include "../widgets/elidedlabel.h"
 #include "bookrow.h"
 
-BookRow::BookRow(SearchResult result, QWidget *parent) : QFrame(parent), id(result.id.value_or_default()) {
+BookRow::BookRow(const SearchResult &result, QWidget *parent) : QFrame(parent), id(result.id.value_or_default()) {
   setStyleSheet(R"(
     [qApp_deviceIsTrilogy=true] BookRow {
       padding: 12px;
@@ -110,7 +110,7 @@ BookRow::BookRow(SearchResult result, QWidget *parent) : QFrame(parent), id(resu
   buttons->addStretch(1);
 }
 
-QLabel *BookRow::buildCover(SearchResult result) {
+QLabel *BookRow::buildCover(const SearchResult &result) {
   QLabel *label = new QLabel();
   label->setObjectName("cover");
   label->setScaledContents(true);
@@ -127,7 +127,7 @@ QLabel *BookRow::buildCover(SearchResult result) {
   return label;
 }
 
-QString BookRow::getSeries(SearchResult result) {
+QString BookRow::getSeries(const SearchResult &result) {
   if (!result.series || !result.series->name) {
     return "";
   }
@@ -141,7 +141,7 @@ QString BookRow::getSeries(SearchResult result) {
   return seriesName;
 }
 
-QString BookRow::getMeta(SearchResult result) {
+QString BookRow::getMeta(const SearchResult &result) {
   QStringList meta;
 
   if (result.release_year) {
@@ -174,7 +174,3 @@ void BookRow::loadCover() {
 
   reply->deleteLater();
 }
-
-void BookRow::selectTapped() { selected(id); }
-
-void BookRow::editionsTapped() { editions(id); }

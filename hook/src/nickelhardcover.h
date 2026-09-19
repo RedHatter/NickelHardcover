@@ -1,3 +1,5 @@
+#pragma once
+
 #include <QCheckBox>
 #include <QDialog>
 #include <QFrame>
@@ -96,4 +98,4 @@ PowerTimer *construct_PowerTimer(QString const &name, QObject *parent);
 extern void (*PowerTimer__fireAt)(PowerTimer *__this, QDateTime const &datatime);
 extern int (*PowerTimer__timeRemaining)(PowerTimer *__this);
 
-QString join(QVector<QString> list, QString separator);
+QString join(const QVector<QString> &list, const QString &separator);

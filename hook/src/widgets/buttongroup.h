@@ -1,3 +1,5 @@
+#pragma once
+
 #include <QFrame>
 
 #include "../settings/menurow.h"
@@ -7,13 +9,13 @@ class ButtonGroup : public QFrame {
   Q_PROPERTY(QVariant value READ value WRITE setValue NOTIFY valueChanged)
 
 public:
-  ButtonGroup(QList<Item> items, QVariant defaultValue, QString label = QString(), QWidget *parent = nullptr);
+  ButtonGroup(const QList<Item> &items, const QVariant &defaultValue, const QString &label = QString(), QWidget *parent = nullptr);
 
-  void setValue(QVariant value);
-  QVariant value() const;
+  void setValue(const QVariant &value);
+  QVariant value() const { return m_value; }
 
 public Q_SLOTS:
-  void tapped();
+  void tapped() { setValue(sender()->property("value")); }
 
 Q_SIGNALS:
   void valueChanged(QVariant value);

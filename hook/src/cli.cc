@@ -8,21 +8,20 @@
 #include "files.h"
 #include "messages.h"
 #include "search/searchdialog.h"
+#include "signin/signindialog.h"
 #include "settings.h"
 #include "synccontroller.h"
 
-QString CLI::Options::getContentId() {
+QString CLI::Options::getContentId() const {
   return contentId.isEmpty() ? SyncController::getInstance()->contentId : contentId;
 }
 
-QString CLI::Options::getQuery() {
+QString CLI::Options::getQuery() const {
   SyncController *ctl = SyncController::getInstance();
   return query.isEmpty() ? ctl->title + " " + ctl->author : query;
 }
 
-CLI *CLI::listBookmarks(Options options) { return new CLI({"list-bookmarks"}, options); }
-
-CLI *CLI::listEditions(QString bookId, int readingFormat, QString language, Options options) {
+CLI *CLI::listEditions(const QString &bookId, int readingFormat, const QString &language, const Options &options) {
   QStringList arguments = {"list-editions", "--book-id", bookId};
 
   if (readingFormat != 0) {
@@ -36,46 +35,42 @@ CLI *CLI::listEditions(QString bookId, int readingFormat, QString language, Opti
   return new CLI(arguments, options);
 }
 
-CLI *CLI::listJournal(int limit, int offset, Options options) {
+CLI *CLI::listJournal(int limit, int offset, const Options &options) {
   QStringList arguments = {"list-journal", "--limit", QString::number(limit), "--offset", QString::number(offset)};
   arguments.append(getIdentifier(options));
   return new CLI(arguments, options);
 }
 
-CLI *CLI::oauthRequest(Options options) { return new CLI({"oauth-request"}, options); }
-
-CLI *CLI::oauthSet(QString deviceCode, Options options) {
+CLI *CLI::oauthSet(const QString &deviceCode, const Options &options) {
   return new CLI({"oauth-set", "--device-code", deviceCode}, options);
 }
 
-CLI *CLI::insertJournal(QString text, int percentage, QString privacy, Options options) {
+CLI *CLI::insertJournal(const QString &text, int percentage, const QString &privacy, const Options &options) {
   QStringList arguments = {"insert-journal", "--text", text, "--percentage", QString::number(percentage),
                            "--privacy",      privacy};
   arguments.append(getIdentifier(options));
   return new CLI(arguments, options);
 }
 
-CLI *CLI::updateJournal(Options options) {
+CLI *CLI::updateJournal(const Options &options) {
   QStringList arguments = {"update-journal"};
   arguments.append(getIdentifier(options));
   return new CLI(arguments, options);
 }
 
-CLI *CLI::getUser(Options options) { return new CLI({"get-user"}, options); }
-
-CLI *CLI::getUserBook(Options options) {
+CLI *CLI::getUserBook(const Options &options) {
   QStringList arguments = {"get-user-book"};
   arguments.append(getIdentifier(options));
   return new CLI(arguments, options);
 }
 
-CLI *CLI::setUserBook(int status, Options options) {
+CLI *CLI::setUserBook(int status, const Options &options) {
   QStringList arguments = {"set-user-book", "--status", QString::number(status)};
   arguments.append(getIdentifier(options));
   return new CLI(arguments, options);
 }
 
-CLI *CLI::setUserBook(float rating, QString text, bool spoilers, bool sponsored, Options options) {
+CLI *CLI::setUserBook(float rating, const QString &text, bool spoilers, bool sponsored, const Options &options) {
   QStringList arguments = {"set-user-book"};
 
   arguments.append(getIdentifier(options));
@@ -93,19 +88,19 @@ CLI *CLI::setUserBook(float rating, QString text, bool spoilers, bool sponsored,
   return new CLI(arguments, options);
 }
 
-CLI *CLI::search(QString query, int limit, int page, Options options) {
+CLI *CLI::search(const QString &query, int limit, int page, const Options &options) {
   return new CLI({"search", "--limit", QString::number(limit), "--page", QString::number(page), "--query", query},
                  options);
 }
 
-CLI *CLI::update(int percentage, Options options) {
+CLI *CLI::update(int percentage, const Options &options) {
   QStringList arguments = {"update", "--value", QString::number(percentage)};
   arguments.append(getIdentifier(options));
 
   return new CLI(arguments, options);
 }
 
-QStringList CLI::getIdentifier(Options options) {
+QStringList CLI::getIdentifier(const Options &options) {
   QString contentId = options.getContentId();
   QStringList identifiers = {"--content-id", contentId};
 
@@ -186,7 +181,7 @@ void CLI::connectingFailed() {
   showIcon(Files::error);
 
   failure(FailureReason::Network);
-  QTimer::singleShot(800, this, &SyncQueue::deleteLater);
+  QTimer::singleShot(800, this, &CLI::deleteLater);
 }
 
 void CLI::showIcon(const char *path) {
@@ -223,12 +218,10 @@ void CLI::networkConnected() {
   QObject::connect(process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished), this, &CLI::processFinished);
 }
 
-void CLI::processFinished() {
+void CLI::processFinished(int exitCode) {
   QProcess *process = qobject_cast<QProcess *>(sender());
 
-  QByteArray stdout = process->readAllStandardOutput();
-
-  QList<QByteArray> lines = stdout.split('\n');
+  QList<QByteArray> lines = process->readAllStandardOutput().split('\n');
   for (QByteArray &line : lines) {
     if (line.length() == 0)
       continue;
@@ -236,6 +229,10 @@ void CLI::processFinished() {
     Messages msg = Messages::fromJson(QJsonDocument::fromJson(line).object());
 
     switch (msg.kind) {
+    case Messages::Kind::Unknown:
+      nh_log("%s", qPrintable(line));
+      break;
+
     case Messages::Kind::Log:
       nh_log("%s", qPrintable(msg.log->message));
       break;
@@ -280,7 +277,13 @@ void CLI::processFinished() {
     }
   }
 
-  success();
+  if (exitCode == 0) {
+    success();
+  } else {
+    ConfirmationDialogFactory__showErrorDialog("Hardcover.app", "Encountered an unexpected error. Please report this.");
+    failure(FailureReason::Error);
+  }
+
   deleteLater();
 }
 

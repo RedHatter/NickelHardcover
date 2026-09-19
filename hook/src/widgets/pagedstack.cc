@@ -128,8 +128,6 @@ void PagedStack::prev() {
   }
 }
 
-void PagedStack::addPage(QWidget *page) { setCurrent(stack->addWidget(page)); }
-
 void PagedStack::clear() {
   while (QLayoutItem *item = stack->layout()->takeAt(1)) {
     if (QWidget *widget = item->widget()) {
@@ -144,10 +142,6 @@ void PagedStack::clear() {
   setCurrent(0);
 }
 
-int PagedStack::getAvailableHeight() { return stack->contentsRect().height(); }
-
-int PagedStack::countPages() { return stack->count() - 1; }
-
 void PagedStack::setStatusText(const QString &text) {
   if (status) {
     status->setText(text);
@@ -159,19 +153,11 @@ void PagedStack::resizeEvent(QResizeEvent *event) {
   QWidget::resizeEvent(event);
 }
 
-QGridLayout *PagedStack::layout() const { return qobject_cast<QGridLayout *>(QWidget::layout()); }
-
-void PagedStack::setFooterHeight(int value) { layout()->setRowMinimumHeight(1, value); }
-
-int PagedStack::footerHeight() const { return layout()->rowMinimumHeight(1); }
-
 void PagedStack::setFooterButtonWidth(int value) {
   QGridLayout *grid = layout();
   grid->setColumnMinimumWidth(0, value);
   grid->setColumnMinimumWidth(2, value);
 }
-
-int PagedStack::footerButtonWidth() const { return layout()->columnMinimumWidth(0); }
 
 PagedStackFilter::PagedStackFilter(PagedStack *pages) : QObject(pages), pages(pages) {}
 

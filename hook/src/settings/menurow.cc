@@ -10,8 +10,8 @@
 
 QVariant MenuRow::OPEN_DIALOG = QVariant("OPEN_DIALOG");
 
-MenuRow::MenuRow(QString heading, MenuRowType type, QList<Item> menuItems, QList<Item> dialogItems,
-                 QVariant defaultValue, QWidget *parent)
+MenuRow::MenuRow(const QString &heading, MenuRowType type, const QList<Item> &menuItems, const QList<Item> &dialogItems,
+                 const QVariant &defaultValue, QWidget *parent)
     : QWidget(parent), type(type), menuItems(menuItems), dialogItems(dialogItems) {
   QVBoxLayout *layout = new QVBoxLayout(this);
   layout->setSpacing(0);
@@ -56,10 +56,6 @@ MenuRow::MenuRow(QString heading, MenuRowType type, QList<Item> menuItems, QList
   }
 }
 
-void MenuRow::setHeading(QString heading) {
-  headingLabel->setText(heading);
-}
-
 void MenuRow::tapped() {
   nh_log("MenuRow::tapped()");
 
@@ -78,7 +74,7 @@ void MenuRow::tapped() {
   }
 }
 
-void MenuRow::setItem(Item item) {
+void MenuRow::setItem(const Item &item) {
   this->item = item;
   label->setText(item.text);
 
@@ -166,14 +162,12 @@ void MenuRow::down() {
   dialogLabel->setText(dialogItems.at(index).text);
 }
 
-void MenuRow::accept() { setItem(dialogItems.at(index)); }
-
 void MenuRow::showMenu() {
   NickelTouchMenu *menu = MenuController::showMenu(menuItems, label, -sizeHint().height(), false, false);
   QWidget::connect(menu, &QMenu::triggered, this, &MenuRow::menuTriggered);
 }
 
-void MenuRow::menuTriggered(QAction *action) {
+void MenuRow::menuTriggered(const QAction *action) {
   QVariant value = action->data();
 
   for (Item item : menuItems) {

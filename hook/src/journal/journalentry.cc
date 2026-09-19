@@ -10,7 +10,7 @@
 #include "../widgets/elidedlabel.h"
 #include "journalentry.h"
 
-JournalEntry::JournalEntry(Journal journal, QWidget *parent) : QFrame(parent) {
+JournalEntry::JournalEntry(const Journal &journal, QWidget *parent) : QFrame(parent) {
   setStyleSheet(R"(
     [qApp_deviceIsTrilogy=true] JournalEntry {
       padding: 12px 0;

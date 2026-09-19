@@ -5,7 +5,7 @@
 #include "../synccontroller.h"
 #include "dialog.h"
 
-Dialog::Dialog(QString title) : QFrame() {
+Dialog::Dialog(const QString &title) : QFrame() {
   dialog = N3DialogFactory__getDialog(this, true);
   N3Dialog__setTitle(dialog, title);
 
@@ -19,17 +19,13 @@ Dialog::Dialog(QString title) : QFrame() {
   dialog->show();
 }
 
-void Dialog::currentViewChanged(QString name) {
+void Dialog::currentViewChanged(const QString &name) {
   if (name != "ReadingView") {
     dialog->deleteLater();
   }
 }
 
-void Dialog::showKeyboard() { N3Dialog__showKeyboard(dialog); }
-
-void Dialog::hideKeyboard() { N3Dialog__hideKeyboard(dialog); }
-
-KeyboardFrame *Dialog::buildKeyboardFrame(TouchLineEdit *lineEdit, QString goText) {
+KeyboardFrame *Dialog::buildKeyboardFrame(TouchLineEdit *lineEdit, const QString &goText) {
   KeyboardReceiver *receiver = construct_KeyboardReceiver(lineEdit);
   KeyboardFrame *keyboard = buildKeyboardFrame(receiver, goText);
   QObject::connect(lineEdit, SIGNAL(tapped()), this, SLOT(showKeyboard()));
@@ -37,14 +33,14 @@ KeyboardFrame *Dialog::buildKeyboardFrame(TouchLineEdit *lineEdit, QString goTex
   return keyboard;
 }
 
-KeyboardFrame *Dialog::buildKeyboardFrame(QTextEdit *textEdit, QString goText) {
+KeyboardFrame *Dialog::buildKeyboardFrame(QTextEdit *textEdit, const QString &goText) {
   KeyboardReceiver *receiver = construct_KeyboardReceiver(textEdit);
   KeyboardFrame *keyboard = buildKeyboardFrame(receiver, goText);
 
   return keyboard;
 }
 
-KeyboardFrame *Dialog::buildKeyboardFrame(KeyboardReceiver *receiver, QString goText) {
+KeyboardFrame *Dialog::buildKeyboardFrame(KeyboardReceiver *receiver, const QString &goText) {
   KeyboardFrame *keyboard = N3Dialog__keyboardFrame(dialog);
 
   SearchKeyboardController *ctl = KeyboardFrame__createKeyboard(keyboard, 0, locale());

@@ -1,3 +1,5 @@
+#pragma once
+
 #include <QFrame>
 #include <QJsonObject>
 
@@ -7,5 +9,5 @@ class JournalEntry : public QFrame {
   Q_OBJECT
 
 public:
-  JournalEntry(Journal doc, QWidget *parent = nullptr);
+  JournalEntry(const Journal &doc, QWidget *parent = nullptr);
 };

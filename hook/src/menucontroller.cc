@@ -16,7 +16,7 @@
 #include "settings/settingsdialog.h"
 #include "signin/signindialog.h"
 
-NickelTouchMenu *MenuController::showMenu(QList<Item> items, QWidget *anchor, int offset, bool checkable,
+NickelTouchMenu *MenuController::showMenu(const QList<Item> &items, QWidget *anchor, int offset, bool checkable,
                                           bool decorated) {
   NickelTouchMenu *menu = construct_NickelTouchMenu(anchor);
   NickelTouchMenu__showDecoration(menu, decorated);
@@ -63,7 +63,7 @@ MenuController::MenuController(int iconHeight, QWidget *parent) : QWidget(parent
   setSelected(false);
 
   QWidget::connect(icon, SIGNAL(tapped(bool)), this, SLOT(showMainMenu()));
-};
+}
 
 void MenuController::setSelected(bool selected) {
   icon->setPixmap(QPixmap(selected ? Files::icon_hit : Files::icon).scaledToHeight(iconHeight));
@@ -98,9 +98,9 @@ void MenuController::showMainMenu() {
   QList<Item> items;
   if (settings->isSignedIn()) {
     items = {
-        {"Sync now", MenuOption::SYNC_NOW, false, syncController->syncDisabled},
-        {!settings->isEnabled(contentId) || syncController->syncDisabled ? "Enable auto-sync" : "Disable auto-sync",
-         MenuOption::TOGGLE_ENABLED, false, syncController->syncDisabled},
+        {"Sync now", MenuOption::SYNC_NOW, false, !syncController->isEnabled()},
+        {!settings->isEnabled(contentId) || syncController->notRealBook ? "Enable auto-sync" : "Disable auto-sync",
+         MenuOption::TOGGLE_ENABLED, false, syncController->notRealBook},
         {settings->getLinkedId(contentId).isEmpty() ? "Manually link book" : "Unlink book", MenuOption::LINK},
         {"Update book status", MenuOption::BOOK_STATUS},
         {"Open reading journal", MenuOption::JOURNAL},
@@ -121,7 +121,7 @@ void MenuController::showMainMenu() {
   }
 }
 
-void MenuController::showStatusMenu(Messages message) {
+void MenuController::showStatusMenu(const Messages &message) {
   if (!message.isUserBook()) {
     ConfirmationDialogFactory__showErrorDialog("Hardcover.app", "Unexpected CLI response for <i>getUserBook</i>");
     return;
@@ -153,7 +153,7 @@ void MenuController::showStatusMenu(Messages message) {
   }
 }
 
-void MenuController::triggered(QAction *action) {
+void MenuController::triggered(const QAction *action) {
   int value = action->data().toInt();
   nh_log("MenuController::triggered(%d)", value);
 

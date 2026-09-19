@@ -1,3 +1,5 @@
+#pragma once
+
 #include <QFrame>
 #include <QJsonObject>
 #include <QLabel>
@@ -8,12 +10,11 @@ class BookRow : public QFrame {
   Q_OBJECT
 
 public:
-  BookRow(SearchResult result, QWidget *parent = nullptr);
+  BookRow(const SearchResult &result, QWidget *parent = nullptr);
 
 public Q_SLOTS:
-  void selectTapped();
-  void editionsTapped();
-  void loadCover();
+  void selectTapped() { selected(id); }
+  void editionsTapped() { editions(id); }
 
 Q_SIGNALS:
   void selected(QString id);
@@ -23,7 +24,9 @@ private:
   QString id;
   QLabel *cover = nullptr;
 
-  QLabel *buildCover(SearchResult result);
-  QString getSeries(SearchResult result);
-  QString getMeta(SearchResult result);
+  void loadCover();
+
+  QLabel *buildCover(const SearchResult &result);
+  QString getSeries(const SearchResult &result);
+  QString getMeta(const SearchResult &result);
 };

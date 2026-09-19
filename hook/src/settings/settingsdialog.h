@@ -1,4 +1,8 @@
+#pragma once
+
 #include <QJsonObject>
+
+#include <NickelHook.h>
 
 #include "../messages.h"
 #include "../widgets/dialog.h"
@@ -9,21 +13,20 @@ class SettingsDialog : public Dialog {
   Q_OBJECT
 
 public:
-  static void show();
+  static void show() { new SettingsDialog(); }
 
-public Q_SLOTS:
+private:
+  SettingsDialog();
+
   void buildPages();
 
-  void saveLogs();
+  void saveLogs() { nh_dump_log(); }
   void signOut();
 
   void clearReadProgress();
   void clearLastSynced();
 
-  void setUsername(Messages user);
-
-private:
-  SettingsDialog();
+  void setUsername(const Messages &user);
 
   PagedStack *pages = nullptr;
   MenuRow *username = nullptr;

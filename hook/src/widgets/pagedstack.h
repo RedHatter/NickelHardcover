@@ -16,20 +16,20 @@ class PagedStack : public QWidget {
 public:
   PagedStack(QWidget *parent = nullptr);
 
-  void addPage(QWidget *page);
+  void addPage(QWidget *page) { setCurrent(stack->addWidget(page)); }
   void clear();
-  int getAvailableHeight();
-  int countPages();
+  int getAvailableHeight() const { return stack->contentsRect().height(); }
+  int countPages() const { return stack->count() - 1; }
   void setTotal(int value);
   void setStatusText(const QString &text);
 
-  void setFooterHeight(int value);
-  int footerHeight() const;
+  void setFooterHeight(int value) { layout()->setRowMinimumHeight(1, value); }
+  int footerHeight() const { return layout()->rowMinimumHeight(1); }
 
   void setFooterButtonWidth(int value);
-  int footerButtonWidth() const;
+  int footerButtonWidth() const { return layout()->columnMinimumWidth(0); }
 
-  QGridLayout *layout() const;
+  QGridLayout *layout() const { return qobject_cast<QGridLayout *>(QWidget::layout()); }
 
 public Q_SLOTS:
   void next();

@@ -8,24 +8,25 @@ class Dialog : public QFrame {
   Q_OBJECT
 
 public Q_SLOTS:
-  void currentViewChanged(QString name);
-  void showKeyboard();
-  void hideKeyboard();
-
-  void close() {
-    dialog->deleteLater();
-  }
+  void showKeyboard() { N3Dialog__showKeyboard(dialog); }
+  void hideKeyboard() { N3Dialog__hideKeyboard(dialog); }
 
   virtual void commit() {}
 
 private:
-  KeyboardFrame *buildKeyboardFrame(KeyboardReceiver *receiver, QString goText);
+  void currentViewChanged(const QString &name);
+
+  KeyboardFrame *buildKeyboardFrame(KeyboardReceiver *receiver, const QString &goText);
 
 protected:
-  Dialog(QString title);
+  Dialog(const QString &title);
 
   N3Dialog *dialog = nullptr;
 
-  KeyboardFrame *buildKeyboardFrame(TouchLineEdit *lineEdit, QString goText);
-  KeyboardFrame *buildKeyboardFrame(QTextEdit *textEdit, QString goText);
+  void closeDialog() {
+    dialog->deleteLater();
+  }
+
+  KeyboardFrame *buildKeyboardFrame(TouchLineEdit *lineEdit, const QString &goText);
+  KeyboardFrame *buildKeyboardFrame(QTextEdit *textEdit, const QString &goText);
 };

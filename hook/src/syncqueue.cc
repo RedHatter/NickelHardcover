@@ -9,7 +9,7 @@
 SyncQueue::SyncQueue(QObject *parent) : QObject(parent) {
   WirelessManager *wm = WirelessManager__sharedInstance();
   QObject::connect(wm, SIGNAL(networkConnected()), this, SLOT(networkConnected()));
-};
+}
 
 void SyncQueue::updateReadProgress(const QString &contentId) {
   MainWindowController *mwc = MainWindowController__sharedInstance();
@@ -74,6 +74,10 @@ void SyncQueue::prepareNext() {
 }
 
 void SyncQueue::run(const QString &contentId, bool manual) {
+  if (running) {
+    return;
+  }
+
   retryQueue.remove(contentId);
   currentProgress = progress.value(contentId);
 
@@ -86,6 +90,7 @@ void SyncQueue::run(const QString &contentId, bool manual) {
   }
 
   failed = false;
+  running = true;
   this->currentContentId = contentId;
 
   if (manual) {
@@ -106,6 +111,8 @@ void SyncQueue::run(const QString &contentId, bool manual) {
 }
 
 void SyncQueue::success() {
+  running = false;
+
   if (currentProgress == 100) {
     Settings::getInstance()->setEnabled(currentContentId, false);
   }
@@ -124,6 +131,7 @@ void SyncQueue::success() {
 
 void SyncQueue::failure(CLI::FailureReason reason) {
   failed = true;
+  running = false;
 
   if (reason == CLI::FailureReason::Network && Settings::getInstance()->getRetryOnNetwork()) {
     retryQueue.insert(currentContentId);

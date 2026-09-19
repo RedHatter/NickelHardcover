@@ -7,11 +7,8 @@
 
 #include "../cli.h"
 #include "../nickelhardcover.h"
-#include "../widgets/elidedlabel.h"
 #include "annotationsdialog.h"
 #include "annotationsrow.h"
-
-void AnnotationsDialog::show() { new AnnotationsDialog(); }
 
 AnnotationsDialog::AnnotationsDialog() : Dialog("Annotations") {
   setStyleSheet(R"(
@@ -41,9 +38,10 @@ AnnotationsDialog::AnnotationsDialog() : Dialog("Annotations") {
 
   CLI *cli = CLI::listBookmarks();
   QObject::connect(cli, &CLI::response, this, &AnnotationsDialog::response);
+  QObject::connect(cli, &CLI::failure, this, &AnnotationsDialog::closeDialog);
 }
 
-void AnnotationsDialog::response(Messages message) {
+void AnnotationsDialog::response(const Messages &message) {
   if (!message.isAnnotationList()) {
     ConfirmationDialogFactory__showErrorDialog("Hardcover.app", "Unexpected CLI response for <i>listBookmarks</i>");
     return;
@@ -94,4 +92,4 @@ void AnnotationsDialog::requestPage(int index) {
   if (index == 1 && offset > 0) {
     pages->setTotal(qCeil((float)length / offset));
   }
-};
+}

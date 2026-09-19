@@ -1,3 +1,5 @@
+#pragma once
+
 #include <QJsonObject>
 #include <QVBoxLayout>
 #include <QWidget>
@@ -10,7 +12,7 @@ class InsertJournalDialog : public Dialog {
   Q_OBJECT
 
 public:
-  static void show();
+  static void show() { new InsertJournalDialog(); }
 
   void commit() override;
 

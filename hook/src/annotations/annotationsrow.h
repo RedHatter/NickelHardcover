@@ -1,3 +1,5 @@
+#pragma once
+
 #include <QFrame>
 #include <QJsonObject>
 
@@ -8,14 +10,15 @@ class AnnotationsRow : public QFrame {
   Q_OBJECT
 
 public:
-  AnnotationsRow(Annotation annotation, QWidget *parent = nullptr);
+  AnnotationsRow(const Annotation &annotation, QWidget *parent = nullptr);
 
 public Q_SLOTS:
   void tapped();
+
+private:
   void success();
   void closeDialog();
 
-private:
   Annotation annotation;
   ConfirmationDialog *dialog = nullptr;
 };

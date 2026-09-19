@@ -10,8 +10,6 @@
 #include "journaldialog.h"
 #include "journalentry.h"
 
-void JournalDialog::show() { new JournalDialog(); }
-
 JournalDialog::JournalDialog() : Dialog("Reading Journal") {
   setStyleSheet(R"(
     [qApp_deviceIsTrilogy=true] QStackedWidget {
@@ -78,9 +76,10 @@ void JournalDialog::requestPage(int index) {
 
   CLI *cli = CLI::listJournal(15, offset);
   QObject::connect(cli, &CLI::response, this, &JournalDialog::response);
+  QObject::connect(cli, &CLI::failure, this, &JournalDialog::closeDialog);
 }
 
-void JournalDialog::response(Messages message) {
+void JournalDialog::response(const Messages &message) {
   if (!message.isJournalList()) {
     ConfirmationDialogFactory__showErrorDialog("Hardcover.app", "Unexpected CLI response for <i>listJournal</i>");
     return;
@@ -119,4 +118,4 @@ void JournalDialog::response(Messages message) {
   if (i == length) {
     pages->setTotal(pages->countPages());
   }
-};
+}

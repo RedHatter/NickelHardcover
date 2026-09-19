@@ -8,9 +8,9 @@ class StaticRow : public QFrame {
   Q_OBJECT
 
 public:
-  StaticRow(QString heading, QString value, bool showClear, QWidget *parent = nullptr);
+  StaticRow(const QString &heading, const QString &value, bool showClear, QWidget *parent = nullptr);
 
-  void setValue(QString value);
+  void setValue(const QString &value) { label->setText(value); }
 
 Q_SIGNALS:
   void clear();

@@ -21,15 +21,16 @@ public:
   MenuController(int iconHeight, QWidget *parent = nullptr);
   TouchLabel *icon = nullptr;
 
-public Q_SLOTS:
-  static NickelTouchMenu *showMenu(QList<Item> items, QWidget *anchor, int offset, bool checkable = false,
+  static NickelTouchMenu *showMenu(const QList<Item> &items, QWidget *anchor, int offset, bool checkable = false,
                                    bool decorated = true);
 
+public Q_SLOTS:
   void showMainMenu();
-  void showStatusMenu(Messages message);
-  void triggered(QAction *action);
 
 private:
+  void showStatusMenu(const Messages &message);
+  void triggered(const QAction *action);
+
   void setSelected(bool selected);
 
   int iconHeight;

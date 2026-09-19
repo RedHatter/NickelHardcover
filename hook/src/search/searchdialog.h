@@ -1,3 +1,5 @@
+#pragma once
+
 #include <QVBoxLayout>
 #include <QWidget>
 
@@ -10,18 +12,17 @@ class SearchDialog : public Dialog {
   Q_OBJECT
 
 public:
-  static void show(QString contentId, QString query);
+  static void show(const QString &contentId, const QString &query) { new SearchDialog(contentId, query); }
 
   void commit() override;
 
-public Q_SLOTS:
-  void requestPage(int index);
-  void response(Messages message);
-  void selected(QString id);
-  void editions(QString id);
-
 private:
-  SearchDialog(QString contentId, QString query);
+  SearchDialog(const QString &contentId, const QString &query);
+
+  void requestPage(int index);
+  void response(const Messages &message);
+  void selected(const QString &id);
+  void editions(const QString &id);
 
   PagedStack *pages = nullptr;
   TouchLineEdit *lineEdit = nullptr;

@@ -34,7 +34,7 @@ void SyncController::currentViewIndexChanged(int index) {
     nh_log("Alarm set for %s", qPrintable(alarm.toString()));
   }
 
-  if (syncDisabled) {
+  if (notRealBook) {
     return;
   }
 
@@ -60,7 +60,7 @@ void SyncController::currentViewIndexChanged(int index) {
 void SyncController::pageChanged() {
   nh_log("SyncController::pageChanged()");
 
-  if (syncDisabled) {
+  if (notRealBook) {
     return;
   }
 

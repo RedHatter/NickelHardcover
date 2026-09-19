@@ -10,7 +10,7 @@ class CheckboxRow : public QWidget {
   Q_OBJECT
 
 public:
-  CheckboxRow(QString heading, bool checked, QWidget *parent = nullptr);
+  CheckboxRow(const QString &heading, bool checked, QWidget *parent = nullptr);
 
 public Q_SLOTS:
   void tapped();

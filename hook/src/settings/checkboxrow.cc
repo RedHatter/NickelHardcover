@@ -6,7 +6,7 @@
 #include "../widgets/label.h"
 #include "checkboxrow.h"
 
-CheckboxRow::CheckboxRow(QString heading, bool checked, QWidget *parent) : QWidget(parent), checked(checked) {
+CheckboxRow::CheckboxRow(const QString &heading, bool checked, QWidget *parent) : QWidget(parent), checked(checked) {
   QVBoxLayout *layout = new QVBoxLayout(this);
   layout->setSpacing(0);
   layout->setContentsMargins(0, 0, 0, 0);

@@ -6,7 +6,7 @@
 #include "../widgets/label.h"
 #include "buttongroup.h"
 
-ButtonGroup::ButtonGroup(QList<Item> items, QVariant defaultValue, QString label, QWidget *parent)
+ButtonGroup::ButtonGroup(const QList<Item> &items, const QVariant &defaultValue, const QString &label, QWidget *parent)
     : QFrame(parent), m_value(defaultValue) {
   setStyleSheet(R"(
     N3ButtonLabel {
@@ -40,7 +40,7 @@ ButtonGroup::ButtonGroup(QList<Item> items, QVariant defaultValue, QString label
   }
 }
 
-void ButtonGroup::setValue(QVariant value) {
+void ButtonGroup::setValue(const QVariant &value) {
   if (value == m_value)
     return;
 
@@ -57,7 +57,3 @@ void ButtonGroup::setValue(QVariant value) {
 
   valueChanged(value);
 }
-
-QVariant ButtonGroup::value() const { return m_value; }
-
-void ButtonGroup::tapped() { setValue(sender()->property("value")); }

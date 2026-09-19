@@ -7,15 +7,11 @@
 #include <NickelHook.h>
 
 #include "../cli.h"
-#include "../settings.h"
-#include "../synccontroller.h"
 #include "../widgets/buttongroup.h"
 #include "editionrow.h"
 #include "editionsdialog.h"
 
-EditionsDialog *EditionsDialog::show(QString bookId) { return new EditionsDialog(bookId); }
-
-EditionsDialog::EditionsDialog(QString bookId) : Dialog("Manually link book"), bookId(bookId) {
+EditionsDialog::EditionsDialog(const QString &bookId) : Dialog("Manually link book"), bookId(bookId) {
   setStyleSheet(R"(
     [qApp_deviceIsTrilogy=true] QStackedWidget {
       margin: 0 20px;
@@ -87,9 +83,10 @@ void EditionsDialog::request() {
 
   CLI *cli = CLI::listEditions(bookId, readingFormat.toInt(), lang);
   QObject::connect(cli, &CLI::response, this, &EditionsDialog::response);
+  QObject::connect(cli, &CLI::failure, this, &EditionsDialog::closeDialog);
 }
 
-void EditionsDialog::response(Messages message) {
+void EditionsDialog::response(const Messages &message) {
   if (!message.isEditionList()) {
     ConfirmationDialogFactory__showErrorDialog("Hardcover.app", "Unexpected CLI response for <i>listEditions</i>");
     return;
@@ -135,7 +132,7 @@ void EditionsDialog::requestPage(int index) {
     vbox->addWidget(row);
 
     QObject::connect(row, &EditionRow::selected, this, &EditionsDialog::selected);
-    QObject::connect(row, SIGNAL(selected(QString)), dialog, SLOT(deleteLater()));
+    QObject::connect(row, &EditionRow::selected, dialog, &QObject::deleteLater);
   }
 
   vbox->addStretch(1);
@@ -161,13 +158,13 @@ void EditionsDialog::showLangMenu() {
   QWidget::connect(menu, &QMenu::triggered, this, &EditionsDialog::langTriggered);
 }
 
-void EditionsDialog::langTriggered(QAction *action) {
+void EditionsDialog::langTriggered(const QAction *action) {
   lang = action->data().toString();
   langButton->setText(lang.isEmpty() ? "Any language" : lang);
   request();
 }
 
-void EditionsDialog::readingFormatChanged(QVariant value) {
+void EditionsDialog::readingFormatChanged(const QVariant &value) {
   readingFormat = value;
   request();
 }

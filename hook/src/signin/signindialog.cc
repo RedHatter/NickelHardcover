@@ -11,8 +11,6 @@
 #include "qnamespace.h"
 #include "signindialog.h"
 
-void SignInDialog::show() { new SignInDialog(); }
-
 SignInDialog::SignInDialog() : Dialog("Sign in to Hardcover.app") {
   QVBoxLayout *layout = new QVBoxLayout(this);
   layout->setContentsMargins(0, 0, 0, 0);
@@ -22,9 +20,10 @@ SignInDialog::SignInDialog() : Dialog("Sign in to Hardcover.app") {
 
   CLI *cli = CLI::oauthRequest();
   QObject::connect(cli, &CLI::response, this, &SignInDialog::response);
+  QObject::connect(cli, &CLI::failure, this, &SignInDialog::closeDialog);
 }
 
-void SignInDialog::response(Messages message) {
+void SignInDialog::response(const Messages &message) {
   if (!message.isOAuthDevice()) {
     ConfirmationDialogFactory__showErrorDialog("Hardcover.app", "Unexpected CLI response for <i>oauthRequest</i>");
     return;
@@ -97,6 +96,6 @@ QImage SignInDialog::buildQrCode(const QString &text) {
 
 void SignInDialog::continueTapped() {
   CLI *cli = CLI::oauthSet(deviceCode);
-  QObject::connect(cli, &CLI::success, this, &Dialog::close);
-  QObject::connect(cli, &CLI::failure, this, &Dialog::close);
+  QObject::connect(cli, &CLI::success, this, &SignInDialog::closeDialog);
+  QObject::connect(cli, &CLI::failure, this, &SignInDialog::closeDialog);
 }

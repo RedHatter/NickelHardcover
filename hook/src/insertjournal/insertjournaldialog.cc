@@ -5,8 +5,6 @@
 #include "../synccontroller.h"
 #include "insertjournaldialog.h"
 
-void InsertJournalDialog::show() { new InsertJournalDialog(); }
-
 InsertJournalDialog::InsertJournalDialog() : Dialog("Add New Journal Entry") {
   QVBoxLayout *layout = new QVBoxLayout(this);
 
@@ -41,7 +39,6 @@ void InsertJournalDialog::commit() {
   CLI *cli = CLI::insertJournal(textEdit->toPlainText(), SyncController::getInstance()->getCurrentProgress(),
                                 privacy->value().toString());
   QObject::connect(cli, &CLI::success, dialog, &QDialog::deleteLater);
-  QObject::connect(cli, &CLI::failure, dialog, &QDialog::deleteLater);
 }
 
 void InsertJournalDialog::response(Messages message) {

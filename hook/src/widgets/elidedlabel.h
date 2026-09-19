@@ -1,3 +1,5 @@
+#pragma once
+
 #include <QFrame>
 
 #include "label.h"
@@ -12,7 +14,7 @@ public:
 protected:
   void paintEvent(QPaintEvent *event) override;
   int heightForWidth(int w) const override;
-  QSize sizeHint() const override;
+  QSize sizeHint() const override { return QSize(width(), heightForWidth(width())); }
 
 private:
   QString text;

@@ -8,7 +8,7 @@
 #include "../menucontroller.h"
 #include "../nickelhardcover.h"
 
-enum MenuRowType {
+enum class MenuRowType {
   Tap,
   Menu,
   Dialog,
@@ -18,19 +18,18 @@ class MenuRow : public QWidget {
   Q_OBJECT
 
 public:
-  MenuRow(QString heading, MenuRowType type, QList<Item> menuItems, QList<Item> dialogItems, QVariant defaultValue,
-          QWidget *parent = nullptr);
+  MenuRow(const QString &heading, MenuRowType type, const QList<Item> &menuItems, const QList<Item> &dialogItems,
+          const QVariant &defaultValue, QWidget *parent = nullptr);
 
   static QVariant OPEN_DIALOG;
 
-  void setHeading(QString heading);
+  void setHeading(const QString &heading) { headingLabel->setText(heading); }
 
 public Q_SLOTS:
   void tapped();
   void up();
   void down();
-  void accept();
-  void menuTriggered(QAction *action);
+  void accept() { setItem(dialogItems.at(index)); }
 
 Q_SIGNALS:
   void triggered(QVariant value);
@@ -47,5 +46,6 @@ private:
 
   void showMenu();
   void showDialog();
-  void setItem(Item item);
+  void setItem(const Item &item);
+  void menuTriggered(const QAction *action);
 };

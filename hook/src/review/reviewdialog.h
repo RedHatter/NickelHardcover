@@ -1,3 +1,5 @@
+#pragma once
+
 #include <QJsonObject>
 #include <QVBoxLayout>
 #include <QWidget>
@@ -9,19 +11,18 @@ class ReviewDialog : public Dialog {
   Q_OBJECT
 
 public:
-  static void show();
+  static void show() { new ReviewDialog(); }
 
   void commit() override;
 
-public Q_SLOTS:
-  void response(Messages message);
+private:
+  ReviewDialog();
+
+  void response(const Messages &message);
 
   void setRating(float value);
   void setSpoilers(int state);
   void setSponsored(int state);
-
-private:
-  ReviewDialog();
 
   float rating = 0;
   bool spoilers = false;

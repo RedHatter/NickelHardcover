@@ -5,7 +5,6 @@
 #include <QObject>
 #include <QStringList>
 
-#include "signin/signindialog.h"
 #include "messages.h"
 
 class CLI : public QObject {
@@ -28,30 +27,27 @@ public:
 
     Options() {};
 
-    QString getContentId();
-    QString getQuery();
+    QString getContentId() const;
+    QString getQuery() const;
   };
 
-  static CLI *listBookmarks(Options options = Options());
-  static CLI *listEditions(QString bookId, int readingFormat, QString language, Options options = Options());
-  static CLI *listJournal(int limit, int offset, Options options = Options());
-  static CLI *oauthRequest(Options options = Options());
-  static CLI *oauthSet(QString deviceCode, Options options = Options());
-  static CLI *insertJournal(QString text, int percentage, QString privacy, Options options = Options());
-  static CLI *updateJournal(Options options = Options());
-  static CLI *getUser(Options options = Options());
-  static CLI *getUserBook(Options options = Options());
-  static CLI *setUserBook(int status, Options options = Options());
-  static CLI *setUserBook(float rating, QString text, bool spoilers, bool sponsored, Options options = Options());
-  static CLI *search(QString query, int limit, int page, Options options = Options());
-  static CLI *update(int percentage, Options options = Options());
+  static CLI *listBookmarks(const Options &options = Options()) { return new CLI({"list-bookmarks"}, options); }
+  static CLI *listEditions(const QString &bookId, int readingFormat, const QString &language, const Options &options = Options());
+  static CLI *listJournal(int limit, int offset, const Options &options = Options());
+  static CLI *oauthRequest(const Options &options = Options()) { return new CLI({"oauth-request"}, options); }
+  static CLI *oauthSet(const QString &deviceCode, const Options &options = Options());
+  static CLI *insertJournal(const QString &text, int percentage, const QString &privacy, const Options &options = Options());
+  static CLI *updateJournal(const Options &options = Options());
+  static CLI *getUser(const Options &options = Options()) { return new CLI({"get-user"}, options); }
+  static CLI *getUserBook(const Options &options = Options());
+  static CLI *setUserBook(int status, const Options &options = Options());
+  static CLI *setUserBook(float rating, const QString &text, bool spoilers, bool sponsored, const Options &options = Options());
+  static CLI *search(const QString &query, int limit, int page, const Options &options = Options());
+  static CLI *update(int percentage, const Options &options = Options());
 
 public Q_SLOTS:
-  void checkConnected();
   void networkConnected();
   void connectingFailed();
-  void processFinished();
-  void linkBook();
 
 Q_SIGNALS:
   void response(Messages message);
@@ -59,11 +55,15 @@ Q_SIGNALS:
   void failure(FailureReason reason);
 
 private:
-  static QStringList getIdentifier(Options options);
+  static QStringList getIdentifier(const Options &options);
 
   CLI(QStringList arguments, Options options = Options(), QObject *parent = nullptr);
 
   ~CLI();
+
+  void checkConnected();
+  void processFinished(int errorCode);
+  void linkBook();
 
   void showIcon(const char *path);
 

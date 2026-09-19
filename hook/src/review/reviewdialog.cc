@@ -6,8 +6,6 @@
 #include "../widgets/rating.h"
 #include "reviewdialog.h"
 
-void ReviewDialog::show() { new ReviewDialog(); }
-
 ReviewDialog::ReviewDialog() : Dialog("Write your review") {
   setStyleSheet(R"(
     [qApp_deviceIsTrilogy=true] ReviewDialog {
@@ -55,14 +53,17 @@ ReviewDialog::ReviewDialog() : Dialog("Write your review") {
   QObject::connect(cli, &CLI::failure, dialog, &QDialog::deleteLater);
 }
 
-void ReviewDialog::response(Messages message) {
+void ReviewDialog::response(const Messages &message) {
   if (!message.isUserBook()) {
     ConfirmationDialogFactory__showErrorDialog("Hardcover.app", "Unexpected CLI response for <i>getUserBook</i>");
     return;
   }
 
   QLayout *column = layout();
-  column->takeAt(0)->widget()->deleteLater();
+
+  QLayoutItem *item = column->takeAt(0);
+  item->widget()->deleteLater();
+  delete item;
 
   rating = message.user_book->rating.value_or_default();
   spoilers = message.user_book->review_has_spoilers;
@@ -108,7 +109,7 @@ void ReviewDialog::response(Messages message) {
 
   buildKeyboardFrame(textEdit, "Submit");
   showKeyboard();
-};
+}
 
 void ReviewDialog::setRating(float value) {
   nh_log("ReviewDialog::setRating(%f)", value);
@@ -135,5 +136,4 @@ void ReviewDialog::commit() {
 
   CLI *cli = CLI::setUserBook(rating, textEdit->toPlainText(), spoilers, sponsored);
   QObject::connect(cli, &CLI::success, dialog, &QDialog::deleteLater);
-  QObject::connect(cli, &CLI::failure, dialog, &QDialog::deleteLater);
 }

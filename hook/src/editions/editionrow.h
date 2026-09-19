@@ -1,3 +1,5 @@
+#pragma once
+
 #include <QFrame>
 #include <QGridLayout>
 #include <QJsonObject>
@@ -10,16 +12,15 @@ class EditionRow : public QFrame {
   Q_PROPERTY(int verticalSpacing READ verticalSpacing WRITE setVerticalSpacing)
 
 public:
-  EditionRow(Edition edition, QWidget *parent = nullptr);
+  EditionRow(const Edition &edition, QWidget *parent = nullptr);
 
-  QGridLayout *layout() const;
+  QGridLayout *layout() const { return qobject_cast<QGridLayout *>(QWidget::layout()); }
 
-  void setVerticalSpacing(int value);
-  int verticalSpacing() const;
+  void setVerticalSpacing(int value) { layout()->setVerticalSpacing(value); }
+  int verticalSpacing() const { return layout()->verticalSpacing(); }
 
 public Q_SLOTS:
-  void tapped();
-  void loadCover();
+  void tapped() { selected(id); }
 
 Q_SIGNALS:
   void selected(QString id);
@@ -28,5 +29,7 @@ private:
   QString id;
   QLabel *cover = nullptr;
 
-  QLabel *buildCover(Edition edition);
+  void loadCover();
+
+  QLabel *buildCover(const Edition &edition);
 };

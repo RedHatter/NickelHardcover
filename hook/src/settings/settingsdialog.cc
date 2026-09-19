@@ -13,8 +13,6 @@
 #include "settingsdialog.h"
 #include "staticrow.h"
 
-void SettingsDialog::show() { new SettingsDialog(); }
-
 SettingsDialog::SettingsDialog() : Dialog("Settings") {
   setStyleSheet(R"(
     [qApp_deviceIsTrilogy=true] Label[textSize="ExtraLarge"] {
@@ -339,7 +337,7 @@ QFrame *SettingsDialog::buildAdvanced() {
   return frame;
 }
 
-void SettingsDialog::setUsername(Messages message) {
+void SettingsDialog::setUsername(const Messages &message) {
   if (!message.isUser()) {
     ConfirmationDialogFactory__showErrorDialog("Hardcover.app", "Unexpected CLI response for <i>getUser</i>");
     return;
@@ -370,9 +368,7 @@ void SettingsDialog::clearLastSynced() {
   row->setValue(progress <= 0 ? "Never" : QString::number(progress).append("%"));
 }
 
-void SettingsDialog::saveLogs() { nh_dump_log(); }
-
 void SettingsDialog::signOut() {
   Settings::getInstance()->clearAccessToken();
-  QTimer::singleShot(0, this, &Dialog::close);
+  QTimer::singleShot(0, this, &SettingsDialog::closeDialog);
 }

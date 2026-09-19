@@ -1,3 +1,5 @@
+#pragma once
+
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QStackedLayout>
@@ -10,14 +12,13 @@ class AnnotationsDialog : public Dialog {
   Q_OBJECT
 
 public:
-  static void show();
-
-public Q_SLOTS:
-  void response(Messages message);
-  void requestPage(int index);
+  static void show() { new AnnotationsDialog(); }
 
 private:
   AnnotationsDialog();
+
+  void response(const Messages &message);
+  void requestPage(int index);
 
   int offset = 0;
   Optional<AnnotationList> annotationList;
