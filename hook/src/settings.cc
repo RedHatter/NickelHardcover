@@ -1,4 +1,5 @@
 #include <QSettings>
+#include <QFile>
 
 #include <NickelHook.h>
 
@@ -67,4 +68,10 @@ int Settings::getSyncOnRead() const {
 int Settings::getSyncOnSchedule() const {
   int hour = config->value("sync_on_schedule", -1).toInt();
   return hour >= 0 && hour <= 23 ? hour : -1;
+}
+
+void Settings::deleteConfig() {
+  config->clear();
+  config->sync();
+  QFile::remove(config->fileName());
 }

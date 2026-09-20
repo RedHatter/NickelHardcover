@@ -9,8 +9,8 @@
 #include "messages.h"
 #include "nickelhardcover.h"
 #include "search/searchdialog.h"
-#include "signin/signindialog.h"
 #include "settings.h"
+#include "signin/signindialog.h"
 #include "synccontroller.h"
 
 CLI *CLI::listEditions(const QString &bookId, int readingFormat, const QString &language) {
@@ -33,9 +33,7 @@ CLI *CLI::listJournal(int limit, int offset) {
   return new CLI(arguments);
 }
 
-CLI *CLI::oauthSet(const QString &deviceCode) {
-  return new CLI({"oauth-set", "--device-code", deviceCode});
-}
+CLI *CLI::oauthSet(const QString &deviceCode) { return new CLI({"oauth-set", "--device-code", deviceCode}); }
 
 CLI *CLI::insertJournal(const QString &text, int percentage, const QString &privacy) {
   QStringList arguments = {"insert-journal", "--text", text, "--percentage", QString::number(percentage),
@@ -235,14 +233,29 @@ void CLI::processFinished(int exitCode) {
         SignInDialog::show();
         failure(FailureReason::Unauthorized);
         return;
+      } else if (msg.error->error_code == "InvalidConfig") {
+        QString message = msg.error->message;
+        nh_log("%s", qPrintable(message));
+
+        ConfirmationDialog *dialog = ConfirmationDialogFactory__getConfirmationDialog(nullptr);
+        ConfirmationDialog__setAcceptButtonText(dialog, "Reset");
+        ConfirmationDialog__setRejectButtonText(dialog, "Not now");
+        ConfirmationDialog__setTitle(dialog, "Hardcover.app");
+        ConfirmationDialog__setText(dialog, message);
+
+        QObject::connect(dialog, &QDialog::accepted, this, &CLI::deleteConfig);
+        QObject::connect(dialog, &QDialog::rejected, this, &CLI::deleteLater);
+        dialog->open();
+
+        failure(FailureReason::BookNotFound);
+        return;
       } else if (msg.error->error_code == "BookNotFound") {
         QString message = msg.error->message;
         nh_log("%s", qPrintable(message));
 
         ConfirmationDialog *dialog = ConfirmationDialogFactory__getConfirmationDialog(nullptr);
         ConfirmationDialog__setAcceptButtonText(
-            dialog,
-            Settings::getInstance()->getLinkedId(contentId).isEmpty() ? "Link book" : "Unlink book");
+            dialog, Settings::getInstance()->getLinkedId(contentId).isEmpty() ? "Link book" : "Unlink book");
         ConfirmationDialog__setRejectButtonText(dialog, "Cancel");
         ConfirmationDialog__setTitle(dialog, "Hardcover.app");
         ConfirmationDialog__setText(dialog, describeBookError(contentId, message));
@@ -288,6 +301,12 @@ void CLI::linkBook() {
   } else {
     Settings::getInstance()->setLinkedId(contentId, QString());
   }
+
+  deleteLater();
+}
+
+void CLI::deleteConfig() {
+  Settings::getInstance()->deleteConfig();
 
   deleteLater();
 }

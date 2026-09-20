@@ -51,6 +51,7 @@ private:
   void checkConnected();
   void processFinished(int errorCode);
   void linkBook();
+  void deleteConfig();
 
   void showIcon(const char *path);
 

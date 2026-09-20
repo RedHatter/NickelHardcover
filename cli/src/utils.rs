@@ -50,6 +50,8 @@ pub enum ExpectedError {
   OAuth(String),
   #[error("Unauthorized")]
   Unauthorized,
+  #[error("{0}")]
+  InvalidConfig(String),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

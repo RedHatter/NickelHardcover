@@ -340,7 +340,7 @@ QString join(const QVector<QString> &list, const QString &separator) {
 
 QString describeBookError(const QString &contentId, const QString &message) {
   QString bookTitle = SyncController::getInstance()->getBookInfo(contentId).title;
-  return bookTitle.isEmpty() ? message : QString("<b>%1</b><br>%2").arg(bookTitle, message);
+  return bookTitle.isEmpty() ? message : QString("<b>%1</b><br><br>%2").arg(bookTitle, message);
 }
 
 void showBookErrorDialog(const QString &contentId, const QString &message) {

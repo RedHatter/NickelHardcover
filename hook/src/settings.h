@@ -51,6 +51,8 @@ public:
 
   bool is24HourClock() const { return kobo->value("ApplicationPreferences/is24HourClock").toBool(); }
 
+  void deleteConfig ();
+
 private:
   Settings(QObject *parent = nullptr);
 
