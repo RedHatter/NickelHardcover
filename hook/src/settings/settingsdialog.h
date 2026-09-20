@@ -23,9 +23,6 @@ private:
   void saveLogs() { nh_dump_log(); }
   void signOut();
 
-  void clearReadProgress();
-  void clearLastSynced();
-
   void setUsername(const Messages &user);
 
   PagedStack *pages = nullptr;
@@ -33,6 +30,6 @@ private:
 
   QFrame *buildGeneral();
   QFrame *buildAutoSync();
-  QFrame *buildInformation();
+  QFrame *buildQueuedProgress();
   QFrame *buildAdvanced();
 };

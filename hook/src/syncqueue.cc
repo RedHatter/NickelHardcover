@@ -49,10 +49,8 @@ void SyncQueue::networkConnected() {
 }
 
 void SyncQueue::runAll() {
-  QHash<QString, int>::const_iterator i = progress.constBegin();
-  while (i != progress.constEnd()) {
-    queue.insert(i.key());
-    ++i;
+  for (QHash<QString, int>::const_iterator it = progress.constBegin(); it != progress.constEnd(); ++it) {
+    queue.insert(it.key());
   }
 
   prepareNext();

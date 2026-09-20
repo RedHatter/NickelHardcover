@@ -33,7 +33,7 @@ public:
 
   const QHash<QString, int> &getProgress() const { return queue->getProgress(); }
 
-  void clearReadProgress() { queue->clearReadProgress(contentId); }
+  void clearReadProgress(const QString &contentId) { queue->clearReadProgress(contentId); }
 
   void manualSync();
   QDateTime getAlarm() const;

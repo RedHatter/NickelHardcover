@@ -162,7 +162,7 @@ void SettingsDialog::buildPages() {
   rows->setSpacing(0);
   rows->setContentsMargins(0, 0, 0, 0);
 
-  QList<QFrame *> sections = {buildGeneral(), buildAutoSync(), buildInformation(), buildAdvanced()};
+  QList<QFrame *> sections = {buildGeneral(), buildAutoSync(), buildQueuedProgress(), buildAdvanced()};
   int availableHeight = pages->getAvailableHeight();
   int pageHeight = 0;
 
@@ -211,7 +211,8 @@ QFrame *SettingsDialog::buildGeneral() {
 
   Settings *settings = Settings::getInstance();
 
-  CheckboxRow *checkboxRow = new CheckboxRow("Enable auto-sync by default for new books", settings->getAutoSyncDefault());
+  CheckboxRow *checkboxRow =
+      new CheckboxRow("Enable auto-sync by default for new books", settings->getAutoSyncDefault());
   QObject::connect(checkboxRow, &CheckboxRow::triggered, settings, &Settings::setAutoSyncDefault);
   layout->addWidget(checkboxRow);
 
@@ -246,6 +247,24 @@ QFrame *SettingsDialog::buildAutoSync() {
 
   Settings *settings = Settings::getInstance();
 
+  QList<Item> thresholdItems;
+  for (int i = 1; i < 100; i++) {
+    thresholdItems.append({QString::number(i).append("%"), i});
+  }
+
+  MenuRow *menuRow = new MenuRow("After closing a book or the Kobo is put to sleep", MenuRowType::Menu,
+                                 {{"Every time", 1}, {"Never", -1}, {"Set a threshold", MenuRow::OPEN_DIALOG}},
+                                 thresholdItems, settings->getSyncOnClose());
+  QObject::connect(menuRow, &MenuRow::triggered, settings, &Settings::setSyncOnClose);
+  menuRow->setProperty("noBorder", true);
+  layout->addWidget(menuRow);
+
+  menuRow = new MenuRow("Periodically by read percentage", MenuRowType::Menu,
+                        {{"Never", -1}, {"Set a threshold", MenuRow::OPEN_DIALOG}}, thresholdItems,
+                        settings->getSyncOnRead());
+  QObject::connect(menuRow, &MenuRow::triggered, settings, &Settings::setSyncOnRead);
+  layout->addWidget(menuRow);
+
   bool is24HourClock = settings->is24HourClock();
 
   QList<Item> hours;
@@ -258,56 +277,54 @@ QFrame *SettingsDialog::buildAutoSync() {
     hours.append(Item{text, hour});
   }
 
-  MenuRow *menuRow =
-      new MenuRow("At a scheduled time each day", MenuRowType::Menu, {{"Never", -1}, {"Set time of day", MenuRow::OPEN_DIALOG}}, hours,
-                  settings->getSyncOnSchedule());
+  menuRow =
+      new MenuRow("At a scheduled time each day", MenuRowType::Menu,
+                  {{"Never", -1}, {"Set time of day", MenuRow::OPEN_DIALOG}}, hours, settings->getSyncOnSchedule());
   QObject::connect(menuRow, &MenuRow::triggered, settings, &Settings::setSyncOnSchedule);
   layout->addWidget(menuRow);
-  menuRow->setProperty("noBorder", true);
 
-  QList<Item> thresholdItems;
-  for (int i = 1; i < 100; i++) {
-    thresholdItems.append({QString::number(i).append("%"), i});
-  }
-
-  menuRow = new MenuRow("After closing a book or the Kobo is put to sleep", MenuRowType::Menu,
-                        {{"Every time", 1}, {"Never", -1}, {"Set a threshold", MenuRow::OPEN_DIALOG}}, thresholdItems,
-                        settings->getSyncOnClose());
-  QObject::connect(menuRow, &MenuRow::triggered, settings, &Settings::setSyncOnClose);
-  layout->addWidget(menuRow);
-
-  menuRow = new MenuRow("Periodically by read percentage", MenuRowType::Menu,
-                        {{"Never", -1}, {"Set a threshold", MenuRow::OPEN_DIALOG}}, thresholdItems,
-                        settings->getSyncOnRead());
-  QObject::connect(menuRow, &MenuRow::triggered, settings, &Settings::setSyncOnRead);
-  layout->addWidget(menuRow);
+  QDateTime alarm = SyncController::getInstance()->getAlarm();
+  layout->addWidget(
+      new StaticRow("Auto-sync scheduled for", alarm.isValid() ? alarm.toLocalTime().toString() : "Never", false));
 
   return frame;
 }
 
-QFrame *SettingsDialog::buildInformation() {
+QFrame *SettingsDialog::buildQueuedProgress() {
   QFrame *frame = new QFrame(this);
   QVBoxLayout *layout = new QVBoxLayout(frame);
   layout->setSpacing(0);
   layout->setContentsMargins(0, 0, 0, 0);
 
-  layout->addWidget(new Label(Label::Avenir, "Current book"));
-
   SyncController *ctl = SyncController::getInstance();
-  QDateTime alarm = ctl->getAlarm();
-  StaticRow *row =
-      new StaticRow("Auto-sync scheduled for", alarm.isValid() ? alarm.toLocalTime().toString() : "Never", false);
-  layout->addWidget(row);
-  row->setProperty("noBorder", true);
+  const QHash<QString, int> &progress = ctl->getProgress();
 
-  row = new StaticRow("Current progress", QString::number(ctl->getCurrentProgress()).append("%"), true);
-  layout->addWidget(row);
-  QObject::connect(row, &StaticRow::clear, this, &SettingsDialog::clearReadProgress);
+  if (progress.isEmpty()) {
+    return frame;
+  }
 
-  int progress = Settings::getInstance()->getLastProgress(ctl->contentId);
-  row = new StaticRow("Last synced", progress <= 0 ? "Never" : QString::number(progress).append("%"), true);
-  layout->addWidget(row);
-  QObject::connect(row, &StaticRow::clear, this, &SettingsDialog::clearLastSynced);
+  layout->addWidget(new Label(Label::Avenir, "Queued progress"));
+
+  for (QHash<QString, int>::const_iterator it = progress.constBegin(); it != progress.constEnd(); ++it) {
+    QString contentId = it.key();
+    QString title = ctl->getBookInfo(contentId).title;
+
+    int lastSynced = Settings::getInstance()->getLastProgress(contentId);
+    QString value = lastSynced <= 0 ? QString("%1% • never synced").arg(it.value())
+                                    : QString("%1% • last synced %2%").arg(it.value()).arg(lastSynced);
+
+    StaticRow *row = new StaticRow(title.isEmpty() ? "Unknown" : title, value, true);
+    QObject::connect(row, &StaticRow::clear, this, [contentId, row]() {
+      SyncController::getInstance()->clearReadProgress(contentId);
+      row->deleteLater();
+    });
+
+    if (it == progress.constBegin()) {
+      row->setProperty("noBorder", true);
+    }
+
+    layout->addWidget(row);
+  }
 
   return frame;
 }
@@ -345,24 +362,6 @@ void SettingsDialog::setUsername(const Messages &message) {
   if (usernameValue) {
     username->setHeading(usernameValue->prepend("@"));
   }
-}
-
-void SettingsDialog::clearReadProgress() {
-  SyncController *ctl = SyncController::getInstance();
-  ctl->clearReadProgress();
-
-  StaticRow *row = qobject_cast<StaticRow *>(sender());
-  row->setValue(QString::number(ctl->getCurrentProgress()).append("%"));
-}
-
-void SettingsDialog::clearLastSynced() {
-  QString contentId = SyncController::getInstance()->contentId;
-  Settings *settings = Settings::getInstance();
-  settings->setLastProgress(contentId, 0);
-
-  StaticRow *row = qobject_cast<StaticRow *>(sender());
-  int progress = settings->getLastProgress(contentId);
-  row->setValue(progress <= 0 ? "Never" : QString::number(progress).append("%"));
 }
 
 void SettingsDialog::signOut() {

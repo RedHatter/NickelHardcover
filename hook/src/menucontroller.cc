@@ -7,14 +7,14 @@
 
 #include "cli.h"
 #include "files.h"
-#include "menucontroller.h"
-#include "settings.h"
-#include "synccontroller.h"
 #include "journal/journaldialog.h"
+#include "menucontroller.h"
 #include "review/reviewdialog.h"
 #include "search/searchdialog.h"
+#include "settings.h"
 #include "settings/settingsdialog.h"
 #include "signin/signindialog.h"
+#include "synccontroller.h"
 
 NickelTouchMenu *MenuController::showMenu(const QList<Item> &items, QWidget *anchor, int offset, bool checkable,
                                           bool decorated) {
@@ -185,7 +185,7 @@ void MenuController::triggered(const QAction *action) {
     settings->setEnabled(contentId, enabled);
 
     if (!enabled) {
-      ctl->clearReadProgress();
+      ctl->clearReadProgress(contentId);
     }
 
     break;
