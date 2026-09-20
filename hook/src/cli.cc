@@ -7,21 +7,13 @@
 #include "cli.h"
 #include "files.h"
 #include "messages.h"
+#include "nickelhardcover.h"
 #include "search/searchdialog.h"
 #include "signin/signindialog.h"
 #include "settings.h"
 #include "synccontroller.h"
 
-QString CLI::Options::getContentId() const {
-  return contentId.isEmpty() ? SyncController::getInstance()->contentId : contentId;
-}
-
-QString CLI::Options::getQuery() const {
-  SyncController *ctl = SyncController::getInstance();
-  return query.isEmpty() ? ctl->title + " " + ctl->author : query;
-}
-
-CLI *CLI::listEditions(const QString &bookId, int readingFormat, const QString &language, const Options &options) {
+CLI *CLI::listEditions(const QString &bookId, int readingFormat, const QString &language) {
   QStringList arguments = {"list-editions", "--book-id", bookId};
 
   if (readingFormat != 0) {
@@ -32,48 +24,48 @@ CLI *CLI::listEditions(const QString &bookId, int readingFormat, const QString &
     arguments.append({"--language", language});
   }
 
-  return new CLI(arguments, options);
+  return new CLI(arguments);
 }
 
-CLI *CLI::listJournal(int limit, int offset, const Options &options) {
+CLI *CLI::listJournal(int limit, int offset) {
   QStringList arguments = {"list-journal", "--limit", QString::number(limit), "--offset", QString::number(offset)};
-  arguments.append(getIdentifier(options));
-  return new CLI(arguments, options);
+  arguments.append(getIdentifier());
+  return new CLI(arguments);
 }
 
-CLI *CLI::oauthSet(const QString &deviceCode, const Options &options) {
-  return new CLI({"oauth-set", "--device-code", deviceCode}, options);
+CLI *CLI::oauthSet(const QString &deviceCode) {
+  return new CLI({"oauth-set", "--device-code", deviceCode});
 }
 
-CLI *CLI::insertJournal(const QString &text, int percentage, const QString &privacy, const Options &options) {
+CLI *CLI::insertJournal(const QString &text, int percentage, const QString &privacy) {
   QStringList arguments = {"insert-journal", "--text", text, "--percentage", QString::number(percentage),
                            "--privacy",      privacy};
-  arguments.append(getIdentifier(options));
-  return new CLI(arguments, options);
+  arguments.append(getIdentifier());
+  return new CLI(arguments);
 }
 
-CLI *CLI::updateJournal(const Options &options) {
+CLI *CLI::updateJournal(const QString &contentId) {
   QStringList arguments = {"update-journal"};
-  arguments.append(getIdentifier(options));
-  return new CLI(arguments, options);
+  arguments.append(getIdentifier(contentId));
+  return new CLI(arguments, false, true, contentId);
 }
 
-CLI *CLI::getUserBook(const Options &options) {
+CLI *CLI::getUserBook() {
   QStringList arguments = {"get-user-book"};
-  arguments.append(getIdentifier(options));
-  return new CLI(arguments, options);
+  arguments.append(getIdentifier());
+  return new CLI(arguments);
 }
 
-CLI *CLI::setUserBook(int status, const Options &options) {
+CLI *CLI::setUserBook(int status) {
   QStringList arguments = {"set-user-book", "--status", QString::number(status)};
-  arguments.append(getIdentifier(options));
-  return new CLI(arguments, options);
+  arguments.append(getIdentifier());
+  return new CLI(arguments);
 }
 
-CLI *CLI::setUserBook(float rating, const QString &text, bool spoilers, bool sponsored, const Options &options) {
+CLI *CLI::setUserBook(float rating, const QString &text, bool spoilers, bool sponsored) {
   QStringList arguments = {"set-user-book"};
 
-  arguments.append(getIdentifier(options));
+  arguments.append(getIdentifier());
 
   if (rating > 0.0) {
     arguments.append({"--rating", QString::number(rating)});
@@ -85,26 +77,25 @@ CLI *CLI::setUserBook(float rating, const QString &text, bool spoilers, bool spo
     arguments.append({"--text", text});
   }
 
-  return new CLI(arguments, options);
+  return new CLI(arguments);
 }
 
-CLI *CLI::search(const QString &query, int limit, int page, const Options &options) {
-  return new CLI({"search", "--limit", QString::number(limit), "--page", QString::number(page), "--query", query},
-                 options);
+CLI *CLI::search(const QString &query, int limit, int page) {
+  return new CLI({"search", "--limit", QString::number(limit), "--page", QString::number(page), "--query", query});
 }
 
-CLI *CLI::update(int percentage, const Options &options) {
+CLI *CLI::update(const QString &contentId, int percentage, bool silent) {
   QStringList arguments = {"update", "--value", QString::number(percentage)};
-  arguments.append(getIdentifier(options));
+  arguments.append(getIdentifier(contentId));
 
-  return new CLI(arguments, options);
+  return new CLI(arguments, silent, true, contentId);
 }
 
-QStringList CLI::getIdentifier(const Options &options) {
-  QString contentId = options.getContentId();
-  QStringList identifiers = {"--content-id", contentId};
+QStringList CLI::getIdentifier(const QString &contentId) {
+  QString id = contentId.isEmpty() ? SyncController::getInstance()->contentId : contentId;
+  QStringList identifiers = {"--content-id", id};
 
-  QString linkedId = Settings::getInstance()->getLinkedId(contentId);
+  QString linkedId = Settings::getInstance()->getLinkedId(id);
   if (!linkedId.isEmpty()) {
     identifiers.append({"--linked-id", linkedId});
   }
@@ -112,8 +103,10 @@ QStringList CLI::getIdentifier(const Options &options) {
   return identifiers;
 }
 
-CLI::CLI(QStringList arguments, Options options, QObject *parent)
-    : QObject(parent), arguments(arguments), options(options) {
+CLI::CLI(QStringList arguments, bool silent, bool icon, const QString &contentId, QObject *parent)
+    : QObject(parent), arguments(arguments),
+      contentId(contentId.isEmpty() ? SyncController::getInstance()->contentId : contentId), silent(silent),
+      iconEnabled(icon) {
   WirelessWorkflowManager *wfm = WirelessWorkflowManager__sharedInstance();
 
   if (WirelessWorkflowManager__isInternetAccessible(wfm)) {
@@ -133,10 +126,10 @@ CLI::CLI(QStringList arguments, Options options, QObject *parent)
     QObject::connect(wm, SIGNAL(networkConnected()), this, SLOT(networkConnected()));
 
     // Yield to caller so signals can be setup before a possible connectingFailed() is triggered
-    QTimer::singleShot(0, this, [options] {
+    QTimer::singleShot(0, this, [silent] {
       WirelessWorkflowManager *wfm = WirelessWorkflowManager__sharedInstance();
 
-      if (options.silent) {
+      if (silent) {
         WirelessWorkflowManager__connectWirelessSilently(wfm);
       } else {
         WirelessWorkflowManager__connectWireless(wfm, false, false);
@@ -168,8 +161,8 @@ void CLI::checkConnected() {
 void CLI::connectingFailed() {
   nh_log("CLI::connectingFailed()");
 
-  if (!options.silent) {
-    ConfirmationDialogFactory__showErrorDialog("Hardcover.app", "Failed to connect to WIFI.");
+  if (!silent) {
+    showBookErrorDialog(contentId, "Failed to connect to WIFI.");
   }
 
   if (timer != nullptr) {
@@ -203,7 +196,7 @@ void CLI::networkConnected() {
   WirelessManager *wm = WirelessManager__sharedInstance();
   QObject::disconnect(wm, SIGNAL(networkConnected()), this, SLOT(networkConnected()));
 
-  if (options.icon) {
+  if (iconEnabled) {
     showIcon(Files::icon);
   }
 
@@ -249,10 +242,10 @@ void CLI::processFinished(int exitCode) {
         ConfirmationDialog *dialog = ConfirmationDialogFactory__getConfirmationDialog(nullptr);
         ConfirmationDialog__setAcceptButtonText(
             dialog,
-            Settings::getInstance()->getLinkedId(options.getContentId()).isEmpty() ? "Link book" : "Unlink book");
+            Settings::getInstance()->getLinkedId(contentId).isEmpty() ? "Link book" : "Unlink book");
         ConfirmationDialog__setRejectButtonText(dialog, "Cancel");
         ConfirmationDialog__setTitle(dialog, "Hardcover.app");
-        ConfirmationDialog__setText(dialog, message);
+        ConfirmationDialog__setText(dialog, describeBookError(contentId, message));
 
         QObject::connect(dialog, &QDialog::accepted, this, &CLI::linkBook);
         QObject::connect(dialog, &QDialog::rejected, this, &CLI::deleteLater);
@@ -262,7 +255,7 @@ void CLI::processFinished(int exitCode) {
         return;
       } else {
         nh_log("Error from command line \"%s\"", qPrintable(msg.error->message));
-        ConfirmationDialogFactory__showErrorDialog("Hardcover.app", msg.error->message);
+        showBookErrorDialog(contentId, msg.error->message);
         failure(FailureReason::Error);
         deleteLater();
         return;
@@ -280,7 +273,7 @@ void CLI::processFinished(int exitCode) {
   if (exitCode == 0) {
     success();
   } else {
-    ConfirmationDialogFactory__showErrorDialog("Hardcover.app", "Encountered an unexpected error. Please report this.");
+    showBookErrorDialog(contentId, "Encountered an unexpected error. Please report this.");
     failure(FailureReason::Error);
   }
 
@@ -290,10 +283,8 @@ void CLI::processFinished(int exitCode) {
 void CLI::linkBook() {
   nh_log("CLI::linkBook()");
 
-  QString contentId = options.getContentId();
-
   if (Settings::getInstance()->getLinkedId(contentId).isEmpty()) {
-    SearchDialog::show(contentId, options.getQuery());
+    SearchDialog::show(contentId);
   } else {
     Settings::getInstance()->setLinkedId(contentId, QString());
   }

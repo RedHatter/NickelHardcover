@@ -72,12 +72,13 @@ void ReviewDialog::response(const Messages &message) {
   SyncController *ctl = SyncController::getInstance();
 
   // Title and author
-  if (!ctl->title.isEmpty()) {
-    column->addWidget(new Label(Label::Large, ctl->title));
+  BookInfo book = ctl->getBookInfo(ctl->contentId);
+  if (!book.title.isEmpty()) {
+    column->addWidget(new Label(Label::Large, book.title));
   }
 
-  if (!ctl->author.isEmpty()) {
-    column->addWidget(new Label(Label::Small, "by " + ctl->author));
+  if (!book.author.isEmpty()) {
+    column->addWidget(new Label(Label::Small, "by " + book.author));
   }
 
   // Rating

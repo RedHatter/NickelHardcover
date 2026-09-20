@@ -99,3 +99,6 @@ extern void (*PowerTimer__fireAt)(PowerTimer *__this, QDateTime const &datatime)
 extern int (*PowerTimer__timeRemaining)(PowerTimer *__this);
 
 QString join(const QVector<QString> &list, const QString &separator);
+
+QString describeBookError(const QString &contentId, const QString &message);
+void showBookErrorDialog(const QString &contentId, const QString &message);

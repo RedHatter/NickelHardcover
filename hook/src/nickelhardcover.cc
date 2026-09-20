@@ -261,8 +261,7 @@ _nh_ReadingController__setVolume(ReadingController *_this, Volume *volume, Bookm
 
   SyncController *syncController = SyncController::getInstance();
   syncController->contentId = Content__getId(volume);
-  syncController->title = Content__getTitle(volume);
-  syncController->author = Content__getAttribution(volume);
+  syncController->registerBook(syncController->contentId, Content__getTitle(volume), Content__getAttribution(volume));
   syncController->notRealBook =
       !Content__isFullBookAccessible(volume) || (Volume__isInstapaper && Volume__isInstapaper(volume));
 
@@ -337,4 +336,13 @@ QString join(const QVector<QString> &list, const QString &separator) {
   }
 
   return res;
+}
+
+QString describeBookError(const QString &contentId, const QString &message) {
+  QString bookTitle = SyncController::getInstance()->getBookInfo(contentId).title;
+  return bookTitle.isEmpty() ? message : QString("<b>%1</b><br>%2").arg(bookTitle, message);
+}
+
+void showBookErrorDialog(const QString &contentId, const QString &message) {
+  ConfirmationDialogFactory__showErrorDialog("Hardcover.app", describeBookError(contentId, message));
 }

@@ -83,8 +83,7 @@ void SyncQueue::run(const QString &contentId, bool manual) {
 
   if (currentProgress == 0) {
     nh_log("Attempted to sync %s with no saved reading progress", qPrintable(contentId));
-    ConfirmationDialogFactory__showErrorDialog("Hardcover.app",
-                                               "Reading progress must be at least 2% to sync with Hardcover.app");
+    showBookErrorDialog(contentId, "Reading progress must be at least 2% to sync with Hardcover.app");
     finished();
     return;
   }
@@ -100,12 +99,7 @@ void SyncQueue::run(const QString &contentId, bool manual) {
     dialog->open();
   }
 
-  CLI::Options options;
-  options.silent = !manual;
-  options.icon = true;
-  options.contentId = contentId;
-
-  CLI *cli = CLI::update(currentProgress, options);
+  CLI *cli = CLI::update(contentId, currentProgress, !manual);
   QObject::connect(cli, &CLI::success, this, &SyncQueue::success);
   QObject::connect(cli, &CLI::failure, this, &SyncQueue::failure);
 }

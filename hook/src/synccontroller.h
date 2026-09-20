@@ -8,17 +8,26 @@
 #include "nickelhardcover.h"
 #include "syncqueue.h"
 
+struct BookInfo {
+  QString title;
+  QString author;
+};
+
 class SyncController : public QObject {
   Q_OBJECT
 
 public:
   static SyncController *getInstance();
 
-  QString title;
-  QString author;
   QString contentId;
   bool notRealBook;
   QNetworkAccessManager *network = new QNetworkAccessManager(this);
+
+  void registerBook(const QString &contentId, const QString &title, const QString &author) {
+    books[contentId] = {title, author};
+  }
+
+  BookInfo getBookInfo(const QString &contentId) const { return books.value(contentId); }
 
   int getCurrentProgress() const { return queue->getProgress().value(contentId); }
 
@@ -45,6 +54,8 @@ private:
 
   PowerTimer *timer = nullptr;
   SyncQueue *queue = new SyncQueue(this);
+
+  QHash<QString, BookInfo> books;
 
   QString lastViewName;
   int lastSyncDaily = 0;

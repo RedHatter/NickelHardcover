@@ -9,10 +9,11 @@
 #include "../cli.h"
 #include "../editions/editionsdialog.h"
 #include "../settings.h"
+#include "../synccontroller.h"
 #include "bookrow.h"
 #include "searchdialog.h"
 
-SearchDialog::SearchDialog(const QString &contentId, const QString &query) : Dialog("Manually link book"), contentId(contentId) {
+SearchDialog::SearchDialog(const QString &contentId) : Dialog("Manually link book"), contentId(contentId) {
   setStyleSheet(R"(
     [qApp_deviceIsTrilogy=true] TouchLineEdit {
       margin: 0 20px;
@@ -53,8 +54,10 @@ SearchDialog::SearchDialog(const QString &contentId, const QString &query) : Dia
   layout->setContentsMargins(0, 0, 0, 0);
   layout->setSpacing(0);
 
+  BookInfo book = SyncController::getInstance()->getBookInfo(contentId);
+
   lineEdit = construct_TouchLineEdit(nullptr);
-  lineEdit->setText(query);
+  lineEdit->setText(book.title + " " + book.author);
   layout->addWidget(lineEdit);
 
   pages = new PagedStack(this);

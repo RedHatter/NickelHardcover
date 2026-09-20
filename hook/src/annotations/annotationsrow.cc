@@ -4,6 +4,7 @@
 
 #include "../cli.h"
 #include "../nickelhardcover.h"
+#include "../synccontroller.h"
 #include "../widgets/elidedlabel.h"
 #include "annotationsrow.h"
 
@@ -63,12 +64,9 @@ void AnnotationsRow::tapped() {
   ConfirmationDialog__setText(dialog, "Syncing annotations with Hardcover.app...");
   dialog->open();
 
-  CLI::Options options;
-  options.icon = true;
-  options.contentId = annotation.volume_id;
-  options.query = annotation.title + " " + annotation.attribution;
+  SyncController::getInstance()->registerBook(annotation.volume_id, annotation.title, annotation.attribution);
 
-  CLI *cli = CLI::updateJournal(options);
+  CLI *cli = CLI::updateJournal(annotation.volume_id);
   QObject::connect(cli, &CLI::success, this, &AnnotationsRow::success);
   QObject::connect(cli, &CLI::failure, this, &AnnotationsRow::closeDialog);
 }

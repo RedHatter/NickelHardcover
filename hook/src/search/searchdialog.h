@@ -12,12 +12,12 @@ class SearchDialog : public Dialog {
   Q_OBJECT
 
 public:
-  static void show(const QString &contentId, const QString &query) { new SearchDialog(contentId, query); }
+  static void show(const QString &contentId) { new SearchDialog(contentId); }
 
   void commit() override;
 
 private:
-  SearchDialog(const QString &contentId, const QString &query);
+  SearchDialog(const QString &contentId);
 
   void requestPage(int index);
   void response(const Messages &message);

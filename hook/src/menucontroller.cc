@@ -195,7 +195,7 @@ void MenuController::triggered(const QAction *action) {
     SyncController *ctl = SyncController::getInstance();
 
     if (Settings::getInstance()->getLinkedId(ctl->contentId).isEmpty()) {
-      SearchDialog::show(ctl->contentId, ctl->title + " " + ctl->author);
+      SearchDialog::show(ctl->contentId);
     } else {
       Settings::getInstance()->setLinkedId(ctl->contentId, QString());
     }

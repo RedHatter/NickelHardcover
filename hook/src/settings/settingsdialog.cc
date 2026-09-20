@@ -206,10 +206,7 @@ QFrame *SettingsDialog::buildGeneral() {
   QObject::connect(username, &MenuRow::triggered, this, &SettingsDialog::signOut);
   layout->addWidget(username);
 
-  CLI::Options options;
-  options.silent = true;
-
-  CLI *cli = CLI::getUser(options);
+  CLI *cli = CLI::getUser(true);
   QObject::connect(cli, &CLI::response, this, &SettingsDialog::setUsername);
 
   Settings *settings = Settings::getInstance();
