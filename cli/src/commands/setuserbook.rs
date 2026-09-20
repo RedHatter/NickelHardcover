@@ -67,7 +67,7 @@ pub struct SetUserBook {
 pub fn run(context: &mut AppContext, args: SetUserBook) -> Result<()> {
   log::info!("{VERSION} {args:?}");
 
-  let (linked_id, isbn) = normalize_identifiers(context, args.linked_id, args.content_id.as_deref());
+  let (linked_id, isbn) = normalize_identifiers(context, args.linked_id, args.content_id.as_deref())?;
   let book = get_book(context, isbn, linked_id)?;
 
   update_or_insert_user_book(

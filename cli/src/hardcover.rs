@@ -15,10 +15,9 @@ use ureq::{
   http::{Response, StatusCode},
 };
 
-use crate::commands::oauthset::refresh_token;
 use crate::rate_limit::RateLimit;
-use crate::utils::send_error;
 use crate::{appcontext::AppContext, config::BASE_URL};
+use crate::{commands::oauthset::refresh_token, utils::ExpectedError};
 
 pub mod scalars {
   #![allow(non_camel_case_types)]
@@ -69,7 +68,7 @@ fn try_request<T: Serialize>(context: &mut AppContext, request_body: &T) -> Resu
   if let Some(daily) = daily.first()
     && daily.remaining() == 0
   {
-    panic!("Exceeded daily rate limit. Please try again tomorrow.");
+    return Err(ExpectedError::DailyRateLimit.into());
   }
 
   if let Some(rate_limit) = rate_limit.first() {
@@ -100,10 +99,10 @@ fn try_request<T: Serialize>(context: &mut AppContext, request_body: &T) -> Resu
     log::info!("{msg}");
 
     if code == StatusCode::UNAUTHORIZED {
-      send_error(context, "UNAUTHORIZED", String::new());
-    } else {
-      bail!(msg);
+      return Err(ExpectedError::Unauthorized.into());
     }
+
+    bail!(msg);
   }
 
   Ok(res)
@@ -145,7 +144,7 @@ pub fn send_request<T: Serialize, R: DeserializeOwned>(
   request_body: T,
 ) -> Result<R> {
   if context.config.access_token.is_empty() {
-    send_error(context, "UNAUTHORIZED", String::new());
+    return Err(ExpectedError::Unauthorized.into());
   }
 
   if let Some(token_expires_at) = context.config.token_expires_at

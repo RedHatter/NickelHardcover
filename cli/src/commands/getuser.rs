@@ -41,7 +41,7 @@ pub fn run(context: &mut AppContext, args: &GetUser) -> Result<()> {
 
   let user = get_user(context)?;
 
-  send_msg(&Messages::User(User {
+  send_msg!(&Messages::User(User {
     id: user.id,
     username: user.username.clone(),
     account_privacy_setting_id: user.account_privacy_setting_id,

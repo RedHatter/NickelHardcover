@@ -50,7 +50,7 @@ pub struct Update {
 pub fn run(context: &mut AppContext, args: &Update) -> Result<()> {
   log::info!("{VERSION} {args:?}");
 
-  let (linked_id, isbn) = normalize_identifiers(context, args.linked_id, Some(&args.content_id));
+  let (linked_id, isbn) = normalize_identifiers(context, args.linked_id, Some(&args.content_id))?;
   let book = get_book(context, isbn, linked_id)?;
   let (user_book_id, user_read_id, started_at) = update_or_insert_user_book(
     context,

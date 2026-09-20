@@ -3,18 +3,53 @@ use std::fs::write;
 use std::str::FromStr;
 use std::sync::Mutex;
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 use graphql_client::{GraphQLQuery, Response};
 use itertools::Itertools;
 use jiff::Zoned;
 use log::{Level, Log, Metadata, Record};
+use thiserror::Error;
 
 use crate::appcontext::AppContext;
 use crate::config::Config;
 use crate::database::get_sqlite_isbn;
 use crate::epub::read_epub_isbn;
 use crate::hardcover::send_request;
-use crate::messages::{Error, Log as LogMessage, Messages};
+use crate::messages::{Log as LogMessage, Messages};
+
+macro_rules! send_msg {
+  ($value:expr) => {{
+    |value| -> anyhow::Result<()> {
+      let message = anyhow::Context::context(serde_json::to_string(value), "Failed to serialize message")?;
+
+      match value {
+        Messages::Log(_) => {} // Already recorded by `BufferedLogger::log`
+        Messages::Error(err) => log::error!("{}", err.message),
+        _ => log::debug!("{message}"),
+      }
+
+      println!("{message}");
+
+      Ok(())
+    }($value)
+  }};
+}
+
+pub(crate) use send_msg;
+
+#[derive(Error, Debug)]
+pub enum ExpectedError {
+  #[error("{0}")]
+  BookInfo(String),
+  #[error("{0}")]
+  BookNotFound(String),
+  #[error("Exceeded daily rate limit. Please try again tomorrow.")]
+  DailyRateLimit,
+  #[error("Sign-in failed, please try again.<br><br><i>{0}</i>")]
+  OAuth(String),
+  #[error("Unauthorized")]
+  Unauthorized,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Percentage(pub f64);
@@ -78,7 +113,7 @@ impl Log for BufferedLogger {
     }
 
     if record.level() == Level::Info {
-      let _ = send_msg(&Messages::Log(LogMessage {
+      let _ = send_msg!(&Messages::Log(LogMessage {
         message: record.args().to_string(),
       }));
     }
@@ -89,49 +124,13 @@ impl Log for BufferedLogger {
 
 pub static LOGGER: BufferedLogger = BufferedLogger::new();
 
-pub fn send_msg(value: &Messages) -> Result<()> {
-  let message = serde_json::to_string(value).context("Failed to serialize message")?;
-
-  match value {
-    Messages::Log(_) => {} // Already recorded by `BufferedLogger::log`
-    Messages::Error(err) => log::error!("{}", err.message),
-    _ => log::debug!("{message}"),
-  }
-
-  println!("{message}");
-
-  Ok(())
-}
-
-pub fn send_error(context: &mut AppContext, error_code: &str, message: String) -> ! {
-  send_msg(&Messages::Error(Error {
-    error_code: error_code.to_string(),
-    message,
-  }))
-  .expect("Failed to log error");
-
-  if context.config.debug {
-    LOGGER.write_to_disk().map_err(fatal);
-  }
-
-  std::process::exit(0);
-}
-
-#[allow(clippy::needless_pass_by_value)]
-pub fn fatal(e: anyhow::Error) -> ! {
-  panic!(
-    "Encountered an unexpected error. Please report this.<br><br>{:#}",
-    e.chain().join("<br>> ")
-  );
-}
-
 pub fn normalize_identifiers(
   context: &mut AppContext,
   linked_id: Option<i64>,
   content_id: Option<&str>,
-) -> (i64, Vec<String>) {
+) -> Result<(i64, Vec<String>)> {
   match (linked_id, content_id) {
-    (Some(linked_id), _) if linked_id != 0 => (linked_id, Vec::new()),
+    (Some(linked_id), _) if linked_id != 0 => Ok((linked_id, Vec::new())),
     (_, Some(content_id)) => {
       let isbn = if content_id.starts_with("file://") {
         read_epub_isbn(content_id)
@@ -140,18 +139,17 @@ pub fn normalize_identifiers(
       };
 
       match isbn {
-        Ok(isbn) => (0, isbn),
-        Err(e) => send_error(
-          context,
-          "BOOK_NOT_FOUND",
-          format!(
+        Ok(isbn) => Ok((0, isbn)),
+        Err(e) => Err(
+          ExpectedError::BookNotFound(format!(
             "Failed to find an ISBN. Please link book manually.<br><br>{:#}",
             e.chain().join("<br>> ")
-          ),
+          ))
+          .into(),
         ),
       }
     }
-    (_, None) => panic!("One of --content-id or --linked-id is required"),
+    (_, None) => bail!("One of --content-id or --linked-id is required"),
   }
 }
 

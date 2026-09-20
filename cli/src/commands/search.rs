@@ -98,7 +98,7 @@ pub fn run(context: &mut AppContext, args: Search) -> Result<()> {
     })
     .collect::<Vec<_>>();
 
-  send_msg(&Messages::SearchPages(SearchPages {
+  send_msg!(&Messages::SearchPages(SearchPages {
     results,
     page: res.get("page").and_then(Value::as_u64).unwrap_or(0),
     total: match res.get("found").and_then(Value::as_u64) {

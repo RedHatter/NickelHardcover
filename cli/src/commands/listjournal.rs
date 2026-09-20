@@ -43,7 +43,7 @@ pub struct ListJournal {
 pub fn run(context: &mut AppContext, args: &ListJournal) -> Result<()> {
   log::info!("{VERSION} {args:?}");
 
-  let (linked_id, isbn) = normalize_identifiers(context, args.linked_id, args.content_id.as_deref());
+  let (linked_id, isbn) = normalize_identifiers(context, args.linked_id, args.content_id.as_deref())?;
   let user_id = get_user(context)?.id;
 
   let reading_journals = GetReadingJournal::send_request(
@@ -86,7 +86,7 @@ pub fn run(context: &mut AppContext, args: &ListJournal) -> Result<()> {
   .collect::<Vec<_>>();
 
   log::info!("Found {}", reading_journals.len());
-  send_msg(&Messages::JournalList(JournalList { reading_journals }))
+  send_msg!(&Messages::JournalList(JournalList { reading_journals }))
 }
 
 pub fn reduce_slate(data: &Value) -> String {

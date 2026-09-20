@@ -46,7 +46,7 @@ pub struct InsertJournal {
 pub fn run(context: &mut AppContext, args: InsertJournal) -> Result<()> {
   log::info!("{VERSION} {args:?}");
 
-  let (linked_id, isbn) = normalize_identifiers(context, args.linked_id, args.content_id.as_deref());
+  let (linked_id, isbn) = normalize_identifiers(context, args.linked_id, args.content_id.as_deref())?;
   let book = get_book(context, isbn, linked_id)?;
   let privacy_setting_id = args
     .privacy

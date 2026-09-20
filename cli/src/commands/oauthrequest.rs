@@ -5,7 +5,7 @@ use serde_json::Value;
 use crate::appcontext::AppContext;
 use crate::config::{BASE_URL, CLIENT_ID, VERSION};
 use crate::messages::Messages;
-use crate::utils::{send_error, send_msg};
+use crate::utils::{ExpectedError, send_msg};
 
 /// Begin OAuth login flow
 #[derive(FromArgs, PartialEq, Debug)]
@@ -33,13 +33,9 @@ pub fn run(context: &mut AppContext, args: &OAuthRequest) -> Result<()> {
   log::debug!("{json:?}");
 
   if let Some(Value::String(error)) = json.get("error") {
-    send_error(
-      context,
-      "OAUTH",
-      format!("Sign-in failed, please try again.<br><br><i>{error}</i>"),
-    );
+    Err(ExpectedError::OAuth(error.clone()).into())
   } else {
-    send_msg(&Messages::OAuthDevice(
+    send_msg!(&Messages::OAuthDevice(
       serde_json::from_value(json).context("Failed to deserialize OAuth device response")?,
     ))
   }

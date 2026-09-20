@@ -6,7 +6,7 @@ use serde_json::Value;
 
 use crate::appcontext::AppContext;
 use crate::config::{BASE_URL, CLIENT_ID, VERSION};
-use crate::utils::send_error;
+use crate::utils::ExpectedError;
 
 #[derive(Serialize, Deserialize)]
 struct OAuthToken {
@@ -70,11 +70,7 @@ pub fn request_token<I: IntoIterator<Item = (K, V)>, K: AsRef<str>, V: AsRef<str
     context.config.refresh_token = String::new();
     context.config.token_expires_at = None;
     context.config.write()?;
-    send_error(
-      context,
-      "OAUTH",
-      format!("Sign-in failed, please try again.<br><br><i>{error}</i>"),
-    );
+    Err(ExpectedError::OAuth(error.clone()).into())
   } else {
     let value = serde_json::from_value::<OAuthToken>(json).context("Failed to deserialize OAuth token response")?;
     context.config.access_token = value.access_token;

@@ -231,11 +231,11 @@ void CLI::processFinished(int exitCode) {
       break;
 
     case Messages::Kind::Error:
-      if (msg.error->error_code == "UNAUTHORIZED") {
+      if (msg.error->error_code == "Unauthorized") {
         SignInDialog::show();
         failure(FailureReason::Unauthorized);
         return;
-      } else if (msg.error->error_code == "BOOK_NOT_FOUND") {
+      } else if (msg.error->error_code == "BookNotFound") {
         QString message = msg.error->message;
         nh_log("%s", qPrintable(message));
 

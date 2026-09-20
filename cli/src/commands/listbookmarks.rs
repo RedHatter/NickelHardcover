@@ -53,7 +53,5 @@ pub fn run(context: &mut AppContext, args: &ListBookmarks) -> Result<()> {
     return Ok(());
   }
 
-  send_msg(&Messages::AnnotationList(AnnotationList { annotations }))?;
-
-  Ok(())
+  send_msg!(&Messages::AnnotationList(AnnotationList { annotations }))
 }

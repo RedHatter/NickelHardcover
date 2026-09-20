@@ -58,7 +58,7 @@ pub struct UpdateJournal {
 pub fn run(context: &mut AppContext, args: &UpdateJournal) -> Result<()> {
   log::info!("{VERSION} {args:?}");
 
-  let (linked_id, isbn) = normalize_identifiers(context, args.linked_id, Some(&args.content_id));
+  let (linked_id, isbn) = normalize_identifiers(context, args.linked_id, Some(&args.content_id))?;
   let book = get_book(context, isbn, linked_id)?;
   update_journal(context, &args.content_id, &book)?;
 

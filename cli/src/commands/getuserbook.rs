@@ -6,7 +6,7 @@ use crate::appcontext::AppContext;
 use crate::commands::getuser::get_user;
 use crate::config::VERSION;
 use crate::messages::{Messages, UserBook};
-use crate::utils::{GraphQLQueryExt, normalize_identifiers, send_error, send_msg};
+use crate::utils::{ExpectedError, GraphQLQueryExt, normalize_identifiers, send_msg};
 
 #[derive(GraphQLQuery)]
 #[graphql(
@@ -47,11 +47,11 @@ pub struct GetUserBook {
 pub fn run(context: &mut AppContext, args: &GetUserBook) -> Result<()> {
   log::info!("{VERSION} {args:?}");
 
-  let (linked_id, isbn) = normalize_identifiers(context, args.linked_id, args.content_id.as_deref());
+  let (linked_id, isbn) = normalize_identifiers(context, args.linked_id, args.content_id.as_deref())?;
   let book = get_book(context, isbn, linked_id)?;
 
   if let Some(user_book) = book.user_book {
-    send_msg(&Messages::UserBook(UserBook {
+    send_msg!(&Messages::UserBook(UserBook {
       user_book_id: user_book.id,
       status_id: user_book.status_id,
       rating: user_book.rating,
@@ -77,7 +77,7 @@ pub fn get_book(context: &mut AppContext, isbn: Vec<String>, linked_id: i64) -> 
   let isbn_display = isbn.join(", ");
 
   // retrieve book, edition and maybe user book and user book read
-  let Some(book) = GetEdition::send_request(
+  let book = GetEdition::send_request(
     context,
     get_edition::Variables {
       isbn,
@@ -87,21 +87,18 @@ pub fn get_book(context: &mut AppContext, isbn: Vec<String>, linked_id: i64) -> 
   )?
   .books
   .into_iter()
-  .next() else {
-    send_error(
-      context,
-      "BOOK_NOT_FOUND",
-      if linked_id != 0 {
-        format!(
-          "Unable to find book or edition with id <i>{linked_id}</i> on Hardcover.app. Please manually un-link and re-link book."
-        )
-      } else {
-        format!(
-          "Unable to find a book edition on Hardcover.app with ISBN/ASIN <i>{isbn_display}</i>. Please manually link book."
-        )
-      },
-    )
-  };
+  .next()
+  .ok_or_else(|| {
+    ExpectedError::BookNotFound(if linked_id != 0 {
+      format!(
+        "Unable to find book or edition with id <i>{linked_id}</i> on Hardcover.app. Please manually un-link and re-link book."
+      )
+    } else {
+      format!(
+        "Unable to find a book edition on Hardcover.app with ISBN/ASIN <i>{isbn_display}</i>. Please manually link book."
+      )
+    })
+  })?;
   let user_book = book.user_books.into_iter().next();
 
   let edition_id = user_book
@@ -121,12 +118,12 @@ pub fn get_book(context: &mut AppContext, isbn: Vec<String>, linked_id: i64) -> 
     .or(book.default_cover_edition.as_ref().filter(filter_edition))
     .or(book.ebook_edition.first().filter(filter_edition))
     .or(book.paper_edition.first().filter(filter_edition))
-    .unwrap_or_else(|| {
-      panic!(
+    .ok_or_else(|| {
+      ExpectedError::BookInfo(format!(
         "Unable to find an edition for book <i>{}</i>. Does the book have any non-audiobook editions?",
         book.id
-      )
-    })
+      ))
+    })?
     .id;
 
   let pages = user_book.as_ref()
@@ -144,8 +141,12 @@ pub fn get_book(context: &mut AppContext, isbn: Vec<String>, linked_id: i64) -> 
     .or(book.ebook_edition.first().and_then(map_pages))
     .or(book.paper_edition.first().and_then(map_pages))
     .or(book.pages)
-    .unwrap_or_else(|| panic!("Unable to find the total page count for book <i>{}</i>. Please update the book on Hardcover.app with the correct page count.",
-        book.id));
+    .ok_or_else(|| {
+      ExpectedError::BookInfo(format!(
+        "Unable to find the total page count for book <i>{}</i>. Please update the book on Hardcover.app with the correct page count.",
+        book.id
+      ))
+    })?;
 
   Ok(Book {
     user_book,

@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Result, bail};
 use argh::FromArgs;
 use graphql_client::GraphQLQuery;
 use serde_json::Value;
@@ -41,7 +41,7 @@ pub fn run(context: &mut AppContext, args: ListEditions) -> Result<()> {
 
   let reading_format = match args.reading_format {
     Some(format @ (1 | 2 | 4)) => vec![format],
-    Some(format) => panic!("{format} is not a valid --reading-format value. Expected 1, 2, or 4."),
+    Some(format) => bail!("{format} is not a valid --reading-format value. Expected 1, 2, or 4."),
     None => vec![1, 4],
   };
 
@@ -108,5 +108,5 @@ pub fn run(context: &mut AppContext, args: ListEditions) -> Result<()> {
     })
     .collect::<Vec<_>>();
 
-  send_msg(&Messages::EditionList(EditionList { languages, editions }))
+  send_msg!(&Messages::EditionList(EditionList { languages, editions }))
 }
