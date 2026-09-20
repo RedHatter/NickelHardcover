@@ -45,7 +45,8 @@ pub fn run(context: &mut AppContext, args: &GetUser) -> Result<()> {
     id: user.id,
     username: user.username.clone(),
     account_privacy_setting_id: user.account_privacy_setting_id,
-    account_privacy_setting: JournalPrivacy::try_from(user.account_privacy_setting_id)
+    #[allow(clippy::cast_sign_loss)]
+    account_privacy_setting: JournalPrivacy::from_repr(user.account_privacy_setting_id as usize)
       .context("Failed to parse <i>account_privacy_setting_id</i>")?
       .to_string(),
   }))

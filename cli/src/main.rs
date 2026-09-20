@@ -115,14 +115,7 @@ fn main() {
       }
 
       send_msg!(&Messages::Error(Error {
-        error_code: match expected {
-          ExpectedError::BookInfo(_) => "BookInfo",
-          ExpectedError::BookNotFound(_) => "BookNotFound",
-          ExpectedError::DailyRateLimit => "DailyRateLimit",
-          ExpectedError::OAuth(_) => "OAuth",
-          ExpectedError::Unauthorized => "Unauthorized",
-        }
-        .to_string(),
+        error_code: expected.as_ref().to_string(),
         message: expected.to_string(),
       }))
       .expect("Failed to log error");

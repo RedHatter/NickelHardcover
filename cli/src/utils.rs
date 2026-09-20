@@ -8,6 +8,7 @@ use graphql_client::{GraphQLQuery, Response};
 use itertools::Itertools;
 use jiff::Zoned;
 use log::{Level, Log, Metadata, Record};
+use strum_macros::AsRefStr;
 use thiserror::Error;
 
 use crate::appcontext::AppContext;
@@ -37,7 +38,7 @@ macro_rules! send_msg {
 
 pub(crate) use send_msg;
 
-#[derive(Error, Debug)]
+#[derive(Error, Debug, AsRefStr)]
 pub enum ExpectedError {
   #[error("{0}")]
   BookInfo(String),

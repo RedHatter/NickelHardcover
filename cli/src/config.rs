@@ -1,12 +1,11 @@
-use core::fmt;
 use std::fs;
 use std::path::PathBuf;
 use std::str::FromStr;
 
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Context, Result};
 use jiff::Timestamp;
-use serde::Serialize;
-use serde::{Deserialize, Deserializer, de};
+use serde::{Deserialize, Deserializer, Serialize, de};
+use strum_macros::{Display, EnumString, FromRepr};
 
 use crate::appcontext::AppContext;
 use crate::commands::getuser::get_user;
@@ -18,7 +17,8 @@ pub static CLIENT_ID: &str = "2ec8855f-400e-4bb9-a2ed-5b628afa4a17";
 pub static BASE_URL: &str = "https://api.hardcover.app";
 pub static VERSION: &str = env!("VERSION");
 
-#[derive(Clone, Copy, Serialize, PartialEq, Debug)]
+#[derive(Clone, Copy, PartialEq, Debug, Serialize, EnumString, FromRepr, Display)]
+#[strum(serialize_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
 pub enum JournalPrivacy {
   Account,
@@ -36,53 +36,12 @@ impl JournalPrivacy {
   }
 }
 
-impl TryFrom<i64> for JournalPrivacy {
-  type Error = anyhow::Error;
-
-  fn try_from(value: i64) -> Result<Self> {
-    match value {
-      0 => Ok(JournalPrivacy::Account),
-      1 => Ok(JournalPrivacy::Public),
-      2 => Ok(JournalPrivacy::Follows),
-      3 => Ok(JournalPrivacy::Private),
-      _ => Err(anyhow!("<i>{value}</i> is not a valid <i>journal_privacy</i> value")),
-    }
-  }
-}
-
-impl FromStr for JournalPrivacy {
-  type Err = String;
-
-  fn from_str(value: &str) -> Result<Self, Self::Err> {
-    match value {
-      s if s.eq_ignore_ascii_case("Account") => Ok(JournalPrivacy::Account),
-      s if s.eq_ignore_ascii_case("Public") => Ok(JournalPrivacy::Public),
-      s if s.eq_ignore_ascii_case("Follows") => Ok(JournalPrivacy::Follows),
-      s if s.eq_ignore_ascii_case("Private") => Ok(JournalPrivacy::Private),
-      s => Err(format!("<i>{s}</i> is not a valid <i>journal_privacy</i> value")),
-    }
-  }
-}
-
 impl<'de> Deserialize<'de> for JournalPrivacy {
   fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
   where
     D: Deserializer<'de>,
   {
     Self::from_str(&String::deserialize(deserializer)?).map_err(de::Error::custom)
-  }
-}
-
-impl fmt::Display for JournalPrivacy {
-  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-    let s = match self {
-      JournalPrivacy::Account => "account",
-      JournalPrivacy::Public => "public",
-      JournalPrivacy::Follows => "follows",
-      JournalPrivacy::Private => "private",
-    };
-
-    write!(f, "{s}")
   }
 }
 
