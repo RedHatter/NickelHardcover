@@ -216,19 +216,16 @@ QFrame *SettingsDialog::buildGeneral() {
   QObject::connect(checkboxRow, &CheckboxRow::triggered, settings, &Settings::setAutoSyncDefault);
   layout->addWidget(checkboxRow);
 
-  checkboxRow = new CheckboxRow(
-      "If a sync fails due to lack of internet connection, automatically retry the next time you connect to Wi-Fi",
-      settings->getRetryOnNetwork());
+  checkboxRow = new CheckboxRow("Retry sync when Wi-Fi reconnects", settings->getRetryOnNetwork());
   QObject::connect(checkboxRow, &CheckboxRow::triggered, settings, &Settings::setRetryOnNetwork);
   layout->addWidget(checkboxRow);
 
-  checkboxRow = new CheckboxRow("Sync Kobo annotations (highlights and notes) to the Hardcover.app journal",
-                                settings->getSyncAnnotations());
+  checkboxRow = new CheckboxRow("Sync Kobo annotations to the Hardcover.app journal", settings->getSyncAnnotations());
   QObject::connect(checkboxRow, &CheckboxRow::triggered, settings, &Settings::setSyncAnnotations);
   layout->addWidget(checkboxRow);
 
   MenuRow *menuRow = new MenuRow(
-      "Reading journal privacy", MenuRowType::Menu,
+      "Journal entry privacy", MenuRowType::Menu,
       {{"Account default", "account"}, {"Public", "public"}, {"Follows", "follows"}, {"Private", "private"}}, {},
       settings->getJournalPrivacy());
   QObject::connect(menuRow, &MenuRow::triggered, settings, &Settings::setJournalPrivacy);
@@ -285,7 +282,7 @@ QFrame *SettingsDialog::buildAutoSync() {
 
   QDateTime alarm = SyncController::getInstance()->getAlarm();
   layout->addWidget(
-      new StaticRow("Auto-sync scheduled for", alarm.isValid() ? alarm.toLocalTime().toString() : "Never", false));
+      new StaticRow("Next scheduled sync", alarm.isValid() ? alarm.toLocalTime().toString() : "Never", false));
 
   return frame;
 }
