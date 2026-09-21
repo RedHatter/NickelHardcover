@@ -61,11 +61,11 @@ While a book is open, you'll find a new menu in the top-right corner that gives 
 
 When you first open the menu, you'll see a "Sign in to Hardcover.app" menu item.
 
-<a href="https://codeberg.org/StrayRose/NickelHardcover/src/branch/main/screenshots/signin.png" target="_blank"><img src="https://codeberg.org/StrayRose/NickelHardcover/raw/branch/main/screenshots/signin.png" alt="Sign in to Hardcover.app menu item" width="24.5%"></a>
+<a href="https://codeberg.org/StrayRose/NickelHardcover/src/branch/main/screenshots/signin.png" target="_blank"><img src="https://codeberg.org/StrayRose/NickelHardcover/raw/branch/main/screenshots/signin.png" alt="Sign in to Hardcover.app menu item" width="600px"></a>
 
 Tapping it brings up a dialog with a QR code.
 
-<a href="https://codeberg.org/StrayRose/NickelHardcover/src/branch/main/screenshots/scan-qrcode.png" target="_blank"><img src="https://codeberg.org/StrayRose/NickelHardcover/raw/branch/main/screenshots/scan-qrcode.png" alt="Sign in dialog" width="24.5%"></a>
+<a href="https://codeberg.org/StrayRose/NickelHardcover/src/branch/main/screenshots/scan-qrcode.png" target="_blank"><img src="https://codeberg.org/StrayRose/NickelHardcover/raw/branch/main/screenshots/scan-qrcode.png" alt="Sign in dialog" width="600px"></a>
 
 Scan the QR code, or visit the link and enter the code, then tap continue. That's it, you're ready to use NickelHardcover!
 
