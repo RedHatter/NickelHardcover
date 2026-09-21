@@ -451,6 +451,8 @@ dependencies = [
 [[package]]
 name = "graphql-introspection-query"
 version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e063446242093b0acecc78a2313801e6c4faafa3501277b409a2b1972eff5d85"
 dependencies = [
  "serde",
 ]
@@ -468,6 +470,8 @@ dependencies = [
 [[package]]
 name = "graphql_client"
 version = "0.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b0f04840854efa7b06377d86fab117f598f5f5c95727067463417ccaf8aa7635"
 dependencies = [
  "graphql_query_derive",
  "serde",
@@ -477,6 +481,8 @@ dependencies = [
 [[package]]
 name = "graphql_client_codegen"
 version = "0.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aa0141e66c8d0302f8a586df12ad5d0cf87c0fa8c391f2f5b5dc296312dce569"
 dependencies = [
  "graphql-introspection-query",
  "graphql-parser",
@@ -491,6 +497,8 @@ dependencies = [
 [[package]]
 name = "graphql_query_derive"
 version = "0.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e16ecf9bb87a6760cf5227f66cbe48bad7b89505aeb002aa9439ea090e6038a3"
 dependencies = [
  "graphql_client_codegen",
  "proc-macro2",
@@ -878,7 +886,7 @@ dependencies = [
 
 [[package]]
 name = "nickel-hardcover-cli"
-version = "0.5.3"
+version = "1.0.0"
 dependencies = [
  "anyhow",
  "argh",
