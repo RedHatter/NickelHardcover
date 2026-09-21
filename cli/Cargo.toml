@@ -4,7 +4,7 @@ members = ["qt_codegen"]
 
 [package]
 name = "nickel-hardcover-cli"
-version = "1.0.0"
+version = "1.0.0-beta+1"
 edition = "2024"
 
 [dependencies]

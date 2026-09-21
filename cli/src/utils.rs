@@ -46,7 +46,7 @@ pub enum ExpectedError {
   BookNotFound(String),
   #[error("Exceeded daily rate limit. Please try again tomorrow.")]
   DailyRateLimit,
-  #[error("Sign-in failed, please try again.<br><br><i>{0}</i>")]
+  #[error("Sign-in failed, please try again.<br><br>>{0}")]
   OAuth(String),
   #[error("Unauthorized")]
   Unauthorized,

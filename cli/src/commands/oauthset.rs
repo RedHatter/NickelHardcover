@@ -1,12 +1,14 @@
 use anyhow::{Context, Result};
 use argh::FromArgs;
+use itertools::Itertools;
 use jiff::{SignedDuration, Timestamp};
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
-use crate::appcontext::AppContext;
-use crate::config::{BASE_URL, CLIENT_ID, VERSION};
-use crate::utils::ExpectedError;
+use crate::{appcontext::AppContext, hardcover::handle_response};
+use crate::{
+  config::{BASE_URL, CLIENT_ID, VERSION},
+  utils::ExpectedError,
+};
 
 #[derive(Serialize, Deserialize)]
 struct OAuthToken {
@@ -29,53 +31,62 @@ pub struct OAuthSet {
 pub fn run(context: &mut AppContext, args: &OAuthSet) -> Result<()> {
   log::info!("{VERSION} {args:?}");
 
-  request_token(
+  if let Err(err) = request_token(
     context,
     [
       ("client_id", CLIENT_ID),
       ("grant_type", "urn:ietf:params:oauth:grant-type:device_code"),
       ("device_code", &args.device_code),
     ],
-  )
+  ) {
+    return Err(ExpectedError::OAuth(format!("{:#}", err.chain().join("<br>> "))).into());
+  }
+
+  Ok(())
 }
 
 pub fn refresh_token(context: &mut AppContext) -> Result<()> {
-  request_token(
+  if let Err(err) = request_token(
     context,
     [
       ("client_id", CLIENT_ID),
       ("grant_type", "refresh_token"),
       ("refresh_token", &context.config.refresh_token.clone()),
     ],
-  )
+  ) {
+    return Err(ExpectedError::OAuth(format!("{:#}", err.chain().join("<br>> "))).into());
+  }
+
+  Ok(())
 }
 
 pub fn request_token<I: IntoIterator<Item = (K, V)>, K: AsRef<str>, V: AsRef<str>>(
   context: &mut AppContext,
   body: I,
 ) -> Result<()> {
-  let json = context
+  let res = context
     .agent
     .post(format!("{}{}", BASE_URL, "/oauth2/token"))
     .send_form(body)
-    .context("Failed to send OAuth token request")?
-    .body_mut()
-    .read_json::<Value>()
-    .context("Failed to parse OAuth token response")?;
+    .context("Failed to send OAuth device request")?;
 
-  log::debug!("{json:?}");
+  let json = handle_response(context, res).context("OAuth token request failed");
 
-  if let Some(Value::String(error)) = json.get("error") {
-    context.config.access_token = String::new();
-    context.config.refresh_token = String::new();
-    context.config.token_expires_at = None;
-    context.config.write()?;
-    Err(ExpectedError::OAuth(error.clone()).into())
-  } else {
-    let value = serde_json::from_value::<OAuthToken>(json).context("Failed to deserialize OAuth token response")?;
-    context.config.access_token = value.access_token;
-    context.config.refresh_token = value.refresh_token;
-    context.config.token_expires_at = Some(Timestamp::now() + SignedDuration::from_secs(value.expires_in));
-    context.config.write()
+  match json {
+    Ok(json) => {
+      let value = serde_json::from_value::<OAuthToken>(json).context("Failed to deserialize OAuth token response")?;
+      context.config.access_token = value.access_token;
+      context.config.refresh_token = value.refresh_token;
+      context.config.token_expires_at = Some(Timestamp::now() + SignedDuration::from_secs(value.expires_in));
+      context.config.write()?;
+      Ok(())
+    }
+    Err(e) => {
+      context.config.access_token = String::new();
+      context.config.refresh_token = String::new();
+      context.config.token_expires_at = None;
+      let _ = context.config.write();
+      Err(e)
+    }
   }
 }

@@ -36,14 +36,7 @@ pub mod scalars {
   pub type timestamptz = Timestamp;
 }
 
-fn try_request<T: Serialize>(context: &mut AppContext, request_body: &T) -> Result<Response<Body>> {
-  let res = context
-    .agent
-    .post(format!("{}{}", BASE_URL, "/v1/graphql"))
-    .header("authorization", format!("Bearer {}", context.config.access_token))
-    .send_json(request_body)
-    .context("Failed to send request")?;
-
+pub fn handle_response(context: &mut AppContext, res: Response<Body>) -> Result<Value> {
   let code = res.status();
 
   if code == StatusCode::TOO_MANY_REQUESTS
@@ -81,34 +74,30 @@ fn try_request<T: Serialize>(context: &mut AppContext, request_body: &T) -> Resu
     }
   }
 
-  if !code.is_success() {
-    let body = res.into_body().read_to_string()?;
+  let body = res.into_body().read_to_string()?;
 
-    let msg = if let Some(json) = serde_json::from_str::<Value>(&body).ok()
-      && let Some(error) = json.get("error").and_then(Value::as_str)
-    {
-      json
-        .get("error_description")
-        .or(json.get("message"))
-        .and_then(Value::as_str)
-        .map_or_else(|| error.to_string(), |desc| format!("{error} — {desc}"))
-    } else {
-      body
-    };
-    let msg = format!("Request failed <i>{code}: {msg}</i>");
-    log::info!("{msg}");
+  log::debug!("{body}");
 
-    if code == StatusCode::UNAUTHORIZED {
-      return Err(ExpectedError::Unauthorized.into());
-    }
+  let json = serde_json::from_str::<Value>(&body).with_context(|| format!("Failed to parse JSON<br>>{body}"))?;
+
+  let mut errors = Vec::<String>::new();
+  collect_errors(&json, &mut errors);
+
+  if errors.is_empty() && !code.is_success() {
+    errors.push(body);
+  }
+
+  if !errors.is_empty() {
+    let msg = format!("Request failed <i>{code}</i><br>{}", errors.join("<br>>"));
+    log::error!("{msg}");
 
     bail!(msg);
   }
 
-  Ok(res)
+  Ok(json)
 }
 
-fn collect_errors<'a>(value: &'a serde_json::Value, errors: &mut Vec<&'a str>) {
+fn collect_errors(value: &serde_json::Value, errors: &mut Vec<String>) {
   match value {
     Value::Array(arr) => {
       for val in arr {
@@ -116,23 +105,23 @@ fn collect_errors<'a>(value: &'a serde_json::Value, errors: &mut Vec<&'a str>) {
       }
     }
     Value::Object(map) => {
-      if let Some(val) = map.get("error") {
+      if let Some(val) = map.get("error").or(map.get("errors")) {
         if let Some(e) = val.as_str() {
-          errors.push(e);
+          errors.push(
+            map
+              .get("error_description")
+              .or(map.get("message"))
+              .and_then(Value::as_str)
+              .map_or_else(|| e.to_string(), |desc| format!("{e} — {desc}")),
+          );
         } else if let Some(vec) = val.as_array() {
-          errors.extend(vec.iter().filter_map(Value::as_str));
+          errors.extend(vec.iter().filter_map(Value::as_str).map(ToString::to_string));
         }
       }
 
-      if let Some(val) = map.get("errors") {
-        if let Some(e) = val.as_str() {
-          errors.push(e);
-        } else if let Some(vec) = val.as_array() {
-          errors.extend(vec.iter().filter_map(Value::as_str));
-        }
+      for val in map.values() {
+        collect_errors(val, errors);
       }
-
-      map.values().for_each(|val| collect_errors(val, errors));
     }
     _ => {}
   }
@@ -155,22 +144,21 @@ pub fn send_request<T: Serialize, R: DeserializeOwned>(
   }
 
   let json = retry(Exponential::from_millis(10).map(jitter).take(3), || {
-    try_request(context, &request_body)
+    let res = context
+      .agent
+      .post(format!("{}{}", BASE_URL, "/v1/graphql"))
+      .header("authorization", format!("Bearer {}", context.config.access_token))
+      .send_json(&request_body)
+      .context("Failed to send request")?;
+
+    if res.status() == StatusCode::UNAUTHORIZED {
+      return Err(ExpectedError::Unauthorized.into());
+    }
+
+    handle_response(context, res)
   })
   .map_err(|err| err.error)
-  .context(format!("<i>{operation_name}</i> request failed"))?
-  .body_mut()
-  .read_json::<Value>()
-  .context(format!("Failed to parse <i>{operation_name}</i> response"))?;
-
-  log::debug!("{json:?}");
-
-  let mut errors = Vec::<&str>::new();
-  collect_errors(&json, &mut errors);
-
-  if !errors.is_empty() {
-    bail!("{operation_name} has errors<br>{}", errors.join("<br>>"));
-  }
+  .context(format!("<i>{operation_name}</i> request failed"))?;
 
   serde_json::from_value(json).context(format!("Failed to deserialize <i>{operation_name}</i> response"))
 }
