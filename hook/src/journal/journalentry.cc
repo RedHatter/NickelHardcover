@@ -80,7 +80,7 @@ JournalEntry::JournalEntry(const Journal &journal, QWidget *parent) : QFrame(par
   } else if (event == "rated") {
     icon->setPixmap(QPixmap(Files::rated));
     Metadata metadata = journal.metadata;
-    label->setText(QString("Rated %1").arg(metadata.rating.value_or_default()));
+    label->setText(QString("Rated %1").arg(metadata.rating.value_or_default(), 0, 'f', 1));
   } else if (event == "list_book") {
     icon->setPixmap(QPixmap(Files::list_book));
     label->setText(QString("Added to list <i>%1</i>").arg(journal.metadata.list_name.value_or("Unknown")));

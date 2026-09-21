@@ -58,32 +58,39 @@ pub fn run(context: &mut AppContext, args: &ListJournal) -> Result<()> {
   )?
   .reading_journals
   .iter()
-  .map(|journal| Journal {
-    id: journal.id,
-    event: journal.event.clone(),
-    entry: journal.entry.clone(),
-    action_at: journal.action_at,
-    metadata: Metadata {
-      list_name: journal
-        .metadata
-        .get("list_name")
-        .and_then(Value::as_str)
-        .map(str::to_string),
-      progress: journal.metadata.get("progress").and_then(Value::as_u64),
-      progress_was: journal.metadata.get("progress_was").and_then(Value::as_u64),
-      prompt: journal
-        .metadata
-        .get("prompt")
-        .and_then(Value::as_str)
-        .map(str::to_string),
-      rating: journal.metadata.get("rating").and_then(Value::as_u64),
-      review: journal
-        .metadata
-        .get("review")
-        .map(|review| reduce_slate(review).trim().to_string()),
-    },
+  .map(|journal| {
+    Ok(Journal {
+      id: journal.id,
+      event: journal.event.clone(),
+      entry: journal.entry.clone(),
+      action_at: journal.action_at,
+      metadata: Metadata {
+        list_name: journal
+          .metadata
+          .get("list_name")
+          .and_then(Value::as_str)
+          .map(str::to_string),
+        progress: journal.metadata.get("progress").and_then(Value::as_u64),
+        progress_was: journal.metadata.get("progress_was").and_then(Value::as_u64),
+        prompt: journal
+          .metadata
+          .get("prompt")
+          .and_then(Value::as_str)
+          .map(str::to_string),
+        rating: journal
+          .metadata
+          .get("rating")
+          .and_then(Value::as_str)
+          .map(str::parse::<f64>)
+          .transpose()?,
+        review: journal
+          .metadata
+          .get("review")
+          .map(|review| reduce_slate(review).trim().to_string()),
+      },
+    })
   })
-  .collect::<Vec<_>>();
+  .collect::<Result<Vec<_>>>()?;
 
   log::info!("Found {}", reading_journals.len());
   send_msg!(&Messages::JournalList(JournalList { reading_journals }))

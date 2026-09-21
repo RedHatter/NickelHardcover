@@ -79,7 +79,7 @@ pub struct Metadata {
   pub progress: Option<u64>,
   pub progress_was: Option<u64>,
   pub prompt: Option<String>,
-  pub rating: Option<u64>,
+  pub rating: Option<f64>,
   pub review: Option<String>,
 }
 
