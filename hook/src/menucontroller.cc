@@ -5,6 +5,7 @@
 
 #include <NickelHook.h>
 
+#include "annotations/annotationsdialog.h"
 #include "cli.h"
 #include "files.h"
 #include "journal/journaldialog.h"
@@ -82,6 +83,7 @@ enum MenuOption {
   BOOK_STATUS,
   JOURNAL,
   REVIEW,
+  ANNOTATIONS,
   SETTINGS,
   SIGNIN
 };
@@ -105,6 +107,7 @@ void MenuController::showMainMenu() {
         {"Update book status", MenuOption::BOOK_STATUS},
         {"Open reading journal", MenuOption::JOURNAL},
         {"Write a review", MenuOption::REVIEW},
+        {"All annotations", MenuOption::ANNOTATIONS},
         {"Settings", MenuOption::SETTINGS},
     };
   } else {
@@ -215,6 +218,10 @@ void MenuController::triggered(const QAction *action) {
 
   case MenuOption::REVIEW:
     ReviewDialog::show();
+    break;
+
+  case MenuOption::ANNOTATIONS:
+    AnnotationsDialog::show();
     break;
 
   case MenuOption::SETTINGS:

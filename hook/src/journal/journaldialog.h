@@ -15,7 +15,6 @@ public:
   static void show() { new JournalDialog(); }
 
 public Q_SLOTS:
-  void annotations();
   void newEntry();
 
 private:
