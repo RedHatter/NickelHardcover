@@ -9,7 +9,7 @@
 
 [Hardcover.app](https://hardcover.app/) integration for Kobo eReaders.
 
-Thanks to **pgaskin** for the [NickelHook](https://github.com/pgaskin/NickelHook) library and [NickelTC](https://github.com/pgaskin/NickelTC) toolchain, without which this project would not be possible.
+This project wouldn't be possible without **pgaskin**'s [NickelHook](https://github.com/pgaskin/NickelHook) library and [NickelTC](https://github.com/pgaskin/NickelTC) toolchain.
 
 **Warning: Firmware version 5.x is not supported yet.**
 
@@ -25,25 +25,25 @@ Thanks to **pgaskin** for the [NickelHook](https://github.com/pgaskin/NickelHook
 
 ## Features
 
-- Automatically update reading progress on Hardcover
-- Automatically add Kobo annotations as Hardcover reading journal entries
+- Automatically update reading progress on Hardcover.app
+- Automatically sync Kobo annotations (highlights and notes) to your Hardcover.app journal
 - Review and rate books
-- View reading journal and add new entries
+- View your Hardcover.app journal and add new entries
 - Update book status
 
 ## FAQ
 
 - **Is my device supported?**  
-  All Kobo devices except the Kobo Mini (2012) are supported. Please make sure your device is fully up to date.
+  All Kobo devices except the Kobo Mini (2012) are supported, as long as your firmware is up to date.
 
 - **Do I need to install NickelMenu as well?**  
-  No. NickelHardcover does not make use of NickelMenu.
+  No. NickelHardcover doesn't rely on NickelMenu.
 
 - **Why is it called NickelHardcover then?**  
-  The Kobo UI is internally referred to as Nickel on the device. The name is simply referencing the fact that this is a mod to the native UI.
+  Kobo internally calls its UI Nickel. The name simply references the fact that this is a mod to the native UI.
 
 - **Can you add support for X feature?**  
-  Maybe. [Open a new issue](https://codeberg.org/StrayRose/NickelHardcover/issues/new) and ask, be sure to provide your use case.
+  Maybe. [Open a new issue](https://codeberg.org/StrayRose/NickelHardcover/issues/new) and ask. Be sure to provide your use case.
 
 ## Installing or updating
 
@@ -51,74 +51,36 @@ Thanks to **pgaskin** for the [NickelHook](https://github.com/pgaskin/NickelHook
 2. Copy the _KoboRoot.tgz_ file to the `.kobo` directory on your Kobo
 3. Eject/disconnect your Kobo, and it should automatically reboot
 
-No need to uninstall before updating. Configuration will be retained.
-
-## Configuring
-
-To function, NickelHardcover needs to be configured with an API key from your Hardcover.app account.
-
-1. Visit [this link](https://hardcover.app/account/api/keys/new?scope=read%3Acatalog+read%3Alibrary+read%3Ajournal+read%3Ame%3Acontent+write%3Alibrary+write%3Areviews) and sign in. You should see the "New API Key" page with some scopes pre-selected
-2. Choose a name and expiration (e.g. "NickelHardcover" and "never") and click "Create Key" at the bottom of the page
-3. You should see a section titled "Your new API key", copy the key from the text box underneath
-4. Connect your Kobo and edit the file `.adds/NickelHardcover/config_example.ini`
-5. On the second line, labeled "authorization”, remove the starting semicolon and paste the API key (copied in step 3) after the equals sign
-6. Save the file as `config.ini`
-7. Eject/disconnect your Kobo
-
-Once the above steps are complete, you should have a file named `config.ini` with contents similar to the following.
-
-```ini
-; Your Hardcover.app authorization token copied from https://hardcover.app/account/api.
-authorization = hc_pat_pm1HiC9W8Wv6Zs2ihG7P2cVnrfEYP7J4ACH4EYZyoHpb
-
-; Whether auto-sync is enabled or disabled by default for each book.
-auto_sync_default = false
-
-; When to sync Kobo highlights and notes (bookmarks) with the Hardcover.app journal.
-; - always    Sync bookmarks with every sync
-; - never     Never sync bookmarks
-sync_bookmarks = always
-
-; Run auto-sync at the specified hour even if the Kobo is asleep. Possible
-; values are 0-23 where 0 is midnight, 1 is 1am, 22 is 10pm, etc. Set to -1 to disable.
-; sync_daily = 11
-
-; Whether to run auto-sync after closing a book or the Kobo is put to sleep.
-; - always    Run auto-sync every time a book is closed
-; - never     Never run auto-sync when a book is closed
-; - 1-100     When a book is closed run auto-sync if the difference in read
-;             percentage is greater than this number
-sync_on_close = always
-
-; Run auto-sync while a book is open when the difference between the last synced
-; read percentage and the current read percentage is greater than this number
-; (in percentage points). Set to 0 to disable.
-threshold = 20
-
-; What privacy setting to use when creating new journal entries.
-; - account   Use the privacy setting specified in your Hardcover.app account
-; - public    The journal entries will be visible to anyone.
-; - follows   The journal entries will be visible only to people you follow.
-; - private   Only you can see your the journal entries.
-journal_privacy = account
-
-; If syncing fails due to lack of internet connection automatically retry next
-; time you connect to WiFi
-retry_on_network = true
-```
+No need to uninstall before updating. Your configuration is retained.
 
 ## Usage
 
-While a book is open, you should find a new menu on the top right where all the functions can be accessed.
+While a book is open, you'll find a new menu in the top-right corner that gives access to all of NickelHardcover's features.
+
+### Signing in
+
+When you first open the menu, you'll see a "Sign in to Hardcover.app" menu item.
+
+<a href="https://codeberg.org/StrayRose/NickelHardcover/src/branch/main/screenshots/signin.png" target="_blank"><img src="https://codeberg.org/StrayRose/NickelHardcover/raw/branch/main/screenshots/signin.png" alt="Sign in to Hardcover.app menu item" width="24.5%"></a>
+
+Tapping it brings up a dialog with a QR code.
+
+<a href="https://codeberg.org/StrayRose/NickelHardcover/src/branch/main/screenshots/scan-qrcode.png" target="_blank"><img src="https://codeberg.org/StrayRose/NickelHardcover/raw/branch/main/screenshots/scan-qrcode.png" alt="Sign in dialog" width="24.5%"></a>
+
+Scan the QR code, or visit the link and enter the code, then tap continue. That's it, you're ready to use NickelHardcover!
 
 ### Linking a Hardcover book
 
-NickelHardcover attempts to determine which book to update on Hardcover using the ISBN of the open book. If that fails, or you would like more control, the "Manually link book” menu option allows you to manually select which book or edition to update.
+NickelHardcover attempts to determine which book to update on Hardcover.app using the ISBN of the open book. If that fails, or you want more control, use the "Manually link book" menu option to select the book or edition yourself.
 
 ### Syncing
 
-There are a few ways to sync reading progress and highlights/annotations with Hardcover. You can trigger a manual sync at any time using the "Sync now” menu option. Additionally, auto-sync can be enabled for the open book using the "Enable auto-sync" menu option. When auto-sync runs can be configured in the NickelHardcover settings.
+There are a few ways to sync reading progress and annotations with Hardcover.app:
+- Manually — trigger a sync at any time with the "Sync now" menu option
+- Automatically — enable auto-sync for the open book with the "Enable auto-sync" menu option
+
+You can configure when auto-sync runs (on a schedule, when closing a book, or by read percentage) in the NickelHardcover settings.
 
 ## Uninstall
 
-To uninstall NickelHardcover, create a file called `nickelhardcover_uninstall` on the root of your device and manually restart your Kobo.
+To uninstall NickelHardcover, delete the `.adds/NickelHardcover` directory and manually restart your Kobo.
